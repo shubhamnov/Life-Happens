@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#19162b">
-<meta name="application-version" content="2026.10.11-life-sim-4">
+<meta name="application-version" content="2026.10.11-life-sim-5">
 <title>Life Happens — Your life, your money, your moves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,7 +144,7 @@ body{background:radial-gradient(ellipse at 50% -12%,#E4E5D9 0,transparent 52%),v
 .profile-icon .vector-icon{width:23px;height:23px;stroke-width:1.7}
 .card-icon{display:flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:9px;background:#FBFAF5B8;color:#3E5547;border:1px solid #FFFFFF80;padding:4px}
 .card-icon .vector-icon{width:100%;height:100%;stroke-width:1.8}
-.wallet{gap:5px}
+.wallet{gap:5px}.wallet{grid-template-columns:repeat(3,minmax(0,1fr))}.wallet-card.buffer{display:none!important}
 .wallet-card b{letter-spacing:-.045em}
 .hero .primary{white-space:nowrap}
 @media(max-width:370px){.hero-character{width:78px;height:100px;flex-basis:78px}.hero h1{font-size:27px}.hero{padding:13px}.hero-head-row{gap:5px}.event-choices{grid-template-columns:1fr}.event-choice{min-height:58px}}
@@ -486,7 +486,7 @@ function renderPlay(){
  $('retireBtn').classList.toggle('hidden',age<40||state.isRetired||state.retired);
  $('retireBtn').textContent=state.isRetired?'RETIRED':'RETIRE';
  $('cashValue').textContent=state.financeDetail.cash?money(state.cash+state.buffer):compact(state.cash+state.buffer);$('cashValue').title=money(state.cash+state.buffer);$('bufferValue').textContent=state.financeDetail.buffer?money(state.buffer):compact(state.buffer);$('bufferValue').title=money(state.buffer);$('investValue').textContent=state.financeDetail.invested?money(state.invested):compact(state.invested);$('investValue').title=money(state.invested);$('debtValue').textContent=state.financeDetail.debt?money(state.debt):compact(state.debt);$('debtValue').title=money(state.debt);document.querySelectorAll('[data-finance-detail]').forEach(el=>el.setAttribute('aria-expanded',String(!!state.financeDetail[el.dataset.financeDetail])));
- const essentials=Math.max(1,state.rent+state.groceries+state.lifestyleExtra),safety=Math.min(100,Math.round(state.buffer/(essentials*3)*100)),future=Math.min(100,Math.round(state.invested/(Math.max(1,state.salary)*6)*100)),career=Math.min(100,Math.round(state.career/5*100)),joy=Math.min(100,Math.round(state.joy/10*100));
+ const essentials=Math.max(1,state.rent+state.groceries+state.lifestyleExtra),safety=Math.min(100,Math.round((state.cash+state.buffer)/(essentials*3)*100)),future=Math.min(100,Math.round(state.invested/(Math.max(1,state.salary)*6)*100)),career=Math.min(100,Math.round(state.career/5*100)),joy=Math.min(100,Math.round(state.joy/10*100));
  $('safetyText').textContent=safety+'%';$('safetyBar').style.width=safety+'%';$('futureText').textContent=future+'%';$('futureBar').style.width=future+'%';$('careerText').textContent=state.career+' / 5';$('careerBar').style.width=career+'%';$('joyText').textContent=state.joy+' / 10';$('joyBar').style.width=joy+'%';$('lifeLevel').textContent='LEVEL '+(1+Math.floor((state.buffer+state.invested+state.career*3000)/50000));
  let s=state.lastSummary||{salary:state.salary,bills:state.rent+state.groceries+state.lifestyleExtra+(state.insurancePremium||0)+(state.vehicleLoanEmi||0),vehicleEmi:state.vehicleLoanEmi||0};if(state.isRetired)s={...s,salary:0,bills:state.rent+state.groceries+state.lifestyleExtra+(state.insurancePremium||0)+(state.vehicleLoanEmi||0),vehicleEmi:state.vehicleLoanEmi||0};
  $('ruleTag').textContent=state.isRetired?'NO PAYCHECK':'INCOME − COSTS';$('payValue').textContent=(s.salary>=0?'+':'−')+compact(Math.abs(s.salary));$('billValue').textContent='−'+compact(s.bills);
