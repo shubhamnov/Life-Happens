@@ -101,7 +101,7 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
  L.goToSetup();const s=L.state;assert(s.runId!==oldRun,'new run id');eq(s.status,'setup','setup');eq(s.month,0,'month reset');eq(s.cash+s.invested+s.unsecuredDebt,0,'balances reset');eq(s.vehicleLoan,null,'loan reset');eq(s.history.length,0,'history reset');eq(s.event,null,'no event');
  L.beginLife({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none'});eq(L.state.status,'playing','new run playing');eq(L.state.month,1,'month 1');
  L.state.status='ended';L.state.finalReason='completed';L.goToSetup();eq(L.state.status,'setup','restart after success');});
-/* 15 */ await test('15. Rapid speed changes and tab switching while an event is open',async()=>{const {L,win}=await game(27);const s=L.state;L.startEvent('laptop');L.render();const id=s.event.id,month=s.month,cash=s.cash;
+/* 15 */ await test('15. Rapid speed changes and tab switching while an event is open',async()=>{const {L,win}=await game(27);const s=L.state;L.startEvent('medical');L.render();const id=s.event.id,month=s.month,cash=s.cash;
  const d=win.document;for(let i=0;i<21;i++)d.getElementById('speedBtn').click();for(let i=0;i<10;i++){d.getElementById('tabRecurring').click();d.getElementById('tabOneTime').click();}
  d.getElementById('pauseBtn').click();L.advanceMonth();eq(s.month,month,'no advance past a pending decision');eq(s.event&&s.event.id,id,'same event still pending');eq(s.cash,cash,'no money moved');eq(s.optionalUsedMonth===s.month,false,'tabs did not trigger a choice');
  assert(L.prefs.speed===1||L.A.speeds.includes(L.prefs.speed),'speed valid');const amount=s.event.amount,debt=s.unsecuredDebt,btn=d.querySelector('#eventChoices [data-choice="savings"]');btn.click();btn.click();eq(s.event,null,'resolved');
@@ -112,7 +112,7 @@ await test('Vehicle: selling a financed vehicle repays 80%, rest becomes debt on
  L.applyExpenseChange('commute','public');eq(s.vehicleLoan,null,'loan closed');eq(s.unsecuredDebt,debt+Math.round(bal*0.2),'20% of balance became debt');eq(L.monthlyBudget().lines.some(l=>l.key==='emi'),false,'no EMI after sale');});
 
 await test('Invariant: one optional choice per month; events do not consume it',async()=>{const {L}=await game(28);const s=L.state;s.cash=1e6;s.month=60;s.career=2;
- L.startEvent('laptop');eq(L.chooseOptional('invest5k'),null,'blocked during event');L.resolveEvent(s.event.id,'savings');assert(L.chooseOptional('invest5k'),'still available after event');
+ L.startEvent('medical');eq(L.chooseOptional('invest5k'),null,'blocked during event');L.resolveEvent(s.event.id,'savings');assert(L.chooseOptional('invest5k'),'still available after event');
  eq(L.chooseOptional('upgrade'),null,'second optional choice blocked');eq(s.homeUpgraded,false,'upgrade not applied');s.event=null;L.advanceMonth();s.event=null;assert(L.chooseOptional('upgrade'),'available next month');eq(L.chooseOptional('upgrade'),null,'no duplicate');});
 await test('Invariant: home upgrade lock and recurring cost in every later month',async()=>{const {L}=await game(29);const s=L.state;s.cash=1e6;s.month=30;s.career=1;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked below 2 XP');s.career=2;s.month=30;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked before 26');s.month=50;
  assert(L.chooseOptional('upgrade'),'applied');for(let i=0;i<3;i++){s.event=null;L.advanceMonth();assert(L.monthlyBudget().lines.some(l=>l.key==='homeUpgrade'),'still charged');}});
@@ -234,7 +234,7 @@ await test('Big buys: home types and car models trade comfort, people and show-o
  assert(L.chooseOptional('buyCar','mpv'),'7-seater bought');eq(s.carModel,'mpv','model stored');eq(s.vehicleLoan.principal,L.priced(1000000),'7-seater loan');eq(L.vehicleLabel(),'7-seater family car','label');
  eq(L.monthlyBudget().lines.find(l=>l.key==='fuel').amount,L.priced(9500),'7-seater fuel');
  s.month+=1;L.applyExpenseChange('commute','public');eq(s.carModel,'hatch','selling resets the model');eq(s.vehicleLoan,null,'loan settled');noNaN(s);});
-await test('Pace: Hustle lifts raises and costs rings; slowing down for family is offered',async()=>{const {L}=await game(203);const s=L.state;s.nextEventMonth=9999;s.event=null;s.life.marriagePlan='no';s.life.parentsMonth=0;s.cash=1e6;
+await test('Pace: Hustle lifts raises and costs rings; slowing down for family is offered',async()=>{const {L}=await game(203);const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.event=null;s.life.marriagePlan='no';s.life.parentsMonth=0;s.cash=1e6;
  const base=L.ringTargets();assert(L.setPace('hustle'),'pace set');eq(s.pace,'hustle','hustle');const h=L.ringTargets();assert(h.fam<base.fam-10&&h.me<base.me,'hustle drains Family and Me targets');
  assert(L.paceBlocker('hustle'),'already set');
  s.month=24;s.lastPromotionYear=2;s.lastRaiseYear=1;s.salary=100000;s.event=null;L.advanceMonth();eq(s.salary,112000,'hustle: 11% appraisal + 1%');
@@ -243,7 +243,7 @@ await test('Pace: Hustle lifts raises and costs rings; slowing down for family i
  const e=s.event;L.resolveEvent(e.id,'slow');eq(s.pace,'balanced','slowed down');assert(s.promoPenaltyUntil>s.month,'promotion odds lowered for a while');
  s.event=null;s.rings.fam=20;L.setPace('hustle');L.advanceMonth();assert(!s.event||s.event.type!=='squeeze','not again within 5 years');
  s.event=null;s.employment='retired';assert(L.paceBlocker('chill'),'no pace in retirement');});
-await test('Burnout: a low Me ring for 9 months, and a break pauses then resumes salary',async()=>{const {L}=await game(204);const s=L.state;s.nextEventMonth=9999;s.event=null;s.life.marriagePlan='no';s.life.parentsMonth=0;s.month=60;s.cash=5e5;
+await test('Burnout: a low Me ring for 9 months, and a break pauses then resumes salary',async()=>{const {L}=await game(204);const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.event=null;s.life.marriagePlan='no';s.life.parentsMonth=0;s.month=60;s.cash=5e5;
  s.lowMeMonths=8;s.rings.me=10;L.advanceMonth();assert(s.event&&s.event.type==='burnout','burnout after 9 low months');const sal=s.salary,e=s.event;
  L.resolveEvent(e.id,'break');eq(s.employment,'laidoff','on a break');eq(s.breakReason,'break','break reason');assert(s.rings.me>=30,'break refills Me');
  s.event=null;L.advanceMonth();eq(s.lastSettlement.income,0,'no salary during the break');s.event=null;L.advanceMonth();eq(s.employment,'employed','back at work');eq(s.salary,sal,'same pay');
@@ -257,13 +257,44 @@ await test('Ring power-ups: once a year, with lasting choices in the Big buys pi
  s.month+=11;eq(L.optionalBlocker('volunteer'),null,'available again after a year');const cash=s.cash;assert(L.chooseOptional('donate'),'donated');eq(s.cash,cash-L.priced(10000),'donation paid once');});
 await test('Rings UI: HUD rings, explained rows, chips on choices, home picker, pace picker, end title',async()=>{const {L,win}=await loadGame(207);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.event=null;L.render();
  eq(d.querySelectorAll('#hudRings .ring').length,3,'three HUD rings');eq(d.querySelectorAll('#ringRows .ring-row').length,3,'three ring rows');assert(/[＋−]/.test(d.getElementById('ringRows').textContent),'rows explain what moves them');
- s.event=null;L.startEvent('festivalTime');L.render();const chips=d.querySelectorAll('#eventChoices .rchip');assert(chips.length>=2,'choices show ring chips');assert([...chips].some(c=>/🏘️ \+16/.test(c.textContent)),'hosting shows Community +16');
+ s.event=null;L.startEvent('festivalTime');L.render();const chips=d.querySelectorAll('#trackCard .rchip');assert(chips.length>=2,'choices show ring chips');assert([...chips].some(c=>/🏘️ \+16/.test(c.textContent)),'hosting shows Community +16');
  L.resolveEvent(s.event.id,'host');L.render();assert(/🏘️ \+16/.test(d.getElementById('feedbackCard').textContent),'feedback shows the ring change');
  s.month=100;s.cash=8e6;s.salary=500000;s.event=null;L.ui.optionalTab='big';L.render();d.querySelector('[data-move="buyHouse"]').click();
  eq(d.querySelectorAll('#confirmBody [data-variant]').length,3,'three home types offered');assert(/brag/.test(d.getElementById('confirmBody').textContent),'show-off value shown');
  d.querySelector('#confirmBody [data-variant="near"]').click();eq(d.querySelector('#confirmBody [data-variant="near"]').getAttribute('aria-pressed'),'true','picked');d.getElementById('confirmOk').click();eq(s.homeType,'near','bought the flat near family');
  d.getElementById('paceBtn').click();d.querySelector('#confirmBody [data-pace="chill"]').click();assert(!d.getElementById('confirmOk').disabled,'can confirm');d.getElementById('confirmOk').click();eq(s.pace,'chill','pace set from the UI');
  s.event=null;s.ringMonths=10;s.ringSum={me:700,fam:700,com:700};L.endRun('completed');L.render();eq(d.getElementById('endTitle').textContent,'Full Life Legend','ending title');assert(/LIFE SCORE/.test(d.getElementById('endBody').textContent),'score shown');});
+
+await test('Track cards: small surprises keep the race going; the default applies if ignored',async()=>{const {L}=await game(301);const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.event=null;s.cash=1e6;
+ L.startEvent('goa');const e=s.event;eq(e.tier,'card','a trip invite is a card');eq(e.defaultChoice,'skip','default: skip it');eq(L.blockingEvent(),null,'cards do not block');
+ const m=s.month;assert(L.advanceMonth(),'the race keeps going');eq(s.month,m+1,'month advanced');eq(s.event&&s.event.id,e.id,'the card is still waiting');
+ assert(L.chooseOptional('invest5k'),'power-ups work while a card waits');
+ for(let i=0;i<4;i++)L.advanceMonth();assert(!s.event||s.event.id!==e.id,'default applied after 4 months');assert(s.history.some(h=>h.eventId===e.id&&/no time to decide/.test(h.text)),'journal notes the default');
+ s.event=null;L.startEvent('medical');eq(s.event.tier,'stop','a health scare stops the race');eq(L.advanceMonth(),false,'stop events pause');L.resolveEvent(s.event.id,'savings');
+ for(const t of ['marriageQ','wedding','kidsQ','birth','schoolQ','parentsCare','medical','parentmedical','layoff','accident','divorce','startup','retire','burnout','squeeze','pitstop'])assert(L.EVENTS[t]&&!L.CARD_DEFAULTS[t],t+' stops the race');
+ for(const [t,d] of Object.entries(L.CARD_DEFAULTS)){s.event=null;s.cash=1e6;s.invested=2e5;s.month=200;s.employment='employed';s.married=true;s.marriageMonth=100;s.children=[{birthMonth:140,base:9000,school:'private'}];L.startEvent(t);eq(s.event.defaultChoice,d,t+' default is offered');}
+ s.event=null;L.startEvent('laptop');const id=s.event.id;s.month=60;assert(L.requestRetirement()===false,'too young to retire');s.month=300;assert(L.requestRetirement(),'retiring settles a pending card first');assert(s.history.some(h=>h.eventId===id),'card resolved');noNaN(s);});
+await test('Pit stops: every 5 years, a lap report, and pace + lifestyle + SIP applied together',async()=>{const {L}=await game(302);const s=L.state;s.nextEventMonth=9999;s.life.askMonth=0;s.life.parentsMonth=0;s.cash=1e6;
+ eq(s.nextPitMonth,61,'first pit stop at 28');
+ for(let i=0;i<70&&!(s.event&&s.event.type==='pitstop');i++){if(s.event)L.resolveEvent(s.event.id,s.event.defaultChoice||L.EVENTS[s.event.type].choices(s.event,s)[0].id);L.advanceMonth();}
+ const e=s.event;assert(e&&e.type==='pitstop','pit stop reached');eq(s.month,61,'at age 28');eq(e.tier,'stop','the pit stop pauses the race');eq(L.advanceMonth(),false,'paused');
+ assert(e.description.length>15,'one line about the lap');assert(e.tip.length>10,'a tip');assert(e.lapPoints>0,'points this lap');
+ const b0=L.monthlyBudget().total,pv=L.pitPreview({pace:'chill',life:-1,sip:'boost'});assert(pv.after.total<b0,'preview: simpler lifestyle costs less');eq(s.profile.food,'balanced','preview changes nothing');
+ const boost=e.sipBoost;assert(boost>=500,'a SIP top-up is offered');
+ L.resolveEvent(e.id,'go',{pit:{pace:'chill',life:-1,sip:'boost'}});eq(s.pace,'chill','pace applied');eq(s.profile.food,'home','food one step simpler');eq(s.profile.social,'quiet','social one step simpler');eq(s.sip,boost,'SIP started');
+ eq(s.nextPitMonth,121,'next at 33');eq(s.pitCount,1,'counted');assert(s.history.some(h=>h.kind==='pit'&&/chill/i.test(h.text)),'journal lists the changes');
+ const g=await game(303);const t=g.L.state;for(let i=0;i<800&&t.status==='playing';i++){autoResolve(g.L);t.cash=Math.max(t.cash,5e6);g.L.advanceMonth();}
+ eq(t.finalReason,'completed','reached 80');eq(t.history.filter(h=>h.kind==='pit').map(h=>h.age).join(),'28.0,33.0,38.0,43.0,48.0,53.0,58.0,63.0,68.0,73.0,78.0','eleven pit stops, every 5 years');noNaN(t);});
+await test('Flow UI: cards slide onto the track, the pit stop screen applies choices',async()=>{const {L,win}=await loadGame(304);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.event=null;s.cash=1e6;
+ L.startEvent('concert');L.render();const tc=d.getElementById('trackCard');
+ assert(!tc.classList.contains('hidden'),'card on the track');assert(d.getElementById('eventOverlay').classList.contains('hidden'),'no pop-up');
+ assert(tc.querySelector('.tc-choice.default'),'default marked');assert(/keeps going/.test(tc.textContent),'the first card explains itself');assert(!d.getElementById('pauseBtn').disabled,'pause still works');
+ tc.querySelector('[data-card-choice="regular"]').click();eq(s.event,null,'resolved by a tap');assert(tc.classList.contains('hidden'),'card gone');
+ s.month=60;s.nextPitMonth=61;s.event=null;L.stepMonth();
+ assert(s.event&&s.event.type==='pitstop','pit stop');assert(!d.getElementById('eventOverlay').classList.contains('hidden'),'pit screen open');eq(d.querySelectorAll('#eventChoices .pit-ring').length,3,'three rings');
+ d.querySelector('[data-pit-key="pace"][data-pit-value="hustle"]').click();eq(d.querySelector('[data-pit-key="pace"][data-pit-value="hustle"]').getAttribute('aria-pressed'),'true','picked hustle');
+ d.querySelector('[data-pit-key="life"][data-pit-value="1"]').click();assert(/→/.test(d.querySelector('.pit-preview').textContent),'preview shows the change');
+ d.querySelector('#eventChoices [data-choice="go"]').click();eq(s.event,null,'back on track');eq(s.pace,'hustle','pace applied');eq(s.profile.food,'foodie','fancier food');eq(s.profile.social,'big','livelier social life');});
 
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#F3EFE6">
-<meta name="application-version" content="2026.10.11-rings-1">
+<meta name="application-version" content="2026.10.11-pitstops-1">
 <meta name="description" content="Life Happens: race through life from 23 to 80 and see how everyday money decisions add up.">
 <title>Life Happens — Race from 23 to 80</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23DCE7D9%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 text-anchor=%27middle%27%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
@@ -101,6 +101,51 @@ button:disabled{cursor:not-allowed}
 .clockbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#9DBFA5,#E2B95C);border-radius:0 999px 999px 0}
 .run-status{display:flex;justify-content:space-between;align-items:center;gap:8px;font:700 12px var(--sans);color:var(--muted);padding:0 4px;margin-top:-4px}
 .run-status b{color:var(--forest)}
+
+/* ---------- Track cards (small surprises) & pit stops ---------- */
+.track-card{background:var(--paper);border:2px solid #fff;border-radius:18px;padding:10px 12px 12px;box-shadow:var(--shadow)}
+.track-card.tc-in{animation:cardIn .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes cardIn{from{transform:translateX(44px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
+.tc-head{display:flex;gap:9px;align-items:center}
+.tc-head .tc-art{font-size:28px;flex:0 0 auto}
+.tc-head small{display:block;font:800 10px var(--sans);letter-spacing:.1em;color:var(--muted)}
+.tc-head b{display:block;font:700 16px/1.2 var(--display)}
+.tc-desc{margin:6px 0 0;font-size:12.5px;line-height:1.4;color:#4E5E54;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tc-note{margin:6px 0 0;font-size:12px;font-weight:800;color:var(--forest-dark);background:var(--sage);border-radius:10px;padding:5px 8px}
+.tc-choices{display:grid;gap:6px;margin-top:8px}
+.tc-choice{width:100%;display:flex;gap:9px;align-items:flex-start;text-align:left;min-height:44px;border:2px solid var(--line);border-radius:13px;background:#FFFDF8;padding:6px 10px;color:var(--ink)}
+.tc-choice .emoji{font-size:20px;line-height:1.2}
+.tc-choice>span:not(.emoji){flex:1;min-width:0}
+.tc-choice>.emoji{flex:0 0 auto}
+.tc-choice strong{display:block;font-size:13.5px;line-height:1.25}
+.tc-choice strong em{font:800 9.5px var(--sans);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--forest);background:var(--sage);border-radius:99px;padding:1px 6px;vertical-align:2px}
+.tc-choice small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3;font-weight:600}
+.tc-choice.default{border-color:var(--sage-strong)}
+.tc-choice span.rchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tc-choice span.rchip{display:inline-block}
+.tc-timer{height:6px;border-radius:99px;background:#ECE6D9;overflow:hidden;margin-top:9px}
+.tc-timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#9DBFA5,#E2B95C);border-radius:99px}
+.pit-rings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:center;background:#F6F1E6;border-radius:14px;padding:8px 6px;margin:8px 0}
+.pit-ring{display:flex;flex-direction:column;align-items:center;gap:1px}
+.pit-ring b{font:700 16px var(--display)}
+.pit-ring small{font:800 11px var(--sans);color:var(--muted)}
+.pit-ring small.up{color:#2F6B4A}.pit-ring small.down{color:var(--danger-ink)}
+.pit-pts{text-align:center}
+.pit-pts b{display:block;font:700 19px var(--display);color:var(--forest-dark)}
+.pit-pts small{display:block;font:800 10px/1.2 var(--sans);color:var(--muted)}
+.pit-tip{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;margin:4px 0 6px}
+.pit-group{margin:8px 0}
+.pit-label{display:block;font:800 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pit-seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.pit-seg button{min-height:56px;border:2px solid var(--line);border-radius:12px;background:var(--paper);padding:5px 3px;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--ink)}
+.pit-seg button[aria-pressed=true]{border-color:var(--sage-strong);background:var(--sage);box-shadow:0 3px 0 var(--sage-strong)}
+.pit-seg button:disabled{opacity:.45}
+.pit-seg .emoji{font-size:17px}
+.pit-seg strong{font-size:13px}
+.pit-seg small{font-size:10.5px;color:var(--muted);font-weight:700;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.pit-preview{font-size:12.5px;font-weight:700;background:#F6F1E6;border-radius:12px;padding:8px 10px;margin:10px 0}
+.pit-preview .rchips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:5px}
+.pit-go{width:100%;margin-top:2px}
 
 /* ---------- Story bubble & coach feedback ---------- */
 .bubble{position:relative;display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:2px solid #fff;border-radius:18px;padding:10px 12px;box-shadow:var(--shadow)}
@@ -355,7 +400,7 @@ button:disabled{cursor:not-allowed}
    <button class="primary" id="startBtn" type="button">Start your engine →</button>
   </div>
  </section>
- <div class="info-line"><strong>How it works:</strong> every month your pay comes in and your bills go out; what is left builds your savings. When life happens, the race pauses so you can choose. Your score comes from three life rings (🧍 Me, 👨‍👩‍👧 Family & Friends, 🏘️ Community), mostly the weakest one. Six months in a row of unpaid bills ends the race early.</div>
+ <div class="info-line"><strong>How it works:</strong> every month your pay comes in and your bills go out; what is left builds your savings. Big life moments pause the race so you can choose; small surprises slide onto the track as cards while you keep racing; every 5 years a pit stop lets you retune your pace, lifestyle and SIP. Your score comes from three life rings (🧍 Me, 👨‍👩‍👧 Family & Friends, 🏘️ Community), mostly the weakest one. Six months in a row of unpaid bills ends the race early.</div>
 </main>
 
 <main id="setupScreen" class="screen hidden">
@@ -392,6 +437,7 @@ button:disabled{cursor:not-allowed}
   </div>
   <div class="clockbar" role="progressbar" aria-label="Progress through this month" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="clockProgress"></i></div>
  </section>
+ <section id="trackCard" class="track-card hidden" aria-live="polite" aria-label="A small surprise on the track"></section>
  <div class="run-status" id="runStatus" aria-live="polite"></div>
  <section class="bubble" aria-live="polite"><span class="face emoji" id="bubbleFace" aria-hidden="true">🙂</span><div><p id="sceneMessage"></p><small id="sceneSub"></small></div></section>
  <section id="feedbackCard" class="feedback hidden" aria-live="polite"></section>
@@ -516,6 +562,11 @@ const A=Object.freeze({
  promoPenalty:0.6,promoPenaltyMonths:24,   // promotion odds after choosing to slow down for family
  burnout:{lowMe:35,months:9,cooldown:36,breakMonths:2},
  squeeze:{lowFam:35,cooldown:60},
+ // Phase 3 flow: small surprises are cards on the track (the race keeps going; a
+ // default is applied if you don't tap in time); big moments still stop the race.
+ cards:{maxMonths:4},          // a card left pending this many months gets its default applied
+ // Pit stop every 5 years (28, 33 … 78): a lap report and one screen for pace, lifestyle and SIP.
+ pit:{firstAge:28,everyMonths:60},
  ringActionCooldown:12,        // ring power-ups (family day, volunteering, donating): once a year each
 });
 const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years elapsed)
@@ -589,7 +640,8 @@ function createState(){
   lastSettlement:null,finalReason:'',
   // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
   rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
-  homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{}
+  homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{},
+  nextPitMonth:0,pitCount:0,lastPit:null
  };
 }
 let state=createState();
@@ -1208,6 +1260,20 @@ const EVENTS={
    if(c==='slow'){s.pace='balanced';s.promoPenaltyUntil=s.month+A.promoPenaltyMonths;record('Slowed down at work for family at '+ageLabel()+'.',{major:true,kind:'pace'});return{text:'Pace set to Balanced. Dinner is at 8. You are there.',feedback:fb('great','You traded some promotion odds for time with your people. Over a lifetime, that is often the better deal.')};}
    return{text:'You pushed through. The family group chat has gone quiet.',feedback:fb('risky','Your career keeps its speed, but your Family & Friends ring keeps draining. The weakest ring sets most of your Life Score.')};}}
 };
+/* ---------- Pit stop: every 5 years (see A.pit) ---------- */
+// One stop for reflection: a lap report (rings, points, one line about the last
+// five years, one tip) and one screen to change pace, lifestyle and SIP together.
+EVENTS.pitstop={kicker:'PIT STOP',art:'🏁',life:true,pit:true,
+ create:s=>pitReport(s),
+ choices:()=>[{id:'go',emoji:'🏎️',title:'Back on track',detail:'Apply any changes and keep racing.'}],
+ resolve:(e,c,opts)=>finishPit(e,(opts&&opts.pit)||{})};
+// Small surprises become cards on the track. The value is the default applied
+// when you don't choose in time: usually the cautious or do-nothing option.
+const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'savings',scam:'report',
+ goa:'skip',weddings:'shagun',concert:'skip',festival:'skip',friendloan:'no',sibling:'part',parentstrip:'later',
+ kidparty:'cake',school:'savings',bonus:'save',taxrefund:'save',sidegig:'rest',promotion:'no',course:'skip',
+ crypto:'pass',boom:'stay',market:'stay',landlord:'accept',leak:'savings',vehiclebill:'savings',challan:'pay',
+ pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories'};
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
  c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Spend it all on something nice. Gone by next week.'});return c;}
@@ -1264,13 +1330,21 @@ function startEvent(type,opts){
  const s=state,def=EVENTS[type];if(s.event||s.status!=='playing')return false;   // never overwrite a pending decision
  const data=def.create(s,opts)||{};
  const title=data.title||def.title||(def.titles?pick(def.titles):'');
- s.event=Object.assign({id:++s.eventSeq,type,kicker:def.kicker,art:def.art},data,{title});   // data may override the art
+ s.event=Object.assign({id:++s.eventSeq,type,kicker:def.kicker,art:def.art},data,{title,month:s.month});   // data may override the art
+ const dflt=CARD_DEFAULTS[type];
+ if(dflt){const ids=def.choices(s.event,s).map(c=>c.id);s.event.tier='card';s.event.defaultChoice=ids.includes(dflt)?dflt:ids[0];}
+ else s.event.tier='stop';
  s.seen[type]=(s.seen[type]||0)+1;
  if(!CONTEXT_EVENTS.includes(type)&&!def.life){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
  return true;
 }
+// Only "stop" events pause the race and lock the panels; a card waits on the track.
+function blockingEvent(s=state){return s.event&&s.event.tier!=='card'?s.event:null;}
+function pitDue(s){return s.nextPitMonth>0&&s.month>=s.nextPitMonth;}
 function maybeStartEvent(){
- const s=state,m=s.month;if(s.event)return;
+ const s=state,m=s.month;
+ if(s.event){if(s.event.tier==='card'&&m-s.event.month>=A.cards.maxMonths)resolveEvent(s.event.id,s.event.defaultChoice,{auto:true});if(s.event)return;}
+ if(pitDue(s)){startEvent('pitstop');return;}
  const st=s.lastSettlement;
  if(m===3){const t=pickRandomEvent(s,OPENERS.shock);if(t)startEvent(t);return;}
  if(m===12&&s.employment==='employed'){startEvent('bonus',{first:true});return;}
@@ -1303,6 +1377,7 @@ function beginLife(profile){
  const L=A.life;s.life.askMonth=randInt(L.marriageAsk[0],L.marriageAsk[1]);
  s.life.parentsMonth=monthAtAge(L.parentsAge[0])+randInt(0,(L.parentsAge[1]-L.parentsAge[0])*12);
  s.nextEventMonth=24+randInt(A.eventGap[0],A.eventGap[1]);
+ s.nextPitMonth=monthAtAge(A.pit.firstAge);s.lastPit=lapSnapshot(s);
  record('Started at 23 on '+money(s.salary)+'/month'+(edu?' (a better college, thanks to an education loan)':'')+': '+BASE_PRICES.home[p.home].label+', '+ride.label.toLowerCase()+(ride.loan?' with a '+money(ride.loan)+' loan':'')+(s.insured?', with health cover':'')+'.',{major:true,kind:'start'});
  const o=settleMonth(s);
  s.message='First payday. '+settlementMessage(o);s.story=edu?'Fancy degree, fancy first paycheck. The education loan EMI starts now.':'A new job in a new city. Your first paycheck is in!';
@@ -1323,7 +1398,7 @@ function yearlyRaise(s){
 }
 // One simulated month. Order: year rollover → review → IOUs → settle → layoff countdown → end checks → events.
 function advanceMonth(){
- const s=state;if(s.status!=='playing'||s.event)return false;
+ const s=state;if(s.status!=='playing'||blockingEvent(s))return false;
  s.month+=1;s.milestone='';s.story='';
  const y=yearIndex(s);
  if(s.month>1&&(s.month-1)%12===0&&s.lastRaiseYear!==y){
@@ -1353,19 +1428,22 @@ function advanceMonth(){
  maybeStartEvent();
  return true;
 }
-function resolveEvent(eventId,choiceId){
+function resolveEvent(eventId,choiceId,opts){
  const s=state,e=s.event;
  if(s.status!=='playing'||!e||e.id!==eventId||e.resolving)return null;
  const def=EVENTS[e.type];
  const choice=def.choices(e,s).find(c=>c.id===choiceId);if(!choice)return null;
  e.resolving=true;                                   // effects apply exactly once
- const r=def.resolve(e,choiceId)||{};
+ const auto=!!(opts&&opts.auto);
+ const r=def.resolve(e,choiceId,opts)||{};
  r.rings=applyRingFx(s,ringEffect(e.type,choiceId));
- s.event=null;s.feedback=Object.assign({source:e.title,art:e.art,rings:r.rings},r.feedback||null);s.message=r.text||'';s.story=r.text||'';
- if(e.type!=='retire'&&e.type!=='crunch'&&!s.history.some(h=>h.eventId===e.id))s.history.push({month:s.month,age:ageLabel(),text:e.art+' '+e.title+' → '+choice.title+'.',eventId:e.id,kind:'event'});
+ if(auto)r.text='No time to decide, so you went with “'+choice.title+'”. '+(r.text||'');
+ s.event=null;s.feedback=Object.assign({source:e.title,art:e.art,rings:r.rings,auto},r.feedback||null);s.message=r.text||'';s.story=r.text||'';
+ if(e.type!=='retire'&&!def.pit&&!s.history.some(h=>h.eventId===e.id))s.history.push({month:s.month,age:ageLabel(),text:e.art+' '+e.title+' → '+choice.title+(auto?' (no time to decide)':'')+'.',eventId:e.id,kind:'event'});
  return r;
 }
-function requestRetirement(){const s=state;if(s.status!=='playing'||s.event||s.employment==='retired'||preciseAge(s)<A.retireMinAge)return false;return startEvent('retire');}
+function requestRetirement(){const s=state;if(s.event&&s.event.tier==='card'&&s.status==='playing')resolveEvent(s.event.id,s.event.defaultChoice,{auto:true});   // a pending card takes its default
+ if(s.status!=='playing'||s.event||s.employment==='retired'||preciseAge(s)<A.retireMinAge)return false;return startEvent('retire');}
 function endRun(reason){const s=state;if(s.status!=='playing')return;s.status='ended';s.finalReason=reason;s.event=null;record(reason==='completed'?'Reached age 80.':'Run ended at '+ageLabel()+': savings and investments were gone and bills went unpaid for six months in a row.',{major:true,kind:'end'});}
 
 /* =====================================================================
@@ -1470,7 +1548,7 @@ function investFeedback(s,amount){s.invested+=amount;const m=monthsOfCushion(s);
 function optionalBlocker(id,variant){
  const s=state,o=OPTIONAL[id];if(!o)return 'Unknown choice.';
  if(s.status!=='playing')return 'This run has ended.';
- if(s.event)return 'Resolve the current life event first.';
+ if(blockingEvent(s))return 'Resolve the current life event first.';
  if(s.optionalUsedMonth===s.month)return 'You already made an optional choice this month.';
  const a=o.available(s);if(a)return a;
  if(o.variants){const vs=o.variants(s);
@@ -1484,10 +1562,10 @@ function chooseOptional(id,variant){
  s.cash-=o.cost(s,variant);s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
  const r=o.apply(s,variant);s.feedback=Object.assign({source:o.name,art:o.emoji,rings:r.rings||null},r.feedback);s.message=r.text;return r;
 }
-/* Pace: how hard you work. Free to change while racing; the next pit stops (Phase 3) will ask too. */
+/* Pace: how hard you work. Free to change while racing; every pit stop asks too. */
 const PACES={hustle:{emoji:'🚀',label:'Hustle',blurb:'Higher promotion odds and raises (+1%/yr). Less time for people and yourself.'},balanced:{emoji:'⚖️',label:'Balanced',blurb:'Work hard, go home.'},chill:{emoji:'🌿',label:'Chill',blurb:'Lower promotion odds and raises (−1%/yr). More time for everyone, you included.'}};
 Object.keys(PACES).forEach(k=>{PACES[k].rings=LIFESTYLE_RINGS.pace[k];});
-function paceBlocker(p){const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';if(!PACES[p])return 'Unknown pace.';if(p===s.pace)return 'Already set.';if(s.employment==='retired')return 'Retired: your pace is your own now.';return null;}
+function paceBlocker(p){const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';if(!PACES[p])return 'Unknown pace.';if(p===s.pace)return 'Already set.';if(s.employment==='retired')return 'Retired: your pace is your own now.';return null;}
 function setPace(p){
  const s=state;if(paceBlocker(p))return null;s.pace=p;record('Switched to a '+PACES[p].label.toLowerCase()+' pace at '+ageLabel()+'.',{kind:'pace'});
  const text='Pace set to '+PACES[p].label+'.',feedback=p==='hustle'?fb('solid','Faster career, less time. Watch your Family & Friends and Me rings.'):p==='chill'?fb('solid','More life, slower career. Make sure the money still adds up.'):fb('great','Balanced: steady career, time for your people.');
@@ -1495,9 +1573,84 @@ function setPace(p){
 }
 
 /* =====================================================================
+   10c. PIT STOPS — every 5 years: a lap report, then pace, lifestyle and
+   SIP on one screen. Optional decisions gather here instead of interrupting.
+   ===================================================================== */
+const LIFESTYLE_STEPS={food:['home','balanced','foodie'],social:['quiet','regular','big']};
+function lapSnapshot(s=state){return {month:s.month,age:Math.round(preciseAge(s)),rings:Object.assign({},s.rings),score:s.score,netWorth:netWorth(s),promotions:s.promotions,strained:s.stats.strainedMonths,layoff:s.lastLayoffMonth};}
+// Lifestyle moves food and social life one step together (null when already at the end).
+function lifestyleShift(s,dir){
+ const F=LIFESTYLE_STEPS.food,So=LIFESTYLE_STEPS.social,P=BASE_PRICES,L=LIFESTYLE_RINGS,f0=s.profile.food,s0=s.profile.social;
+ const food=F[clamp(F.indexOf(f0)+dir,0,F.length-1)],social=So[clamp(So.indexOf(s0)+dir,0,So.length-1)];
+ if(food===f0&&social===s0)return null;
+ return {food,social,label:P.food[food].label+' + '+P.social[social].label.toLowerCase(),
+  monthly:priced(P.food[food].cost+P.social[social].cost-P.food[f0].cost-P.social[s0].cost,s),
+  rings:RING_KEYS.map((k,i)=>L.food[food][i]+L.social[social][i]-L.food[f0][i]-L.social[s0][i])};
+}
+// Suggested SIP top-up: about 30% of what is left after bills and the current SIP.
+function pitSipBoost(s){
+ if(s.employment!=='employed')return 0;const spare=monthlyBudget(s).leftover-s.sip;if(spare<2000)return 0;
+ return Math.min(A.sipMax,s.sip+Math.max(500,Math.round(spare*0.3/500)*500));
+}
+const RING_DROP={me:'you barely had time for yourself',fam:'your family and friends barely saw you',com:'you drifted away from your community'};
+const RING_RISE={me:'you looked after yourself',fam:'you made real time for your people',com:'your neighbours know your name now'};
+function ringName(k){return RINGS.find(r=>r[0]===k)[1];}
+// One line about the last five years, built only from what actually happened.
+function pitInsight(s,lap){
+ const d={};RING_KEYS.forEach(k=>{d[k]=s.rings[k]-lap.rings[k];});
+ const promos=s.promotions-lap.promotions,strained=s.stats.strainedMonths-lap.strained,grew=netWorth(s)>lap.netWorth,laid=s.lastLayoffMonth>lap.month;
+ const lead=promos>=2?'Great career lap':promos===1?'A promotion this lap':laid?'A bumpy career lap':strained>0?'A tight lap for money':s.employment==='retired'?'An easy, unhurried lap':grew?'Your money grew this lap':'A costly lap';
+ const worst=RING_KEYS.reduce((a,k)=>d[k]<d[a]?k:a,'me'),best=RING_KEYS.reduce((a,k)=>d[k]>d[a]?k:a,'me');
+ if(d[worst]<=-6)return lead+', but '+RING_DROP[worst]+'.';
+ if(d[best]>=6)return lead+', and '+RING_RISE[best]+'.';
+ const low=RING_KEYS.reduce((a,k)=>s.rings[k]<s.rings[a]?k:a,'me');
+ if(s.rings[low]<A.rings.low)return lead+'. Your '+ringName(low)+' ring is still running low.';
+ return lead+'. All three rings held steady.';
+}
+// One tip from the pit crew: the most useful thing to look at next.
+function pitTip(s){
+ const b=monthlyBudget(s),low=RING_KEYS.reduce((a,k)=>s.rings[k]<s.rings[a]?k:a,'me');
+ if(s.unsecuredDebt>0)return 'Clear the card debt first: it costs 1% a month, more than investments usually earn.';
+ if(s.rings[low]<A.rings.low){
+  if(s.pace==='hustle')return 'Your '+ringName(low)+' ring is low. A calmer pace refills all three.';
+  return {me:'Your Me ring is low. A bigger savings cushion, a little comfort or a calmer pace help.',fam:'Family & Friends is low. Try the “day with your people” power-up or a livelier social life.',com:'Community is low. Volunteering is free, and festivals count.'}[low];}
+ if(s.employment==='employed'&&!s.sip&&b.leftover>b.income*0.1)return 'Money is left over every month. A SIP would put it to work.';
+ if(monthsOfCushion(s)<3)return 'Build a 3-month savings cushion before upgrading anything.';
+ if(!s.insured)return 'No health cover: one hospital stay could wipe out your savings.';
+ if((s.married||s.children.length)&&!s.termCover&&preciseAge(s)<A.term.maxAge)return 'Your family relies on your pay. Term cover is cheapest the younger you buy it.';
+ return 'Nicely balanced. Keep it up.';
+}
+function pitReport(s){
+ const lap=s.lastPit||lapSnapshot(s),age=Math.round(preciseAge(s)),delta={};
+ RING_KEYS.forEach(k=>{delta[k]=Math.round(s.rings[k])-Math.round(lap.rings[k]);});
+ return {title:'Pit stop: age '+age,age,fromAge:lap.age,lapPoints:Math.round(s.score-lap.score),delta,
+  description:pitInsight(s,lap),tip:pitTip(s),down:lifestyleShift(s,-1),up:lifestyleShift(s,1),sipBoost:pitSipBoost(s),
+  foot:'Changes apply from next month. '+(age+5<A.endAge?'Next pit stop at '+(age+5)+'.':'Next stop: the finish line.')};
+}
+// c = {pace, life: -1|0|1, sip: 'keep'|'boost'|'stop'}; works on any state copy (used for the preview too).
+function applyPitChoices(s,c){
+ const out=[],boost=pitSipBoost(s);   // the top-up offered is based on the budget before any changes
+ if(c.pace&&PACES[c.pace]&&c.pace!==s.pace&&s.employment!=='retired'){s.pace=c.pace;out.push('pace → '+PACES[c.pace].label);}
+ const shift=c.life===-1||c.life===1?lifestyleShift(s,c.life):null;
+ if(shift){applyExpenseTo(s,'food',shift.food);applyExpenseTo(s,'social',shift.social);out.push((c.life<0?'simpler':'fancier')+' lifestyle ('+shift.label.toLowerCase()+')');}
+ if(c.sip==='boost'&&boost&&boost!==s.sip){out.push((s.sip?'SIP raised to ':'SIP started at ')+money(boost)+'/month');s.sip=boost;}
+ else if(c.sip==='stop'&&s.sip>0){s.sip=0;out.push('SIP paused');}
+ return out;
+}
+function pitPreview(c){const copy=JSON.parse(JSON.stringify(state));applyPitChoices(copy,c||{});return{before:monthlyBudget(state),after:monthlyBudget(copy),sip:copy.sip,targets:ringTargets(copy),now:ringTargets(state)};}
+function finishPit(e,c){
+ const s=state,changes=applyPitChoices(s,c);
+ s.pitCount+=1;s.lastPit=lapSnapshot(s);s.nextPitMonth+=A.pit.everyMonths;
+ record('🏁 Pit stop at '+e.age+': '+(changes.length?changes.join(', '):'no changes')+'.',{kind:'pit'});
+ const low=Math.min(...RING_KEYS.map(k=>s.rings[k])),label=low<A.rings.low?'risky':low>=A.rings.healthy?'great':'solid';
+ return {text:changes.length?'Pit stop done: '+changes.join(', ')+'. Back on track!':'Pit stop done. Same setup, back on track!',
+  feedback:Object.assign(fb(label,e.tip),{title:'Lap done: +'+e.lapPoints+' points'})};
+}
+
+/* =====================================================================
    11. MONTHLY SIP — an automatic monthly investment (changing it is free)
    ===================================================================== */
-function sipBlocker(amount){const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';if(!Number.isInteger(amount)||amount<0)return 'Enter a whole amount in rupees.';if(amount>0&&amount<A.sipMin)return 'The smallest SIP is '+money(A.sipMin)+' a month.';if(amount>A.sipMax)return 'The largest SIP is '+money(A.sipMax)+' a month.';if(amount===s.sip)return 'Already set.';if(amount>0&&s.employment==='retired')return 'SIPs need a salary. You are retired.';return null;}
+function sipBlocker(amount){const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';if(!Number.isInteger(amount)||amount<0)return 'Enter a whole amount in rupees.';if(amount>0&&amount<A.sipMin)return 'The smallest SIP is '+money(A.sipMin)+' a month.';if(amount>A.sipMax)return 'The largest SIP is '+money(A.sipMax)+' a month.';if(amount===s.sip)return 'Already set.';if(amount>0&&s.employment==='retired')return 'SIPs need a salary. You are retired.';return null;}
 function setSip(amount){
  const s=state;if(sipBlocker(amount))return null;
  const before=s.sip;s.sip=amount;const b=monthlyBudget(s);
@@ -1517,7 +1670,7 @@ function setSip(amount){
    12. MONTHLY PLAN CHANGES (cost management, not limited per month)
    ===================================================================== */
 function expenseChangeBlocker(key,value){
- const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';
+ const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';
  if(key==='commute'){
   if(!BASE_PRICES.commute[value])return 'Unknown option.';
   if(value===s.vehicle)return 'Already selected.';
@@ -1598,6 +1751,7 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
+ blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
  RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,setPace,paceBlocker,houseSpec,rideSpec,vehicleLabel};
 })();
 </script>
@@ -1897,7 +2051,7 @@ function hydrateIcons(){document.querySelectorAll('[data-icon]').forEach(el=>{el
 /* ---------- UI-only state (never financial) ---------- */
 const ui={modal:null,paused:false,hidden:document.hidden,elapsed:0,timer:null,lastTick:0,countdown:false,
  optionalTab:'one-time',financeDetail:{},lastBalances:null,renderedEventId:null,shownEventId:null,renderedEnd:false,
- pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pacePick:null,
+ pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pacePick:null,pitPick:null,card:null,cardsSeen:0,
  setup:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes'}};
 
 /* ---------- Sound wiring ---------- */
@@ -1906,7 +2060,7 @@ function unlockAudio(){if(ui.audioUnlocked)return;ui.audioUnlocked=true;if(prefs
 function renderSound(){$('soundGlyph').innerHTML=iconSVG(prefs.soundOn?'sound':'mute');$('soundLabel').textContent=prefs.soundOn?'On':'Off';$('soundBtn').setAttribute('aria-pressed',String(prefs.soundOn));}
 
 /* ---------- Clock: one interval per run; never advances past a decision ---------- */
-function clockRunning(){const s=S();return s.status==='playing'&&!s.event&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
+function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
 function monthMs(){return A.monthMs/prefs.speed;}
 function startClock(){
  stopClock();if(TEST_MODE)return;
@@ -1915,9 +2069,18 @@ function startClock(){
   if(S().runId!==runId||S().status!=='playing'){stopClock();return;}  // stale timer from an old run: shut it down
   const now=performance.now(),dt=Math.min(250,now-ui.lastTick);ui.lastTick=now;  // cap dt so a throttled tab can't jump ahead
   if(!clockRunning())return;
+  if(tickCard(dt))return;
   ui.elapsed+=dt;
   if(ui.elapsed>=monthMs()){ui.elapsed=0;stepMonth();}else renderClock();
  },100);
+}
+// A track card's countdown runs only while the race runs; at zero the default is applied.
+const CARD_MS=8000,CARD_FIRST_MS=12000;
+function tickCard(dt){
+ const e=S().event;if(!e||e.tier!=='card'||!ui.card||ui.card.id!==e.id)return false;
+ ui.card.elapsed+=dt;const bar=$('cardTimer');if(bar)bar.style.width=Math.max(0,100-ui.card.elapsed/ui.card.ms*100)+'%';
+ if(ui.card.elapsed<ui.card.ms)return false;
+ const r=M.resolveEvent(e.id,e.defaultChoice,{auto:true});if(r)sfx('tap');render();return true;
 }
 function stopClock(){if(ui.timer){clearInterval(ui.timer);ui.timer=null;}}
 function stepMonth(){
@@ -2023,7 +2186,7 @@ function renderRings(){
  }).join('');
  const pace=M.PACES[s.pace];$('paceEmoji').textContent=pace.emoji;$('paceTitle').textContent='Pace: '+pace.label;
  $('paceNote').textContent=s.employment==='retired'?'Retired: all the time in the world.':pace.blurb;
- $('paceBtn').disabled=!!s.event||s.status!=='playing'||s.employment==='retired';
+ $('paceBtn').disabled=!!M.blockingEvent()||s.status!=='playing'||s.employment==='retired';
 }
 function renderPlay(){
  const s=S(),age=M.preciseAge(),b=M.monthlyBudget(),res=M.resilience();
@@ -2034,7 +2197,7 @@ function renderPlay(){
  renderRings();
  renderStatus();renderClock();
  $('speedBtn').textContent=prefs.speed+'×';
- $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause');$('pauseBtn').setAttribute('aria-label',ui.paused?'Resume':'Pause');$('pauseBtn').disabled=!!s.event||s.status!=='playing';
+ $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause');$('pauseBtn').setAttribute('aria-label',ui.paused?'Resume':'Pause');$('pauseBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('retireBtn').classList.toggle('hidden',!(s.status==='playing'&&age>=A.retireMinAge&&s.employment!=='retired'));
  // Story bubble from your character.
  const stage=stageName(age),lines=IDLE_LINES[stage];
@@ -2049,7 +2212,7 @@ function renderPlay(){
  $('lifeTags').innerHTML=tags.map(t=>'<span>'+em(t[0])+esc(t[1])+'</span>').join('');
  // Decision feedback: reaction face + label + text (never colour alone).
  const f=s.feedback,fc=$('feedbackCard');
- if(f){const chips=ringChips(f.rings),key=f.title+f.why+chips;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
+ if(f){const chips=ringChips(f.rings),key=f.title+f.why+chips;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+(f.auto?' · picked for you':'')+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
  else{fc.className='feedback hidden';fc.dataset.key='';}
  const strain=$('strainNote');
  if(s.distressMonths>0){strain.classList.remove('hidden');strain.innerHTML=em('🌧️')+'<span>Rainy patch: bills could not be fully paid for '+s.distressMonths+' month'+(s.distressMonths>1?'s':'')+' in a row. Six in a row ends the race. One fully paid month clears the sky.</span>';}
@@ -2060,7 +2223,7 @@ function renderPlay(){
  $('debtNote').textContent=M.totalDebt()<=0?'Debt-free 🎉':[s.homeLoan?'Home '+compact(s.homeLoan.balance):'',s.vehicleLoan?'Vehicle '+compact(s.vehicleLoan.balance):'',s.eduLoan?'Study '+compact(s.eduLoan.balance):'',s.unsecuredDebt>0?'Card '+compact(s.unsecuredDebt):''].filter(Boolean).join(' · ');
  animateBalances();
  // SIP
- const sipLocked=!!s.event||s.status!=='playing';
+ const sipLocked=!!M.blockingEvent()||s.status!=='playing';
  if(s.sip>0){$('sipTitle').textContent='SIP '+money(s.sip)+'/month';$('sipNote').textContent=s.employment!=='employed'?'Paused while there is no salary.':(s.lastSettlement&&s.lastSettlement.sipSkipped?'Skipped last month: not enough savings. ':'')+money(s.stats.sipInvested)+' auto-invested so far.';$('sipBtn').textContent='Change';}
  else{$('sipTitle').textContent='No SIP yet';$('sipNote').textContent=s.employment==='retired'?'SIPs stop in retirement.':'Invest a fixed amount automatically every month, after bills.';$('sipBtn').textContent='Start SIP';}
  $('sipBtn').disabled=sipLocked||(s.employment==='retired'&&!s.sip);
@@ -2071,7 +2234,7 @@ function renderPlay(){
  const debtPart=b.lines.filter(l=>l.kind==='debt');if(debtPart.length)notes.push('Includes '+debtPart.map(l=>l.label.toLowerCase()+' '+money(l.amount)).join(', ')+'.');
  notes.push('Prices rise about 6% every new year.');
  $('budgetNote').textContent=notes.join(' ');
- $('editExpensesBtn').disabled=!!s.event||s.status!=='playing';
+ $('editExpensesBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('statusLine').innerHTML='<strong>This month:</strong> '+esc(s.message||'');
  renderOptional();
  $('journal').innerHTML=s.history.slice(-14).reverse().map(h=>'<li><span>'+esc(h.age)+'</span>'+esc(h.text)+'</li>').join('');
@@ -2089,7 +2252,7 @@ function renderMoneyBar(b){
 }
 function renderStatus(){
  const s=S(),el=$('runStatus');
- let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event)t='❓ Life happened · race paused';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='<b>●</b> Racing through life';
+ let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event&&s.event.type==='pitstop')t='🏁 Pit stop · race paused';else if(M.blockingEvent())t='❓ Life happened · race paused';else if(s.event&&!ui.modal&&!ui.paused)t='<b>●</b> A surprise is on the track: tap a choice';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='<b>●</b> Racing through life';
  el.innerHTML='<span>'+t+'</span><span>1 year ≈ '+Math.round(60/prefs.speed)+' s at '+prefs.speed+'×</span>';
 }
 function renderClock(){const p=Math.min(100,ui.elapsed/monthMs()*100);$('clockProgress').style.width=p+'%';$('clockProgress').parentElement.setAttribute('aria-valuenow',String(Math.round(p)));}
@@ -2118,7 +2281,8 @@ function renderOptional(){
 function snapshotHTML(){const s=S(),b=M.monthlyBudget();return '<div><span>🐷 SAVINGS</span><strong>'+money(s.cash)+'</strong></div><div><span>🌱 INVESTED</span><strong>'+money(s.invested)+'</strong></div><div><span>⛓️ LOANS & DEBT</span><strong>'+money(M.totalDebt())+'</strong></div><div><span>'+(b.leftover<0?'📉 SHORT / MONTH':'🪙 LEFT / MONTH')+'</span><strong>'+money(b.leftover)+'</strong></div>';}
 function renderEvent(){
  const s=S(),e=s.event;
- if(!e||s.status!=='playing'){ui.renderedEventId=null;ui.shownEventId=null;hideOverlay('eventOverlay');return;}
+ renderTrackCard();
+ if(!e||s.status!=='playing'||e.tier==='card'){ui.renderedEventId=null;ui.shownEventId=null;hideOverlay('eventOverlay');return;}
  if(ui.renderedEventId===e.id)return;   // keep focus stable while the same decision is open
  ui.renderedEventId=e.id;const def=M.EVENTS[e.type];
  // Every pop-up gets its own tone, pattern and sticker tilt, so no two look the same.
@@ -2130,13 +2294,46 @@ function renderEvent(){
  $('eventKicker').textContent=e.kicker;$('eventAge').textContent='Age '+M.ageLabel();$('eventTitle').textContent=e.title;$('eventDescription').textContent=e.description;
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
- $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
- $('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
+ if(def.pit){ui.pitPick={pace:s.pace,life:0,sip:'keep'};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent=e.foot;}
+ else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
+ if(!def.pit)$('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
- playRace.bump();sfx('bump');
+ playRace.bump();sfx(def.pit?'go':'bump');
  const id=e.id;
  if(TEST_MODE||REDUCED||$('playScreen').classList.contains('hidden')){ui.shownEventId=id;showOverlay('eventOverlay');}
  else setTimeout(()=>{const cur=S().event;if(cur&&cur.id===id&&ui.renderedEventId===id){ui.shownEventId=id;showOverlay('eventOverlay');}},650);
+}
+/* ---------- Pit stop (every 5 years) ---------- */
+const PACE_SHORT={hustle:'More pay, less time',balanced:'Steady',chill:'More time, less pay'};
+function pitBody(){
+ const s=S(),e=s.event,pk=ui.pitPick,pv=M.pitPreview(pk);
+ let h='<div class="pit-rings">'+M.RINGS.map(([k,name,icon])=>{const v=Math.round(s.rings[k]),d=e.delta[k];return '<div class="pit-ring" aria-label="'+esc(name)+' '+v+', '+(d>0?'up '+d:d<0?'down '+(-d):'no change')+' this lap"><span class="ring r-'+k+'" style="--v:'+v+'">'+em(icon)+'</span><b>'+v+'</b><small class="'+(d>0?'up':d<0?'down':'')+'">'+(d>0?'▲'+d:d<0?'▼'+(-d):'＝')+'</small></div>';}).join('')
+  +'<div class="pit-pts"><b>+'+e.lapPoints.toLocaleString('en-IN')+'</b><small>points since '+e.fromAge+'</small></div></div>';
+ h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
+ const seg=(key,title,opts)=>'<div class="pit-group" role="group" aria-label="'+title+'"><span class="pit-label">'+title+'</span><div class="pit-seg">'+opts.map(o=>'<button type="button" data-pit-key="'+key+'" data-pit-value="'+o.v+'" aria-pressed="'+(String(pk[key])===String(o.v))+'"'+(o.dis?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.label)+'</strong><small>'+esc(o.sub)+'</small></button>').join('')+'</div></div>';
+ if(s.employment!=='retired')h+=seg('pace','Pace',Object.entries(M.PACES).map(([id,p])=>({v:id,emoji:p.emoji,label:p.label,sub:PACE_SHORT[id]})));
+ const cur=P.food[s.profile.food].label+' + '+P.social[s.profile.social].label.toLowerCase();
+ h+=seg('life','Lifestyle',[{v:-1,emoji:'⬇️',label:'Simpler',sub:e.down?'−'+compact(-e.down.monthly)+'/mo':'Already simple',dis:!e.down},{v:0,emoji:'🍱',label:'Keep',sub:cur},{v:1,emoji:'⬆️',label:'Fancier',sub:e.up?'+'+compact(e.up.monthly)+'/mo':'Already max',dis:!e.up}]);
+ if(s.employment==='employed'||s.sip>0){const sipOpts=[{v:'keep',emoji:'🌱',label:s.sip?'Keep':'No SIP',sub:s.sip?compact(s.sip)+'/mo':'Keep it off'},{v:'boost',emoji:'📈',label:s.sip?'Raise':'Start',sub:e.sipBoost?compact(e.sipBoost)+'/mo':'No room yet',dis:!e.sipBoost}];if(s.sip>0)sipOpts.push({v:'stop',emoji:'⏸️',label:'Pause',sub:'Stop investing'});h+=seg('sip','Monthly SIP',sipOpts);}
+ const diff={};let any=false;M.RINGS.forEach(([k])=>{diff[k]=Math.round(pv.targets[k])-Math.round(pv.now[k]);if(diff[k])any=true;});
+ const lb=pv.before.leftover-S().sip,la=pv.after.leftover-pv.sip;
+ h+='<div class="pit-preview" aria-live="polite">'+(lb===la?'Left over each month after bills and SIP: <b>'+money(la)+'</b>':'Left over each month after bills and SIP: <b>'+money(lb)+' → '+money(la)+'</b>')+(any?'<div class="rchips"><span>Ring targets:</span>'+ringChips(diff,3)+'</div>':'')+'</div>';
+ return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Back on track</button>';
+}
+/* ---------- Track cards: small surprises that don't stop the race ---------- */
+function renderTrackCard(){
+ const s=S(),e=s.event,el=$('trackCard');
+ if(!e||e.tier!=='card'||s.status!=='playing'){if(!el.classList.contains('hidden')){el.classList.add('hidden');el.innerHTML='';}ui.card=null;return;}
+ if(ui.card&&ui.card.id===e.id)return;
+ ui.cardsSeen+=1;const first=ui.cardsSeen<=2,def=M.EVENTS[e.type],choices=def.choices(e,s),dflt=choices.find(c=>c.id===e.defaultChoice);
+ ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};
+ el.innerHTML='<div class="tc-head">'+em(e.art||'❓','tc-art')+'<div><small>'+esc(e.kicker)+' · AGE '+esc(M.ageLabel())+'</small><b>'+esc(e.title)+'</b></div></div>'
+  +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
+  +(first?'<p class="tc-note">A small surprise: the race keeps going. Tap a choice, or “'+esc(dflt?dflt.title:'')+'” happens when the bar runs out.</p>':'')
+  +'<div class="tc-choices">'+choices.map(c=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return '<button type="button" class="tc-choice'+(c.id===e.defaultChoice?' default':'')+'" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+(c.id===e.defaultChoice?' <em>default</em>':'')+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
+  +'<div class="tc-timer" aria-hidden="true"><i id="cardTimer"></i></div>';
+ el.classList.remove('hidden');el.classList.remove('tc-in');void el.offsetWidth;el.classList.add('tc-in');
+ playRace.bump();sfx('bump');
 }
 function renderCelebration(){
  const s=S(),c=s.celebration;if(!c||c.seq===ui.lastCelebSeq||s.status!=='playing')return;ui.lastCelebSeq=c.seq;
@@ -2209,7 +2406,7 @@ function sipBody(){
   +'<div id="sipPreview" aria-live="polite">'+sipPreview()+'</div>';
 }
 function syncSip(){$('sipPreview').innerHTML=sipPreview();$('confirmOk').disabled=ui.sipPick===null||!!M.sipBlocker(ui.sipPick);$('confirmBody').querySelectorAll('[data-sip]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.sip)===ui.sipPick)));}
-function openSip(){const s=S();if(s.event||s.status!=='playing')return;ui.sipPick=null;openConfirm({kicker:'MONTHLY SIP',title:'🌱 Invest every month',body:sipBody(),okLabel:'Set SIP',okDisabled:true,onOk:()=>{const r=M.setSip(ui.sipPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});}
+function openSip(){const s=S();if(M.blockingEvent()||s.status!=='playing')return;ui.sipPick=null;openConfirm({kicker:'MONTHLY SIP',title:'🌱 Invest every month',body:sipBody(),okLabel:'Set SIP',okDisabled:true,onOk:()=>{const r=M.setSip(ui.sipPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});}
 
 /* ---------- Big-buy versions (home, car) ---------- */
 function variantBody(id){
@@ -2226,7 +2423,7 @@ function openVariants(id){const o=M.OPTIONAL[id],first=o.variants(S()).find(v=>!
 function paceBody(){
  const s=S();return '<p class="lead">How hard do you work? Pace changes your raises and promotion odds, and how much time is left for you and your people. Changing it is free.</p><div class="variant-list">'+Object.entries(M.PACES).map(([id,p])=>'<button type="button" class="variant" data-pace="'+id+'" aria-pressed="'+(id===ui.pacePick)+'">'+em(p.emoji)+'<span><strong>'+esc(p.label)+(id===s.pace?' (now)':'')+'</strong><small>'+esc(p.blurb)+'</small><span class="rchips">'+ringChips(p.rings,3,' lasting')+'</span></span></button>').join('')+'</div>';
 }
-function openPace(){const s=S();if(s.event||s.status!=='playing'||s.employment==='retired')return;ui.pacePick=s.pace;
+function openPace(){const s=S();if(M.blockingEvent()||s.status!=='playing'||s.employment==='retired')return;ui.pacePick=s.pace;
  openConfirm({kicker:'PACE',title:'🏎️ Set your pace',body:paceBody(),okLabel:'Set pace',okDisabled:true,onOk:()=>{const r=M.setPace(ui.pacePick);if(r)sfx('good');}});}
 
 /* ---------- About ---------- */
@@ -2251,6 +2448,8 @@ function renderAbout(){
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
+  ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide onto the track as cards while the race keeps going: about 8 seconds to tap (12 for your first two). If you don’t, the cautious default marked on the card happens'],
+  ['Pit stops','Every 5 years (ages 28, 33 … 78) the race stops at a pit: how each ring moved, points scored that lap, one line about those five years and one tip. On the same screen you can change pace, move food and social life one step simpler or fancier, and start, raise or pause your SIP'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
   ['Health cover','₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
@@ -2261,7 +2460,7 @@ function renderAbout(){
 
 /* ---------- Actions (UI handlers call the model; one click → one transaction) ---------- */
 function goToSetup(){stopClock();M.newRun(FIXED_SEED);S().status='setup';resetUi();render();window.scrollTo(0,0);}
-function resetUi(){ui.paused=false;ui.elapsed=0;ui.countdown=false;ui.pendingExpense=null;ui.financeDetail={};ui.lastBalances=null;ui.renderedEventId=null;ui.shownEventId=null;ui.renderedEnd=false;ui.modal=null;ui.lastCelebSeq=0;$('banner').classList.add('hidden');$('countdown').classList.add('hidden');$('feedbackCard').dataset.key='';OVERLAYS.forEach(id=>$(id).classList.add('hidden'));$('app').inert=false;Sound.setFinalLap(false);}
+function resetUi(){ui.paused=false;ui.elapsed=0;ui.countdown=false;ui.pendingExpense=null;ui.financeDetail={};ui.lastBalances=null;ui.renderedEventId=null;ui.shownEventId=null;ui.renderedEnd=false;ui.modal=null;ui.lastCelebSeq=0;ui.card=null;ui.cardsSeen=0;ui.pitPick=null;$('trackCard').classList.add('hidden');$('trackCard').innerHTML='';$('banner').classList.add('hidden');$('countdown').classList.add('hidden');$('feedbackCard').dataset.key='';OVERLAYS.forEach(id=>$(id).classList.add('hidden'));$('app').inert=false;Sound.setFinalLap(false);}
 function countdown(done){
  if(TEST_MODE||REDUCED){done();return;}
  ui.countdown=true;const el=$('countdown');el.classList.remove('hidden');const runId=S().runId;
@@ -2282,12 +2481,15 @@ $('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup();});
 $('aboutBtn').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
 $('aboutClose').addEventListener('click',()=>closeModal('aboutOverlay'));
 $('soundBtn').addEventListener('click',()=>{ui.audioUnlocked=true;prefs.soundOn=!prefs.soundOn;M.savePrefs();if(prefs.soundOn){Sound.unlock();Sound.startMusic();if(anyOverlayOpen())Sound.duck(true);sfx('good');}else Sound.stopMusic();renderSound();});
-$('pauseBtn').addEventListener('click',()=>{const s=S();if(s.event||s.status!=='playing')return;ui.paused=!ui.paused;ui.lastTick=performance.now();sfx('tap');render();});
+$('pauseBtn').addEventListener('click',()=>{const s=S();if(M.blockingEvent()||s.status!=='playing')return;ui.paused=!ui.paused;ui.lastTick=performance.now();sfx('tap');render();});
 $('speedBtn').addEventListener('click',()=>{const frac=ui.elapsed/monthMs(),sp=A.speeds;prefs.speed=sp[(sp.indexOf(prefs.speed)+1)%sp.length];M.savePrefs();ui.elapsed=frac*monthMs();sfx('tap');render();});
 $('retireBtn').addEventListener('click',()=>{if(M.requestRetirement())render();});
 $('sipBtn').addEventListener('click',openSip);
 $('paceBtn').addEventListener('click',openPace);
-$('eventChoices').addEventListener('click',e=>{const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(id,b.dataset.choice);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
+$('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+ const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
+$('trackCard').addEventListener('click',ev=>{const b=ev.target.closest('[data-card-choice]');if(!b||b.disabled)return;const e=S().event;if(!e||e.tier!=='card'||String(e.id)!==b.dataset.eventId)return;
+ ev.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(e.id,b.dataset.cardChoice);if(r)sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('wallet').addEventListener('click',e=>{const c=e.target.closest('[data-finance-detail]');if(!c)return;const k=c.dataset.financeDetail;ui.financeDetail[k]=!ui.financeDetail[k];renderPlay();});
 const TABS=['one-time','recurring','big'],TAB_IDS={'one-time':'tabOneTime',recurring:'tabRecurring',big:'tabBig'};
 document.querySelector('.choice-tabs').addEventListener('click',e=>{const t=e.target.closest('[data-choice-tab]');if(!t)return;ui.optionalTab=t.dataset.choiceTab;renderOptional();});  // switching tabs never triggers a choice
@@ -2303,7 +2505,7 @@ $('confirmBody').addEventListener('click',e=>{const v=e.target.closest('[data-va
 $('confirmBody').addEventListener('input',e=>{if(e.target.id!=='sipCustom')return;const v=e.target.value.trim();ui.sipPick=v===''?null:Math.round(Number(v));if(Number.isNaN(ui.sipPick))ui.sipPick=null;syncSip();});
 $('confirmOk').addEventListener('click',()=>{const act=ui.confirmAction;ui.confirmAction=null;closeModal('confirmOverlay');if(act)act();render();});
 $('confirmCancel').addEventListener('click',()=>{ui.confirmAction=null;closeModal('confirmOverlay');});
-$('editExpensesBtn').addEventListener('click',()=>{if(S().event||S().status!=='playing')return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');});
+$('editExpensesBtn').addEventListener('click',()=>{if(M.blockingEvent()||S().status!=='playing')return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');});
 $('expenseOverlay').addEventListener('click',e=>{
  if(e.target===$('expenseOverlay')){ui.pendingExpense=null;closeModal('expenseOverlay');return;}
  const opt=e.target.closest('[data-expense-key]');
