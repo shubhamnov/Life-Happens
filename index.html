@@ -381,8 +381,8 @@ function eventForMonth(m){
  if(m>=36&&m%12===0){
   const pool=[
    ()=>({type:'bonus',kicker:'A LITTLE LUCK',title:'You received a bonus.',description:'You receive ₹20,000. What would help you most?',foot:'Save it or invest it.'}),
-   ()=>({type:'family',kicker:'FAMILY NEEDS YOU',title:'A friend is getting married.',description:'Travel and gifts will cost ₹12,000. You can celebrate, keep it modest, or decline.',foot:'There is no single right answer.'}),
-   ()=>({type:'medical',kicker:'UNEXPECTED EXPENSE',title:'Something at home needs fixing.',description:'A repair costs ₹10,000. How will you cover it?',foot:'Use savings, investments or debt.'}),
+   ()=>({type:'family',kicker:'FAMILY NEEDS YOU',title:'A family member needs help.',description:'They need ₹15,000. You can help, offer a smaller amount, or say no this time.',foot:'There is no single right answer.'}),
+   ()=>({type:'medical',kicker:'UNEXPECTED EXPENSE',title:'A medical bill arrives.',description:'An unexpected medical bill costs ₹10,000. How will you cover it?',foot:'Use savings, investments or debt.'}),
    ()=>({type:'promotion',kicker:'A CAREER CHOICE',title:'Your manager offers a stretch project.',description:'It could help your career, but it will take extra effort. Do you take it on?',foot:'Career growth and personal time both matter.'})
   ];
   if(state.invested>0)pool.push(()=>{const before=state.invested;const dip=ECONOMY.marketDipMin+Math.random()*(ECONOMY.marketDipMax-ECONOMY.marketDipMin);state.invested=Math.round(state.invested*(1-dip));const actual=before-state.invested;return{type:'market',kicker:'MARKET DIP',title:'Your investments fell.',description:'The market fell '+Math.round(dip*100)+'%. Your investments are down about '+money(actual)+'. You have not sold anything; this is a change in market value.',foot:'You can stay invested or sell a little.'};});
@@ -404,7 +404,7 @@ function renderEvent(){
  $('eventFinance').innerHTML='<div class="event-finance-item"><span>SAVINGS</span><strong>'+money(state.cash+state.buffer)+'</strong></div><div class="event-finance-item"><span>INVESTMENTS</span><strong>'+money(state.invested)+'</strong></div><div class="event-finance-item"><span>DEBT</span><strong>'+money(state.debt)+'</strong></div>';$('eventFinance').classList.toggle('hidden',!['laptop','medical','market','family','bonus'].includes(e.type));
  $('eventKicker').textContent=e.kicker;$('eventTitle').textContent=e.title;$('eventDescription').textContent=e.description;$('eventFoot').textContent=e.foot+' Choose one option to continue.';let h='';
  if(e.type==='laptop'||e.type==='medical'){
-  const amount=e.type==='laptop'?18000:(state.insured?5000:(e.kicker&&e.kicker.includes('UNEXPECTED BILL')?10000:25000));
+  const amount=e.type==='laptop'?18000:(state.insured?5000:(e.kicker&&(e.kicker.includes('UNEXPECTED BILL')||e.kicker.includes('UNEXPECTED EXPENSE'))?10000:25000));
   h+='<button type="button" class="event-choice" data-event-action="buffer"><strong><span class="choice-icon" data-icon="wallet"></span>Use savings</strong><small>Use savings, including your emergency fund. Any shortfall becomes debt.</small></button>';
   if(state.invested>0)h+='<button type="button" class="event-choice" data-event-action="sell"><strong><span class="choice-icon" data-icon="growth"></span>Sell investments</strong><small>Sell investments to help cover the bill.</small></button>';
   h+='<button type="button" class="event-choice" data-event-action="borrow"><strong><span class="choice-icon" data-icon="debt"></span>Borrow it</strong><small>Keep cash and investments; debt rises by '+money(amount)+'.</small></button>';
