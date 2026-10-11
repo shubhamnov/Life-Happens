@@ -34,7 +34,7 @@ async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g
 const SAFE={savings:1,save:1,full:0};
 // Deterministic auto-player used by long-run scenarios.
 function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event,ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
- const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep'].find(x=>ch.includes(x))||ch[0];
+ const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep','budget','one','shagun','regular','half','train','home','cake','gift','report','pass','small','accept','foster','take','skip','pay','ride','fan'].find(x=>ch.includes(x))||ch[0];
  const pick=ch.includes(want)?want:ch[0];const r=L.resolveEvent(e.id,pick);assert(r,'event '+e.type+' failed to resolve with '+pick);}
 function run(L,months,policy){for(let i=0;i<months&&L.state.status==='playing';i++){autoResolve(L,policy);L.advanceMonth();}autoResolve(L,policy);}
 function noNaN(s){const walk=(o,p)=>{for(const k in o){const v=o[k];if(typeof v==='number')assert(Number.isFinite(v),'non-finite '+p+k);else if(v&&typeof v==='object')walk(v,p+k+'.');}};walk(s,'state.');}
@@ -68,7 +68,7 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
  L.startEvent('child');const c=s.event;L.resolveEvent(c.id,'yes');eq(s.children.length,1,'one child');eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,1,'child cost charged once');
  s.month+=21*12;eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,0,'child cost stops at 21');});
 /* 8 */ await test('8. Layoff: severance once, three months without pay, recovery',async()=>{const {L}=await game(19);const s=L.state;s.month=80;s.nextEventMonth=9999;const pay=s.salary;
- L.startEvent('layoff');const e=s.event,c0=s.cash;L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
+ L.startEvent('layoff');const e=s.event,c0=s.cash;eq(e.severance,Math.round(s.salary*(1+0.5*6)),'severance = 1 month notice + 15 days per year (6 years)');L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
  const incomes=[];for(let i=0;i<4;i++){s.event=null;L.advanceMonth();incomes.push(s.lastSettlement.income);}
  eq(incomes.slice(0,3).join(','),'0,0,0','no salary for 3 months');assert(incomes[3]>=pay,'salary resumes in month 4');eq(s.employment,'employed','employed again');});
 /* 9 */ await test('9. Retirement only from 40; salary stops, expenses continue',async()=>{const {L}=await game(20);const s=L.state;s.month=100;eq(L.requestRetirement(),false,'blocked before 40');
@@ -114,14 +114,43 @@ await test('Invariant: home upgrade lock and recurring cost in every later month
  assert(L.chooseOptional('upgrade'),'applied');for(let i=0;i<3;i++){s.event=null;L.advanceMonth();assert(L.monthlyBudget().lines.some(l=>l.key==='homeUpgrade'),'still charged');}});
 await test('Invariant: expense preview does not mutate state',async()=>{const {L}=await game(30);const s=L.state,snap=JSON.stringify(s);L.previewExpenseChange('commute','car');L.previewExpenseChange('home','premium');eq(JSON.stringify(s),snap,'unchanged');});
 await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
-await test('Invariant: no two severe shocks in a row; event cadence 30–42 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
+await test('Invariant: no two severe shocks in a row; event cadence 12–20 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
  for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
- const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t));for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=30,'gap ≥ 30 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
- assert(rnd.length>=8&&rnd.length<=24,'reasonable number of events: '+rnd.length);});
+ const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t));for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ assert(rnd.length>=25&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
 await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
 await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={relationship:'big',child:'yes',secondchild:'yes',crunch:'keep'};
  for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);L.advanceMonth();}
  if(s.finalReason==='completed')assert(s.unsecuredDebt<L.monthlyBudget().total*24,'completed runs have manageable debt');});
+
+await test('Severance scales with salary and years in the job',async()=>{const {L}=await game(51,{salary:60000});const s=L.state;s.month=30;s.nextEventMonth=9999;
+ L.startEvent('layoff');let e=s.event;eq(e.severance,Math.round(s.salary*(1+0.5*2)),'2 years → 2 months');L.resolveEvent(e.id,'cut');eq(s.jobStartMonth,30,'new job starts the tenure clock');
+ s.month=30+12*30;s.lastLayoffMonth=-999;L.startEvent('layoff');e=s.event;eq(e.severance,Math.round(s.salary*12),'capped at 12 months');
+ const g=await game(52,{salary:35000});g.L.state.month=30;g.L.startEvent('layoff');assert(g.L.state.event.severance<e.severance,'lower salary → lower severance');});
+await test('Promotions: bigger and more frequent early, slower later',async()=>{let early=[],late=[],earlyCount=0,lateCount=0;
+ for(const seed of [61,62,63,64,65,66]){const {L}=await game(seed);const s=L.state;s.career=3;
+  for(let i=0;i<500&&s.status==='playing';i++){if(s.event){if(s.event.type==='layoff'||s.event.type==='retire'||s.event.type==='startup'){L.resolveEvent(s.event.id,L.EVENTS[s.event.type].choices(s.event,s).map(c=>c.id).find(x=>['cut','work','stay'].includes(x)));}else autoResolve(L);}s.cash=Math.max(s.cash,1e7);s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();}
+  s.history.filter(h=>/^Promoted at/.test(h.text)).forEach(h=>{const age=Number(h.age),pct=Number(h.text.match(/\(\+(\d+)%\)/)[1]);if(age<28)early.push(pct);if(age<30)earlyCount++;if(age>=50&&age<62){late.push(pct);lateCount++;}});}
+ assert(early.length>0,'some early promotions');assert(Math.min(...early)>=27,'early promotion raises ≥ 27%: '+early);
+ assert(late.every(p=>p<=10),'late promotion raises ≤ 10%: '+late);assert(earlyCount/8>lateCount/12,'promotions slow down with age ('+earlyCount+' early vs '+lateCount+' late)');});
+await test('Monthly SIP: invested after bills, skipped (not strained) when cash is short',async()=>{const {L}=await game(53);const s=L.state;s.nextEventMonth=9999;s.invested=0;
+ assert(L.setSip(5000),'SIP set');eq(s.optionalUsedMonth===s.month,false,'SIP does not use the power-up');s.cash=100000;const c0=s.cash,b=L.monthlyBudget();L.advanceMonth();
+ eq(s.invested,5000,'5,000 invested');eq(s.cash,c0+b.income-b.total-5000,'cash after bills and SIP');eq(s.lastSettlement.sip,5000,'settlement records the SIP');
+ s.event=null;s.cash=0;s.salary=1000;L.advanceMonth();eq(s.lastSettlement.sipSkipped,true,'skipped when short');
+ s.event=null;s.salary=200000;s.cash=0;s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();eq(s.distressMonths,0,'a skipped SIP alone is not strain');
+ s.employment='retired';eq(L.monthlyBudget().sip,0,'no SIP in retirement');assert(L.sipBlocker(10000),'cannot start a SIP when retired');});
+await test('Big buys: two-wheeler and home loans with a bank check',async()=>{const {L}=await game(54);const s=L.state;s.month=100;s.nextEventMonth=9999;s.cash=5e6;
+ s.salary=40000;assert(/bank/i.test(L.optionalBlocker('buyHouse')||''),'bank refuses a home loan on a small salary');
+ assert(L.chooseOptional('buyBike'),'bike bought');assert(s.vehicleLoan&&s.vehicle==='bike','bike loan active');s.event=null;L.advanceMonth();
+ s.salary=300000;const up=L.houseUpfront(),cash=s.cash;assert(L.chooseOptional('buyHouse'),'home bought');eq(s.cash,cash-up,'down payment + fees paid once');assert(s.ownsHome&&s.homeLoan,'home loan active');
+ const b=L.monthlyBudget();assert(b.lines.some(l=>l.key==='homeEmi'),'home EMI in expenses');eq(b.lines.find(l=>l.key==='housing').label,'Home maintenance','rent replaced by maintenance');
+ const bal=s.homeLoan.balance;s.event=null;L.advanceMonth();assert(s.homeLoan.balance<bal,'home loan amortises');assert(L.totalDebt()>=s.homeLoan.balance,'home loan counted in debt');
+ s.event=null;L.advanceMonth();const owed=s.homeLoan.balance,val=s.homeValue,c2=s.cash;assert(L.chooseOptional('sellHouse'),'home sold');eq(s.cash,c2+Math.round(val*0.97)-owed,'sale repays the loan, rest to savings');eq(s.homeLoan,null,'no home loan');});
+await test('Every event and every choice resolves cleanly',async()=>{const {L}=await game(55);const s=L.state;
+ for(const type of Object.keys(L.EVENTS)){s.event=null;s.status='playing';const probe=()=>{s.event=null;s.cash=1e6;s.invested=2e5;s.month=200;L.startEvent(type);return s.event;};const e0=probe();const ids=L.EVENTS[type].choices(e0,s).map(c=>c.id);
+  for(const id of ids){const e=probe();const r=L.resolveEvent(e.id,id);assert(r&&r.feedback&&r.feedback.label,type+'/'+id+' gives feedback');assert(r.text,type+'/'+id+' gives text');noNaN(s);assert(s.cash>=0,type+'/'+id+' cash ≥ 0');}}});
+await test('Variation: openers at months 3 and 24 differ between lives',async()=>{const m3=new Set(),m24=new Set();for(const seed of [71,72,73,74,75,76,77,78]){const {L}=await game(seed);const s=L.state;for(let i=0;i<24;i++){if(s.event){if(s.month===3)m3.add(s.event.type);if(s.month===24)m24.add(s.event.type);autoResolve(L);}L.advanceMonth();}}
+ assert(m3.size>=3,'month-3 events vary: '+[...m3]);assert(m24.size>=3,'month-24 events vary: '+[...m24]);});
 
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
