@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#F3EFE6">
-<meta name="application-version" content="2026.10.11-life-stages-2">
+<meta name="application-version" content="2026.10.11-rings-1">
 <meta name="description" content="Life Happens: race through life from 23 to 80 and see how everyday money decisions add up.">
 <title>Life Happens — Race from 23 to 80</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23DCE7D9%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 text-anchor=%27middle%27%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
@@ -73,8 +73,13 @@ button:disabled{cursor:not-allowed}
 .hud-age span.final{color:var(--clay-strong)}
 .hud-coins{right:10px;top:9px;display:flex;align-items:center;gap:5px;background:#FFFDF8E6;border-radius:999px;padding:4px 11px 4px 6px;box-shadow:0 2px 0 #2E3A3318;font:700 17px var(--display)}
 .hud-coins .emoji{font-size:19px}
-.hud-hearts{right:10px;top:48px;background:#FFFDF8D9;border-radius:999px;padding:3px 9px;font-size:14px;letter-spacing:1px;color:#C98B8B;box-shadow:0 2px 0 #2E3A3314}
-.hud-hearts .off{color:#D8D2C6}
+.hud-rings{right:10px;top:48px;display:flex;gap:4px;background:#FFFDF8D9;border-radius:999px;padding:3px 4px;box-shadow:0 2px 0 #2E3A3314}
+.ring{--v:50;width:30px;height:30px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--v)*1%),#E6E0D3 0);display:grid;place-items:center;position:relative}
+.ring::before{content:'';position:absolute;inset:4px;border-radius:50%;background:#FFFDF8}
+.ring .emoji{position:relative;font-size:13px;line-height:1}
+.ring.low{animation:ringPulse 1.6s ease-in-out infinite}
+@keyframes ringPulse{50%{transform:scale(1.12)}}
+.r-me{--c:#D9A441}.r-fam{--c:#D9837A}.r-com{--c:#5F9C8A}
 .hud-controls{right:8px;bottom:8px;display:flex;gap:6px;pointer-events:auto}
 .hud-controls button .vector-icon{width:18px;height:18px;margin:auto}
 .hud-controls button{min-width:48px;min-height:44px;border-radius:14px;border:0;background:#FFFDF8EE;box-shadow:0 3px 0 #2E3A3326;font:700 15px var(--display);color:var(--ink);padding:0 10px}
@@ -113,6 +118,39 @@ button:disabled{cursor:not-allowed}
 .feedback.risky{background:var(--danger-bg)}.feedback.risky b{color:var(--danger-ink)}
 .feedback.missed{background:var(--butter)}
 .life-tags{display:flex;flex-wrap:wrap;gap:5px}
+.ring-hint{font-size:11px;font-weight:800;color:var(--muted);text-align:right;line-height:1.25;max-width:46%}
+.ring-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0}
+.ring-row .emoji{font-size:22px;text-align:center}
+.ring-row b{font:700 14px var(--display)}
+.ring-track{height:9px;border-radius:99px;background:#ECE6D9;overflow:hidden;margin:3px 0 2px}
+.ring-track i{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .4s}
+.ring-row small{display:block;font-size:12px;color:var(--muted);font-weight:700;line-height:1.3}
+.ring-val{font:700 19px var(--display);text-align:right;min-width:44px}
+.ring-val em{display:block;font:800 10px var(--sans);font-style:normal;letter-spacing:.04em;color:var(--muted)}
+.ring-val em.up{color:#2F6B4A}.ring-val em.down{color:var(--danger-ink)}
+.pace-row{display:flex;align-items:center;gap:10px;border-top:1.5px dashed var(--line);margin-top:6px;padding-top:9px}
+.pace-row .emoji{font-size:24px}
+.pace-row div{flex:1;min-width:0}
+.pace-row b{display:block;font:700 15px var(--display)}
+.pace-row small{display:block;font-size:12px;color:#4E5E54;font-weight:700;line-height:1.35}
+.rchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.rchip{font:800 11px/1.5 var(--sans);border-radius:999px;padding:0 7px;background:#FFFDF8;border:1.5px solid var(--line);white-space:nowrap}
+.rchip.up{color:#2F6B4A}.rchip.down{color:var(--danger-ink)}.rchip.brag{color:#9A7A22}
+.feedback .rchips{margin-top:6px}
+.event-choice span.rchips,.variant span.rchips,.move-card .rchips{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;margin-top:3px}
+.event-choice span.rchip,.variant span.rchip,.move-card .rchip{display:inline-block}
+.variant-list{display:grid;gap:8px;margin:10px 0}
+.variant{width:100%;text-align:left;border:2px solid var(--line);border-radius:16px;padding:9px 11px;background:var(--paper);display:flex;gap:10px;align-items:flex-start}
+.variant[aria-pressed=true]{border-color:var(--sage-strong);background:var(--sage);box-shadow:0 3px 0 var(--sage-strong)}
+.variant:disabled{opacity:.55}
+.variant .emoji{font-size:26px;flex:0 0 30px;text-align:center}
+.variant span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.variant strong{font:700 15px/1.2 var(--display)}
+.variant small{font-size:12px;line-height:1.35;color:#3D4C42;font-weight:600}
+.variant *{pointer-events:none}
+.end-score{display:flex;justify-content:center;gap:18px;margin:6px 0 4px;text-align:center}
+.end-score div span{display:block;font:800 11px var(--sans);letter-spacing:.1em;color:var(--muted)}
+.end-score div strong{font:700 30px/1.1 var(--display);color:var(--forest-dark)}
 .life-tags>span{font-size:12px;font-weight:800;background:var(--paper);border:1.5px solid var(--line);color:#3E5A47;border-radius:999px;padding:3px 9px 3px 6px;display:inline-flex;gap:4px;align-items:center}
 
 /* ---------- Wallet ---------- */
@@ -312,12 +350,12 @@ button:disabled{cursor:not-allowed}
   <div class="hero-copy">
    <div class="kicker">Age 23 · Day one · First job</div>
    <h1>Life is a race.<br>Money is the fuel.</h1>
-   <p>Run from your first paycheck at 23 to the finish line at 80. Goa trips, weddings, kids, taxes, layoffs and very persuasive sales will try to slow you down.</p>
-   <div class="stamps"><span class="stamp"><span class="emoji">🏁</span>Reach 80</span><span class="stamp"><span class="emoji">🎲</span>Random life events</span><span class="stamp"><span class="emoji">🌱</span>Monthly SIPs</span><span class="stamp"><span class="emoji">🏡</span>Bikes, cars, homes</span></div>
+   <p>Race from 23 to 80. Keep yourself, your people and your community happy, and don’t run out of fuel. Goa trips, weddings, kids, taxes, layoffs and very persuasive sales will try to slow you down.</p>
+   <div class="stamps"><span class="stamp"><span class="emoji">🏁</span>Reach 80</span><span class="stamp"><span class="emoji">🎯</span>3 life rings</span><span class="stamp"><span class="emoji">🎲</span>Random life events</span><span class="stamp"><span class="emoji">🌱</span>Monthly SIPs</span><span class="stamp"><span class="emoji">🏡</span>Bikes, cars, homes</span></div>
    <button class="primary" id="startBtn" type="button">Start your engine →</button>
   </div>
  </section>
- <div class="info-line"><strong>How it works:</strong> every month your pay comes in and your bills go out; what is left builds your savings. When life happens, the race pauses so you can choose. Six months in a row of unpaid bills ends the race early.</div>
+ <div class="info-line"><strong>How it works:</strong> every month your pay comes in and your bills go out; what is left builds your savings. When life happens, the race pauses so you can choose. Your score comes from three life rings (🧍 Me, 👨‍👩‍👧 Family & Friends, 🏘️ Community), mostly the weakest one. Six months in a row of unpaid bills ends the race early.</div>
 </main>
 
 <main id="setupScreen" class="screen hidden">
@@ -347,7 +385,7 @@ button:disabled{cursor:not-allowed}
   <div class="hud">
    <div class="hud-age"><small>AGE</small><b id="ageValue">23.0</b><span id="yearLap">YEAR 1 / 57</span></div>
    <div class="hud-coins" aria-hidden="true"><span class="emoji">🪙</span><b id="hudCash">₹0</b></div>
-   <div class="hud-hearts" id="hearts" role="img" aria-label="Resilience"></div>
+   <div class="hud-rings" id="hudRings" role="img" aria-label="Life rings"></div>
    <div class="hud-controls"><button id="speedBtn" type="button" aria-label="Simulation speed. Tap to change.">1×</button><button id="pauseBtn" type="button" aria-label="Pause"></button></div>
    <div class="hud-banner hidden" id="banner" role="status"></div>
    <div class="countdown hidden" id="countdown" aria-hidden="true"></div>
@@ -357,6 +395,11 @@ button:disabled{cursor:not-allowed}
  <div class="run-status" id="runStatus" aria-live="polite"></div>
  <section class="bubble" aria-live="polite"><span class="face emoji" id="bubbleFace" aria-hidden="true">🙂</span><div><p id="sceneMessage"></p><small id="sceneSub"></small></div></section>
  <section id="feedbackCard" class="feedback hidden" aria-live="polite"></section>
+ <section class="card rings-card" aria-labelledby="ringsTitle">
+  <div class="card-top"><h2 id="ringsTitle"><span class="emoji" aria-hidden="true">🎯</span>Life rings</h2><span class="ring-hint">Score comes mostly from your weakest ring</span></div>
+  <div id="ringRows"></div>
+  <div class="pace-row"><span class="emoji" id="paceEmoji" aria-hidden="true">⚖️</span><div><b id="paceTitle">Pace: Balanced</b><small id="paceNote"></small></div><button type="button" class="secondary" id="paceBtn">Change</button></div>
+ </section>
  <div class="life-tags" id="lifeTags"></div>
  <div id="strainNote" class="strain hidden" role="status"></div>
  <section class="wallet" id="wallet" aria-label="Your money">
@@ -440,7 +483,7 @@ const A=Object.freeze({
  debtMinRate:0.03,debtMinFloor:2000,             // minimum repayment: the larger of 3% of balance or ₹2,000 (inflation-indexed)
  vehicleLoanMonthlyRate:0.01,vehicleLoanTerm:36,
  vehicleResaleShare:0.8,       // selling a financed vehicle: resale repays 80% of the outstanding loan, the rest becomes unsecured debt
- house:{basePrice:3500000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,maintenance:3000,appreciation:0.05,sellCostShare:0.03},
+ house:{basePrice:3500000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,appreciation:0.05,sellCostShare:0.03},  // price and upkeep per home type: BASE_PRICES.house
  maxEmiShare:0.5,              // a bank approves a new loan only if all EMIs stay within 50% of take-home pay
  sipOptions:[0,2000,5000,10000,25000,50000],sipMin:500,sipMax:1000000,
  failureMonths:6,              // six consecutive strained months end the run (see settleMonth)
@@ -465,6 +508,15 @@ const A=Object.freeze({
  schoolYears:[4,18],
  petMonthly:2500,
  eventGap:[12,20],             // months between random life events after the first two years
+ // Life rings (0–100). Each month a ring moves 4% of the way toward the target your
+ // current life sets (see ringDrivers); event choices add one-off bumps that fade.
+ rings:{start:{me:60,fam:60,com:45},base:{me:40,fam:35,com:30},pull:0.04,healthy:55,low:40},
+ // Pace: Hustle lifts promotion odds and raises; Chill lowers them. Rings pay the difference.
+ pace:{hustle:{promo:1.5,raise:0.01},balanced:{promo:1,raise:0},chill:{promo:0.6,raise:-0.01}},
+ promoPenalty:0.6,promoPenaltyMonths:24,   // promotion odds after choosing to slow down for family
+ burnout:{lowMe:35,months:9,cooldown:36,breakMonths:2},
+ squeeze:{lowFam:35,cooldown:60},
+ ringActionCooldown:12,        // ring power-ups (family day, volunteering, donating): once a year each
 });
 const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years elapsed)
  home:{starter:{label:'Starter Nest',emoji:'🛏️',cost:8000},comfort:{label:'Comfort Zone',emoji:'🛋️',cost:14000},premium:{label:'Main Character',emoji:'🏙️',cost:22000}},
@@ -473,7 +525,15 @@ const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years ela
  other:{none:{label:'None',emoji:'➖',cost:0},small:{label:'Small extra',emoji:'🎧',cost:2000},regular:{label:'Regular extra',emoji:'🏋️',cost:5000},big:{label:'Big extra',emoji:'🎮',cost:10000}},
  // running = passes, fares or upkeep (service, insurance); fuel is its own line for your own vehicle.
  commute:{public:{label:'Bus / Metro',emoji:'🚇',running:1500,fuel:0,loan:0},bike:{label:'Two-wheeler',emoji:'🛵',running:800,fuel:2500,loan:100000},car:{label:'Car',emoji:'🚗',running:3000,fuel:8000,loan:600000},cabs:{label:'Cabs',emoji:'🚕',running:7000,fuel:0,loan:0}},
- school:{gov:{label:'Government school',emoji:'🏫',monthly:1000,admission:2000},private:{label:'Private school',emoji:'🎒',monthly:6000,admission:30000},intl:{label:'International school',emoji:'🌍',monthly:20000,admission:150000}}
+ school:{gov:{label:'Government school',emoji:'🏫',monthly:1000,admission:2000},private:{label:'Private school',emoji:'🎒',monthly:6000,admission:30000},intl:{label:'International school',emoji:'🌍',monthly:20000,admission:150000}},
+ // Big buys trade comfort against people. rings = lasting [Me, Family & Friends, Community]
+ // effect on ring targets while you own it; brag = show-off value (worth 0 points).
+ house:{society:{label:'Society flat',emoji:'🏢',price:1,maintenance:3000,brag:1,rings:[8,2,12],blurb:'Clubhouse, festivals, neighbours who know your name. Nothing to show off.'},
+  villa:{label:'Independent villa',emoji:'🏡',price:1.8,maintenance:6000,brag:3,rings:[16,4,-4],blurb:'Space, a garden and serious bragging rights. No society around you.'},
+  near:{label:'Flat near family',emoji:'🏘️',price:0.85,maintenance:2500,brag:0,rings:[6,12,6],blurb:'In your old neighbourhood, close to parents and old friends. Cheaper, cosier, zero flex.'}},
+ car:{hatch:{label:'Hatchback',emoji:'🚗',loan:600000,running:3000,fuel:8000,brag:1,rings:[4,2,0],blurb:'Easy to park, cheap to run. Gets you everywhere.'},
+  mpv:{label:'7-seater family car',emoji:'🚐',loan:1000000,running:4000,fuel:9500,brag:1,rings:[4,6,1],blurb:'Room for grandparents, cousins and the dog. Road trips unlocked.'},
+  suv:{label:'Big SUV',emoji:'🚙',loan:1500000,running:5000,fuel:11000,brag:3,rings:[8,3,-1],blurb:'Heads turn at every signal. So does your fuel gauge.'}}
 };
 
 /* =====================================================================
@@ -526,7 +586,10 @@ function createState(){
   feedback:null,message:'',story:'',milestone:'',celebration:null,celebSeq:0,
   history:[],
   stats:{shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,taxPaid:0,insurancePaid:0,claims:0},
-  lastSettlement:null,finalReason:''
+  lastSettlement:null,finalReason:'',
+  // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
+  rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
+  homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{}
  };
 }
 let state=createState();
@@ -571,9 +634,13 @@ function totalDebt(s=state){return s.unsecuredDebt+sum(LOANS.map(([k])=>s[k]?s[k
 function netWorth(s=state){return s.cash+s.invested+(s.ownsHome?s.homeValue:0)-totalDebt(s);}
 function activeSip(s=state){return s.employment==='employed'?s.sip:0;}
 function severanceMonths(s=state){const yrs=Math.max(0,Math.floor((s.month-s.jobStartMonth)/12));return {years:yrs,months:Math.min(A.severanceCapMonths,A.noticeMonths+A.severancePerYear*yrs)};}
-function housePrice(s=state){return priced(A.house.basePrice,s);}
-function houseUpfront(s=state){return Math.round(housePrice(s)*(A.house.downShare+A.house.feesShare));}
-function houseLoanEmi(s=state){return emiFor(Math.round(housePrice(s)*(1-A.house.downShare)),A.house.annualRate/12,A.house.termMonths);}
+function houseSpec(type){return BASE_PRICES.house[type]||BASE_PRICES.house.society;}
+function housePrice(s=state,type='society'){return priced(A.house.basePrice*houseSpec(type).price,s);}
+function houseUpfront(s=state,type='society'){return Math.round(housePrice(s,type)*(A.house.downShare+A.house.feesShare));}
+function houseLoanEmi(s=state,type='society'){return emiFor(Math.round(housePrice(s,type)*(1-A.house.downShare)),A.house.annualRate/12,A.house.termMonths);}
+// A car's loan, fuel and upkeep depend on the model; other rides use BASE_PRICES.commute.
+function rideSpec(kind,model){return kind==='car'?Object.assign({},BASE_PRICES.commute.car,BASE_PRICES.car[model]||BASE_PRICES.car.hatch):BASE_PRICES.commute[kind];}
+function vehicleLabel(s=state){return rideSpec(s.vehicle,s.carModel).label;}
 function allEmis(s=state){return sum(LOANS.map(([k])=>s[k]?s[k].emi:0));}
 
 // The Monthly Plan panel and monthly settlement both use this function,
@@ -581,12 +648,11 @@ function allEmis(s=state){return sum(LOANS.map(([k])=>s[k]?s[k].emi:0));}
 function monthlyBudget(s=state){
  const lines=[];
  const add=(key,label,amount,kind)=>{if(amount>0)lines.push({key,label,amount,kind});};
- if(s.ownsHome)add('housing','Home maintenance',priced(A.house.maintenance,s),'living');
+ if(s.ownsHome)add('housing','Home maintenance',priced(houseSpec(s.homeType).maintenance,s),'living');
  else add('housing','Rent',priced(s.costs.housing,s),'living');
  add('food','Groceries & food',priced(s.costs.food,s),'living');
  add('social','Social & lifestyle',priced(s.costs.social,s),'living');
- const ride=BASE_PRICES.commute[s.vehicle];
- add('commute',s.vehicle==='public'?(s.transit==='metro'?'Metro':'Bus')+' pass':s.vehicle==='cabs'?'Cab fares':ride.label+' upkeep',priced(s.costs.commute,s),'living');
+ add('commute',s.vehicle==='public'?(s.transit==='metro'?'Metro':'Bus')+' pass':s.vehicle==='cabs'?'Cab fares':vehicleLabel(s)+' upkeep',priced(s.costs.commute,s),'living');
  add('fuel','Fuel',priced(s.costs.fuel,s),'living');
  add('other','Other recurring',priced(s.costs.other,s),'living');
  add('homeUpgrade','Home upgrade',priced(s.costs.homeUpgrade,s),'fixed');
@@ -630,6 +696,120 @@ const FEEDBACK={great:'Great move',solid:'Solid move',risky:'Risky move',missed:
 function fb(label,why){return {label,title:FEEDBACK[label],why};}
 // A non-blocking "power-up" banner the UI shows over the race scene.
 function celebrate(kind,emoji,title,text,s=state){s.celebration={seq:++s.celebSeq,kind,emoji,title,text};}
+
+/* =====================================================================
+   5b. LIFE RINGS & LIFE SCORE
+   Three rings, 0–100: 🧍 Me, 👨‍👩‍👧 Family & Friends, 🏘️ Community.
+   Each month every ring moves 4% of the way toward a target set by how you
+   live right now: lifestyle, money worries, family, home, pace and life stage
+   (ringDrivers lists every part, so the UI can explain it). Event choices add
+   one-off bumps (RING_FX) that fade back toward the target, so relationships
+   need upkeep. Life Score: each month adds up to 10 points, 60% from the
+   weakest ring and 40% from the average, so balance beats maxing one ring.
+   Money never scores; it only feeds the rings.
+   ===================================================================== */
+const RINGS=[['me','Me','🧍'],['fam','Family & Friends','👨‍👩‍👧'],['com','Community','🏘️']];
+const RING_KEYS=['me','fam','com'];
+const LIFESTYLE_RINGS={
+ food:{home:[0,0,0],balanced:[5,0,0],foodie:[8,0,0]},
+ other:{none:[0,0,0],small:[3,0,0],regular:[5,0,0],big:[7,0,0]},
+ social:{quiet:[0,0,0],regular:[2,10,4],big:[4,14,6]},
+ home:{starter:[0,0,3],comfort:[5,0,2],premium:[9,0,0]},
+ ride:{public:[0,0,2],bike:[2,0,0],cabs:[5,0,0]},
+ pace:{hustle:[-8,-12,-6],balanced:[0,0,0],chill:[6,8,5]},
+ parents:{support:[0,5,0],movein:[-2,8,1],share:[0,2,0]}
+};
+function ringDrivers(s=state){
+ const out=[],add=(label,v)=>{if(v&&v.some(x=>x))out.push({label,v});};
+ const b=monthlyBudget(s),cushion=s.cash/Math.max(1,b.total),L=LIFESTYLE_RINGS;
+ add('Food: '+BASE_PRICES.food[s.profile.food].label.toLowerCase(),L.food[s.profile.food]);
+ add('Extras: '+BASE_PRICES.other[s.profile.other||'none'].label.toLowerCase(),L.other[s.profile.other||'none']);
+ add('Social life: '+BASE_PRICES.social[s.profile.social].label.toLowerCase(),L.social[s.profile.social]);
+ if(s.ownsHome)add('Your '+houseSpec(s.homeType).label.toLowerCase(),houseSpec(s.homeType).rings);
+ else{add('Renting: '+BASE_PRICES.home[s.profile.home].label,L.home[s.profile.home]);if(s.homeUpgraded)add('Home upgrade',[4,0,0]);}
+ add(s.vehicle==='public'?'Bus and Metro rides':vehicleLabel(s),s.vehicle==='car'?rideSpec('car',s.carModel).rings:L.ride[s.vehicle]);
+ if(s.distressMonths>0)add('Bills going unpaid',[-15,-3,0]);
+ else if(cushion>=6)add('Six months of savings',[10,0,0]);else if(cushion>=3)add('A savings cushion',[7,0,0]);else if(cushion>=1)add('A thin savings cushion',[3,0,0]);
+ if(s.unsecuredDebt>b.total*6)add('Heavy card debt',[-10,0,0]);else if(s.unsecuredDebt>0)add('Card debt',[-4,0,0]);
+ if(s.insured)add('Health cover',[2,0,0]);
+ if(s.employment==='laidoff')add(s.breakReason==='recovery'?'Recovering from an accident':s.breakReason==='break'?'A break to recharge':'Between jobs',s.breakReason==='break'?[8,4,0]:[-8,0,0]);
+ if(s.married)add('Married life',[2,10,0]);
+ const kids=activeChildren(s).length;if(kids)add(kids>1?'Two kids':'Your kid',[0,6*kids,kids]);
+ if(s.pet)add('Your pet',[2,4,0]);
+ if(s.parentsMode)add('Caring for parents',L.parents[s.parentsMode]);
+ if(s.pace!=='balanced')add(s.pace==='hustle'?'Hustle pace':'Chill pace',L.pace[s.pace]);
+ const age=preciseAge(s);
+ if(s.employment==='retired')add('Retired: time for people',[4,8,8]);
+ else if(age>=30&&age<45)add('The busy years (30–45)',[0,-3,-3]);
+ return out;
+}
+function ringTargets(s=state){
+ const t=Object.assign({},A.rings.base);
+ ringDrivers(s).forEach(d=>RING_KEYS.forEach((k,i)=>{t[k]+=d.v[i];}));
+ RING_KEYS.forEach(k=>{t[k]=clamp(t[k],5,95);});
+ return t;
+}
+// One month of ring drift and Life Score (called once per month after settlement).
+function tickRings(s=state){
+ const t=ringTargets(s);
+ RING_KEYS.forEach(k=>{s.rings[k]=clamp(s.rings[k]+(t[k]-s.rings[k])*A.rings.pull,0,100);s.ringSum[k]+=s.rings[k];});
+ s.ringMonths+=1;s.score+=monthPoints(s);
+ s.lowMeMonths=s.rings.me<A.burnout.lowMe?s.lowMeMonths+1:0;
+}
+function monthPoints(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return (0.6*Math.min(...v)+0.4*sum(v)/3)/10;}
+function ringAverages(s=state){const n=Math.max(1,s.ringMonths),o={};RING_KEYS.forEach(k=>{o[k]=s.ringMonths?s.ringSum[k]/n:s.rings[k];});return o;}
+// One-off ring bumps per event choice: [Me, Family & Friends, Community]. '*' applies to any choice.
+const RING_FX={
+ phone:{flagship:[6,0,0]},ac:{fan:[-3,0,0],savings:[3,0,0],invest:[3,0,0],borrow:[3,0,0]},
+ scam:{report:[0,0,2],family:[0,2,0],click:[-8,0,0]},
+ goa:{allin:[6,10,0],budget:[4,8,0],skip:[0,-6,0]},
+ weddings:{all:[2,6,6],one:[1,4,3],shagun:[0,-2,-1]},
+ concert:{vip:[8,3,0],regular:[6,2,0],skip:[-1,0,0]},
+ festival:{splurge:[6,0,0],gifts:[1,6,0]},
+ friendloan:{full:[0,8,0],half:[0,5,0],no:[0,-5,0]},
+ sibling:{full:[-2,12,0],part:[0,7,0],none:[0,2,0]},
+ parentstrip:{full:[3,14,0],train:[3,12,0],later:[0,-6,0]},
+ kidparty:{big:[0,8,4],home:[0,8,2],cake:[0,6,0]},
+ bonus:{treat:[6,0,0],save:[1,0,0],invest:[1,0,0],debt:[3,0,0]},taxrefund:{treat:[5,0,0],debt:[2,0,0]},
+ sidegig:{take:[-4,-4,0],rest:[3,2,0]},
+ promotion:{yes:[-2,-6,0],no:[2,3,0]},
+ startup:{join:[2,-4,0],counter:[1,0,0]},
+ course:{savings:[2,-5,0],invest:[2,-5,0],borrow:[0,-5,0]},
+ market:{sell:[-2,0,0]},
+ landlord:{accept:[-2,0,0],move:[-2,0,-6]},
+ pet:{adopt:[6,6,0],foster:[2,0,3]},
+ midlife:{buy:[10,-2,0],cycle:[6,0,2],ride:[2,0,0]},
+ medical:{'*':[-5,0,0]},parentmedical:{'*':[0,6,0],part:[0,3,0]},
+ wedding:{big:[6,12,8],modest:[6,12,3],wait:[0,-2,0]},
+ birth:{'*':[4,12,0]},
+ schoolQ:{gov:[0,2,4],private:[0,4,1],intl:[0,6,-1]},
+ parentsCare:{support:[0,6,0],movein:[-3,14,2],share:[0,3,0]},
+ divorce:{mediate:[-12,-15,0],court:[-18,-22,-3]},
+ festivalTime:{host:[4,6,16],join:[2,4,10],quiet:[1,0,-4]},
+ accident:{'*':[-12,0,0]},
+ grandkid:{spoil:[2,10,0],gift:[2,10,0],stories:[3,12,0]},
+ layoff:{search:[-6,0,0],cut:[-8,0,0]},
+ retire:{retire:[6,6,4]},
+ burnout:{break:[25,4,0],slow:[10,4,2],push:[-5,-2,0]},
+ squeeze:{slow:[2,15,0],push:[0,-5,0]}
+};
+function ringEffect(type,choiceId){
+ const t=RING_FX[type]||{},v=t[choiceId]||t['*']||(choiceId==='borrow'?[-3,0,0]:null);
+ return v&&v.some(x=>x)?{me:v[0],fam:v[1],com:v[2]}:null;
+}
+function applyRingFx(s,fx){if(!fx)return null;RING_KEYS.forEach(k=>{s.rings[k]=clamp(s.rings[k]+(fx[k]||0),0,100);});return fx;}
+// The ending title comes from your rings averaged over the whole run.
+function lifeEnding(s=state){
+ const a=ringAverages(s),H=A.rings.healthy,Lo=A.rings.low,weak=RINGS.slice().sort((x,y)=>a[x[0]]-a[y[0]])[0];
+ const e=(key,emoji,title,line)=>({key,emoji,title,line,avg:a,weakest:weak[0]});
+ if(s.finalReason==='insolvent')return e('broke','💸','Lived Fast, Ran Out of Fuel','The money ran dry before the finish line, and every month you missed scored nothing.');
+ if(a.me>=H&&a.fam>=H&&a.com>=H)return e('legend','🏆','Full Life Legend','You kept yourself, your people and your community going strong. That is the win.');
+ if(a.me>=H&&a.fam>=H)return e('home','🏡','Home Is Where the Heart Is','A happy you and a happy home. The wider community saw less of you.');
+ if(a.fam>=H&&a.com>=H&&a.me<Lo)return e('gave','🕯️','Gave Everything, Kept Nothing','Everyone leaned on you, and you never refilled your own tank.');
+ if(a.me>=H&&a.fam<Lo)return e('corner','💼','Corner Office, Empty House','You did well for yourself, but your people barely saw you.');
+ if(a.fam>=H&&a.com>=H)return e('people','🤝','People Person','Family, friends and neighbours loved you. Look after yourself a little more next time.');
+ return e('steady','🚗','Steady Cruiser','A steady life. Your '+weak[1]+' ring held the others back.');
+}
 
 /* =====================================================================
    6. MONTHLY SETTLEMENT
@@ -965,7 +1145,7 @@ const EVENTS={
  parentsCare:{kicker:'FAMILY FIRST',art:'🧓',life:true,titles:['Your parents need more support now.','Dad’s knees and Mum’s BP: time to step up.'],snapshot:true,
   create:()=>({support:priced(8000),share:priced(3000),movein:priced(5000),setup:priced(40000),description:'Your parents are getting older. Medicines, help at home and check-ups add up. How will you support them?',foot:'Caring for parents is a real, long-term cost. Bills are bigger without health cover for them.'}),
   choices:e=>[{id:'support',emoji:'💸',title:'Send monthly support',detail:money(e.support)+'/month, rising with inflation.'},{id:'movein',emoji:'🏠',title:'Move them in with you',detail:money(e.setup)+' once to set up a room, then '+money(e.movein)+'/month in extra household costs.'},{id:'share',emoji:'🤝',title:'Share it with your siblings',detail:money(e.share)+'/month as your share.'}],
-  resolve:(e,c)=>{const s=state,base={support:8000,movein:5000,share:3000}[c];s.life.parentsDone=true;s.costs.parents=base;const r=c==='movein'?fundExpense(e.setup,'savings'):null;
+  resolve:(e,c)=>{const s=state,base={support:8000,movein:5000,share:3000}[c];s.life.parentsDone=true;s.costs.parents=base;s.parentsMode=c;const r=c==='movein'?fundExpense(e.setup,'savings'):null;
    record('Started supporting parents at '+ageLabel()+' ('+{support:'monthly support',movein:'moved them in',share:'shared with siblings'}[c]+').',{major:true,kind:'family'});const left=monthlyBudget(s).leftover;
    return{text:'Parents’ support: '+money(priced(base,s))+'/month.'+(r?' '+r.text:''),feedback:left<0?fb('risky','Supporting your parents pushed monthly costs above income. Look for savings elsewhere in your plan.'):fb('solid','Looking after family is part of the plan. '+(s.insured&&!s.parentsCovered?'You can add them to your health cover in Power-ups.':'A steady monthly amount is easier to plan than surprise bills.'))};}},
  divorce:{kicker:'PLOT TWIST',art:'💔',titles:['Your marriage is ending.','It’s not you, it’s… complicated.'],snapshot:true,severe:true,weight:0.35,
@@ -1012,7 +1192,21 @@ const EVENTS={
   choices:()=>[{id:'retire',emoji:'🏖️',title:'Retire now',detail:'Salary stops this month. Expenses continue; investments are drawn down when savings run out.'},{id:'work',emoji:'💼',title:'Keep working',detail:'Keep earning. You can retire later.'}],
   resolve:(e,c)=>{const s=state;if(c==='work')return{text:'You chose to keep working.',feedback:fb('solid','More working years mean more saving and fewer years your assets must fund.')};
    s.employment='retired';s.laidOffMonthsLeft=0;s.retiredAtAge=ageLabel();record('Retired at '+s.retiredAtAge+'.',{major:true,kind:'retire'});celebrate('retire','🌅','Retired!','Your savings and investments take over from here.');
-   return{text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}}
+   return{text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}},
+ /* ---- rings: triggered by how your life is going (contextEventDue), never at random ---- */
+ burnout:{kicker:'RUNNING ON EMPTY',art:'🫠',titles:['You are running on empty.','Burnout: your body wants a word.','You cried in the office lift. Twice.'],
+  create:s=>({bill:priced(15000),description:'Months of stress have caught up with you: bad sleep, short temper, no joy in anything. Something has to give.',foot:'Rest is part of the plan, not a break from it.'}),
+  choices:(e,s)=>[{id:'break',emoji:'🏝️',title:'Take a '+A.burnout.breakMonths+'-month break',detail:'No salary for '+A.burnout.breakMonths+' months (about '+money(monthlyIncome(s)*A.burnout.breakMonths)+'). Your job waits for you.'},{id:'slow',emoji:'🌿',title:'Switch to a chill pace',detail:'Keep earning. Lower raises and promotion odds while you stay chill.'},{id:'push',emoji:'☕',title:'Push through',detail:'A doctor’s bill of about '+money(e.bill)+' and no real rest.'}],
+  resolve:(e,c)=>{const s=state;s.lastBurnoutMonth=s.month;s.lowMeMonths=0;
+   if(c==='break'){s.employment='laidoff';s.breakReason='break';s.laidOffMonthsLeft=A.burnout.breakMonths;record('Took a '+A.burnout.breakMonths+'-month break to recover from burnout at '+ageLabel()+'.',{major:true,kind:'health'});return{text:'Out-of-office: on. Salary pauses for '+A.burnout.breakMonths+' months.',feedback:monthsOfCushion(s)>=A.burnout.breakMonths?fb('great','Your savings could carry a short break. That is exactly what a cushion is for.'):fb('solid','Rest was needed, but your cushion is thin, so the break will strain your savings.')};}
+   if(c==='slow'){s.pace='chill';record('Switched to a chill pace after burnout at '+ageLabel()+'.',{kind:'pace'});return{text:'Pace set to Chill. Fewer late nights, slower career.',feedback:fb('solid','Slower growth, saner life. You can change your pace any time.')};}
+   const r=fundExpense(e.bill,'savings');return{text:'You pushed through. '+r.text,feedback:fb('risky','Pushing through burnout rarely works for long. Your Me ring stays low, and a low Me ring drags your Life Score.')};}},
+ squeeze:{kicker:'HOME IS CALLING',art:'🍽️',titles:['You have missed 3 family dinners this quarter.','Your kid asked if you live here.','Your best friend’s birthday: you sent a voice note. From the office.'],
+  create:()=>({description:'Hustle mode is paying off at work, but the people who matter are seeing less and less of you.',foot:'Promotions come back. Missed years do not.'}),
+  choices:()=>[{id:'slow',emoji:'🫶',title:'Slow down',detail:'Pace back to Balanced. Lower promotion odds for 2 years.'},{id:'push',emoji:'🚀',title:'Push through',detail:'Career stays on track. Home waits a little longer.'}],
+  resolve:(e,c)=>{const s=state;s.lastSqueezeMonth=s.month;
+   if(c==='slow'){s.pace='balanced';s.promoPenaltyUntil=s.month+A.promoPenaltyMonths;record('Slowed down at work for family at '+ageLabel()+'.',{major:true,kind:'pace'});return{text:'Pace set to Balanced. Dinner is at 8. You are there.',feedback:fb('great','You traded some promotion odds for time with your people. Over a lifetime, that is often the better deal.')};}
+   return{text:'You pushed through. The family group chat has gone quiet.',feedback:fb('risky','Your career keeps its speed, but your Family & Friends ring keeps draining. The weakest ring sets most of your Life Score.')};}}
 };
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
@@ -1028,10 +1222,11 @@ function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
 // Life stages (marriage, kids, school, parents) follow their own schedule in
 // lifeEventDue(), inside believable age windows.
 // After that, a random event every 12–20 months, weighted away from events you
-// have already seen. Contextual events (cash crunch, retirement at 60) happen
-// when the situation calls for them. Never two severe shocks in a row, never
+// have already seen. Contextual events (retirement at 60, burnout, missing your
+// family on Hustle pace) happen when the situation calls for them. Never two severe shocks in a row, never
 // the same type twice in a row.
-const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!['retire','crunch'].includes(t)&&!EVENTS[t].life);
+const CONTEXT_EVENTS=['retire','burnout','squeeze'];
+const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life);
 const OPENERS={shock:RANDOM_POOL.filter(t=>EVENTS[t].group==='shock'),social:RANDOM_POOL.filter(t=>EVENTS[t].group==='social')};
 function eligibleEvent(t,s){const d=EVENTS[t];return !d.eligible||d.eligible(s);}
 function eventWeight(t,s){const d=EVENTS[t];const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*(s.seen[t]||0));}
@@ -1057,13 +1252,21 @@ function lifeEventDue(s){
  if(!L.parentsDone&&L.parentsMonth&&m>=L.parentsMonth)return 'parentsCare';
  return null;
 }
+// Burnout: Me ring under 35 for 9 months straight while working. Squeeze: Hustle pace
+// with the Family & Friends ring under 35. Burnout returns at most every 3 years, the squeeze every 5.
+function contextEventDue(s){
+ if(s.employment!=='employed')return null;
+ if(s.lowMeMonths>=A.burnout.months&&s.month-s.lastBurnoutMonth>=A.burnout.cooldown)return 'burnout';
+ if(s.pace==='hustle'&&s.rings.fam<A.squeeze.lowFam&&s.month-s.lastSqueezeMonth>=A.squeeze.cooldown)return 'squeeze';
+ return null;
+}
 function startEvent(type,opts){
  const s=state,def=EVENTS[type];if(s.event||s.status!=='playing')return false;   // never overwrite a pending decision
  const data=def.create(s,opts)||{};
  const title=data.title||def.title||(def.titles?pick(def.titles):'');
  s.event=Object.assign({id:++s.eventSeq,type,kicker:def.kicker,art:def.art},data,{title});   // data may override the art
  s.seen[type]=(s.seen[type]||0)+1;
- if(!['crunch','retire'].includes(type)&&!def.life){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
+ if(!CONTEXT_EVENTS.includes(type)&&!def.life){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
  return true;
 }
 function maybeStartEvent(){
@@ -1074,6 +1277,7 @@ function maybeStartEvent(){
  if(m===24){const t=pickRandomEvent(s,OPENERS.social);if(t)startEvent(t,{first:true});return;}
  if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
+ const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
  if(m>=s.nextEventMonth&&m>24){s.nextEventMonth=m+randInt(A.eventGap[0],A.eventGap[1]);const t=pickRandomEvent(s);if(t)startEvent(t);}
 }
 
@@ -1107,8 +1311,8 @@ function monthAtAge(age){return Math.round((age-A.startAge)*12)+1;}
 // Yearly appraisal and a possible promotion (called at the start of each new simulated year).
 function yearlyRaise(s){
  const age=preciseAge(s),y=yearIndex(s),before=s.salary;
- const appraisal=byAge(A.appraisalByAge,age);
- const odds=(A.promoBaseChance+A.promoChancePerXp*s.career)*byAge(A.promoOddsByAge,age);
+ const pace=A.pace[s.pace]||A.pace.balanced,appraisal=Math.max(0,byAge(A.appraisalByAge,age)+pace.raise);
+ const odds=(A.promoBaseChance+A.promoChancePerXp*s.career)*byAge(A.promoOddsByAge,age)*pace.promo*(s.month<s.promoPenaltyUntil?A.promoPenalty:1);
  const promoted=y-s.lastPromotionYear>=A.promoMinGapYears&&rand()<odds;
  const hike=promoted?byAge(A.promoHikeByAge,age):0;
  s.salary=Math.round(s.salary*(1+appraisal+hike));
@@ -1137,10 +1341,12 @@ function advanceMonth(){
  const due=s.receivables.filter(r=>r.month<=s.month);
  if(due.length){const amt=sum(due.map(r=>r.amount));s.receivables=s.receivables.filter(r=>r.month>s.month);s.cash+=amt;s.story='Plot twist: your friend paid back '+money(amt)+'!';record('A friend repaid '+money(amt)+' at '+ageLabel()+'.');celebrate('repaid','🤝','Paid back!','+'+compact(amt)+' from your friend');}
  const o=settleMonth(s);
+ tickRings(s);
  s.message=settlementMessage(o);
  if(o.loanPaidOff)celebrate('loan','🎉',o.loanPaidOff+' loan cleared!','No more '+o.loanPaidOff.toLowerCase()+' EMI');
- if(s.employment==='laidoff'){s.laidOffMonthsLeft-=1;if(s.laidOffMonthsLeft<=0){const healed=s.breakReason==='recovery';s.employment='employed';s.laidOffMonthsLeft=0;s.breakReason='';if(!healed)s.jobStartMonth=s.month+1;
-  s.story=healed?'Fully recovered and back at work! Salary of '+money(s.salary)+' resumes next month.':'You found a new role! Salary of '+money(s.salary)+' resumes next month.';record('Back at work at '+ageLabel()+'.',{kind:'career'});celebrate('job','🙌',healed?'Back on your feet!':'New job!','Salary resumes next month');}}
+ if(s.employment==='laidoff'){s.laidOffMonthsLeft-=1;if(s.laidOffMonthsLeft<=0){const reason=s.breakReason,healed=reason==='recovery';s.employment='employed';s.laidOffMonthsLeft=0;s.breakReason='';if(!healed&&reason!=='break')s.jobStartMonth=s.month+1;
+  if(reason==='break'){s.story='Recharged and back at work. Salary of '+money(s.salary)+' resumes next month.';celebrate('job','🔋','Recharged!','Salary resumes next month');}
+  else{s.story=healed?'Fully recovered and back at work! Salary of '+money(s.salary)+' resumes next month.':'You found a new role! Salary of '+money(s.salary)+' resumes next month.';record('Back at work at '+ageLabel()+'.',{kind:'career'});celebrate('job','🙌',healed?'Back on your feet!':'New job!','Salary resumes next month');}}}
  if(s.distressMonths>0)s.message+=' Strained months in a row: '+s.distressMonths+' of '+A.failureMonths+'.';
  if(s.month>=A.endMonth){endRun('completed');return true;}
  if(s.distressMonths>=A.failureMonths){endRun('insolvent');return true;}
@@ -1154,7 +1360,8 @@ function resolveEvent(eventId,choiceId){
  const choice=def.choices(e,s).find(c=>c.id===choiceId);if(!choice)return null;
  e.resolving=true;                                   // effects apply exactly once
  const r=def.resolve(e,choiceId)||{};
- s.event=null;s.feedback=Object.assign({source:e.title,art:e.art},r.feedback||null);s.message=r.text||'';s.story=r.text||'';
+ r.rings=applyRingFx(s,ringEffect(e.type,choiceId));
+ s.event=null;s.feedback=Object.assign({source:e.title,art:e.art,rings:r.rings},r.feedback||null);s.message=r.text||'';s.story=r.text||'';
  if(e.type!=='retire'&&e.type!=='crunch'&&!s.history.some(h=>h.eventId===e.id))s.history.push({month:s.month,age:ageLabel(),text:e.art+' '+e.title+' → '+choice.title+'.',eventId:e.id,kind:'event'});
  return r;
 }
@@ -1170,16 +1377,28 @@ function bankCheck(s,newEmi){
  const share=(allEmis(s)+newEmi)/Math.max(1,monthlyIncome(s));
  return share>A.maxEmiShare?'The bank says no: EMIs would take '+Math.round(share*100)+'% of your take-home pay (limit 50%).':null;
 }
-function vehicleOption(kind){
- const ride=BASE_PRICES.commute[kind],other=kind==='bike'?'car':'bike';
- return {tab:'big',name:(kind==='bike'?'Buy a two-wheeler':'Buy a car'),emoji:ride.emoji,color:kind==='bike'?'c-sand':'c-blue',
-  cost:()=>0,
-  monthly:s=>emiFor(priced(ride.loan,s))+priced(ride.running+ride.fuel,s)-priced(s.costs.commute+s.costs.fuel,s),
-  available:s=>s.vehicle===kind?'You already '+(kind==='bike'?'ride one':'drive one')+'.':s.vehicleLoan?'Repay or sell your '+BASE_PRICES.commute[s.vehicle].label.toLowerCase()+' first (Monthly Plan → Commute).':bankCheck(s,emiFor(priced(ride.loan,s))),
-  describe:s=>money(priced(ride.loan,s))+' on a 36-month loan at 12% a year: EMI '+money(emiFor(priced(ride.loan,s)))+', plus about '+money(priced(ride.fuel,s))+' a month for fuel and '+money(priced(ride.running,s))+' for upkeep. Replaces your current commute'+(s.vehicle===other?' (your '+BASE_PRICES.commute[other].label.toLowerCase()+' is sold)':'')+'.',
-  apply:s=>{applyExpenseTo(s,'commute',kind);record('Bought a '+ride.label.toLowerCase()+' on a '+money(s.vehicleLoan.principal)+' loan at '+ageLabel()+'.',{major:true,kind:'vehicle'});celebrate('vehicle',ride.emoji,'New ride!',ride.label+' unlocked');const b=monthlyBudget(s);
-   return{text:'New '+ride.label.toLowerCase()+'! Loan '+money(s.vehicleLoan.principal)+' at '+money(s.vehicleLoan.emi)+'/month for 36 months.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The gap will turn into debt.'):b.leftover<b.income*0.15?fb('risky','A new ride, but the EMI leaves a thin monthly surplus.'):fb('solid','Convenience you can afford. Vehicles lose value; the EMI does not.')};}};
+// Variants: a big buy can come in versions that trade comfort, people and show-off value.
+// Each variant: {id, emoji, label, blurb, brag (0–3, worth 0 points), rings (lasting effect), block}.
+function rideVariants(kind,s){
+ if(kind!=='car')return null;
+ return Object.entries(BASE_PRICES.car).map(([id,c])=>({id,emoji:c.emoji,label:c.label,blurb:c.blurb,brag:c.brag,rings:c.rings,
+  price:priced(c.loan,s),emi:emiFor(priced(c.loan,s)),block:bankCheck(s,emiFor(priced(c.loan,s)))}));
 }
+function vehicleOption(kind){
+ const base=BASE_PRICES.commute[kind],other=kind==='bike'?'car':'bike';
+ return {tab:'big',name:(kind==='bike'?'Buy a two-wheeler':'Buy a car'),emoji:base.emoji,color:kind==='bike'?'c-sand':'c-blue',
+  variants:kind==='car'?s=>rideVariants('car',s):null,
+  cost:()=>0,
+  monthly:(s,v)=>{const ride=rideSpec(kind,v);return emiFor(priced(ride.loan,s))+priced(ride.running+ride.fuel,s)-priced(s.costs.commute+s.costs.fuel,s);},
+  available:s=>s.vehicle===kind?'You already '+(kind==='bike'?'ride one':'drive one')+'.':s.vehicleLoan?'Repay or sell your '+vehicleLabel(s).toLowerCase()+' first (Monthly Plan → Commute).':kind==='car'?null:bankCheck(s,emiFor(priced(base.loan,s))),
+  describe:(s,v)=>{const ride=rideSpec(kind,v);return (kind==='car'?ride.label+': ':'')+money(priced(ride.loan,s))+' on a 36-month loan at 12% a year: EMI '+money(emiFor(priced(ride.loan,s)))+', plus about '+money(priced(ride.fuel,s))+' a month for fuel and '+money(priced(ride.running,s))+' for upkeep. Replaces your current commute'+(s.vehicle===other?' (your '+vehicleLabel(s).toLowerCase()+' is sold)':'')+'.';},
+  apply:(s,v)=>{applyExpenseTo(s,'commute',kind,v);const ride=rideSpec(kind,s.carModel);record('Bought a '+ride.label.toLowerCase()+' on a '+money(s.vehicleLoan.principal)+' loan at '+ageLabel()+'.',{major:true,kind:'vehicle'});celebrate('vehicle',ride.emoji,'New ride!',ride.label+' unlocked');const b=monthlyBudget(s);
+   return{text:'New '+ride.label.toLowerCase()+'! Loan '+money(s.vehicleLoan.principal)+' at '+money(s.vehicleLoan.emi)+'/month for 36 months.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The gap will turn into debt.'):b.leftover<b.income*0.15?fb('risky','A new ride, but the EMI leaves a thin monthly surplus.'):v==='suv'?fb('solid','Very shiny. Show-off value earns no points; the EMI and fuel are real.'):fb('solid','Convenience you can afford. Vehicles lose value; the EMI does not.')};}};
+}
+// Ring power-ups: small, deliberate ways to look after your people and your community.
+function ringAction(o){return Object.assign({tab:'one-time',monthly:()=>0,
+ available:s=>{const used=s.lastUsed[o.id];return used&&s.month-used<A.ringActionCooldown?'Done recently. Again in '+(A.ringActionCooldown-(s.month-used))+' month'+(A.ringActionCooldown-(s.month-used)===1?'':'s')+'.':null;},
+ apply:s=>{s.lastUsed[o.id]=s.month;if(o.price)s.stats.fun+=priced(o.price,s);const fx=applyRingFx(s,{me:o.rings[0],fam:o.rings[1],com:o.rings[2]});const r=o.done(s);r.rings=fx;return r;}},o,{cost:s=>o.price?priced(o.price,s):0});}
 const OPTIONAL={
  skill:{tab:'one-time',name:'Skill up',emoji:'📚',color:'c-sand',
   cost:()=>priced(A.trainingCost),monthly:()=>0,
@@ -1215,39 +1434,64 @@ const OPTIONAL={
   describe:s=>{const q=termQuote(s);return 'Cover of '+compact(q.cover)+' until 65, with a disability benefit: if an accident stops you working, it pays '+compact(Math.round(q.cover*A.term.disabilityShare))+'. Premium '+money(q.premium)+'/month, locked for life. The younger you buy, the cheaper it is.';},
   apply:s=>{const q=termQuote(s);s.termCover={premium:q.premium,cover:q.cover,untilMonth:monthAtAge(A.term.untilAge),boughtAge:ageLabel(s)};record('Bought '+compact(q.cover)+' term cover at '+ageLabel()+' ('+money(q.premium)+'/month, locked).',{major:true,kind:'cover'});
    return{text:'Term cover active: '+money(q.premium)+'/month until 65.',feedback:preciseAge(s)<30?fb('great','Bought young, the premium is tiny and stays fixed for decades while your pay grows.'):fb('solid','Protection for the people who depend on you. Buying earlier would have been cheaper.')};}},
+ familyDay:ringAction({id:'familyDay',name:'A day with your people',emoji:'🧺',color:'c-mint',price:6000,rings:[2,8,0],
+  describe:s=>'A picnic, a movie or a long lunch with '+(s.married||activeChildren(s).length?'your family':'friends')+'. Once a year. Family & Friends +8, Me +2.',
+  done:s=>({text:'A lovely day out with '+(s.married||activeChildren(s).length?'the family':'friends')+'.',feedback:fb('great','Showing up beats sending gifts. Small, regular time together keeps the ring full.')})}),
+ volunteer:ringAction({id:'volunteer',name:'Volunteer for a weekend',emoji:'🙋',color:'c-sage',price:0,rings:[2,-1,8],
+  describe:()=>'Teach at a shelter, clean a lake, run the colony sports day. Costs a weekend, not money. Once a year. Community +8.',
+  done:()=>({text:'You gave a weekend to your community.',feedback:fb('great','Free, and it fills the Community ring. Time can be worth more than money.')})}),
+ donate:ringAction({id:'donate',name:'Donate to a local cause',emoji:'🎗️',color:'c-lav',price:10000,rings:[2,0,6],
+  describe:s=>'Give '+money(priced(10000,s))+' to a school, temple, mosque, church or NGO near you. Once a year. Community +6.',
+  done:()=>({text:'Donation made. The local school library has new books.',feedback:fb('solid','Generous. Giving time often fills the Community ring more cheaply than giving money.')})}),
  buyBike:vehicleOption('bike'),
  buyCar:vehicleOption('car'),
  buyHouse:{tab:'big',name:'Buy a home',emoji:'🏡',color:'c-sage',
-  cost:s=>houseUpfront(s),
-  monthly:s=>houseLoanEmi(s)+priced(A.house.maintenance,s)-priced(s.costs.housing,s)-priced(s.costs.homeUpgrade,s),
-  available:s=>s.ownsHome?'You already own your home.':bankCheck(s,houseLoanEmi(s)),
-  describe:s=>'A 2BHK for '+money(housePrice(s))+'. Pay 20% down + 7% registration ('+money(houseUpfront(s))+'), and a 20-year home loan at 8.5% a year: EMI '+money(houseLoanEmi(s))+'. Rent stops; maintenance is '+money(priced(A.house.maintenance,s))+'/month. Home value grows about 5% a year.',
-  apply:s=>{const price=housePrice(s),loan=Math.round(price*(1-A.house.downShare));s.ownsHome=true;s.homeValue=price;s.homeLoan=makeLoan('home',loan);s.homeUpgraded=false;s.costs.homeUpgrade=0;
-   record('Bought a home for '+money(price)+' at '+ageLabel()+' ('+money(loan)+' home loan).',{major:true,kind:'home'});celebrate('home','🏡','Home sweet home!','You own a home');const b=monthlyBudget(s);
-   return{text:'You bought a home! Loan '+money(loan)+' at '+money(s.homeLoan.emi)+'/month for 20 years. Rent stops from next month.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The home could become a burden.'):monthsOfCushion(s)<2?fb('risky','A home of your own, but the down payment left your cash cushion thin.'):b.leftover<b.income*0.15?fb('risky','A home of your own, with a thin monthly surplus. Big EMIs leave little room for surprises.'):fb('great','A home you can afford, with a cushion left over. Rent money now builds equity.')};}},
+  variants:s=>Object.entries(BASE_PRICES.house).map(([id,h])=>({id,emoji:h.emoji,label:h.label,blurb:h.blurb,brag:h.brag,rings:h.rings,
+   price:housePrice(s,id),upfront:houseUpfront(s,id),emi:houseLoanEmi(s,id),block:bankCheck(s,houseLoanEmi(s,id))||(houseUpfront(s,id)>s.cash?'Needs '+money(houseUpfront(s,id))+' in savings for the down payment.':null)})),
+  cost:(s,v)=>houseUpfront(s,v),
+  monthly:(s,v)=>houseLoanEmi(s,v)+priced(houseSpec(v).maintenance,s)-priced(s.costs.housing,s)-priced(s.costs.homeUpgrade,s),
+  available:s=>s.ownsHome?'You already own your home.':null,
+  describe:(s,v)=>{const h=houseSpec(v);return h.label+' for '+money(housePrice(s,v))+'. Pay 20% down + 7% registration ('+money(houseUpfront(s,v))+'), and a 20-year home loan at 8.5% a year: EMI '+money(houseLoanEmi(s,v))+'. Rent stops; maintenance is '+money(priced(h.maintenance,s))+'/month. Home value grows about 5% a year.';},
+  apply:(s,v)=>{const h=houseSpec(v),price=housePrice(s,v),loan=Math.round(price*(1-A.house.downShare));s.ownsHome=true;s.homeType=v;s.homeValue=price;s.homeLoan=makeLoan('home',loan);s.homeUpgraded=false;s.costs.homeUpgrade=0;
+   record('Bought a '+h.label.toLowerCase()+' for '+money(price)+' at '+ageLabel()+' ('+money(loan)+' home loan).',{major:true,kind:'home'});celebrate('home',h.emoji,'Home sweet home!',h.label);const b=monthlyBudget(s);
+   return{text:'You bought a '+h.label.toLowerCase()+'! Loan '+money(loan)+' at '+money(s.homeLoan.emi)+'/month for 20 years. Rent stops from next month.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The home could become a burden.'):monthsOfCushion(s)<2?fb('risky','A home of your own, but the down payment left your cash cushion thin.'):b.leftover<b.income*0.15?fb('risky','A home of your own, with a thin monthly surplus. Big EMIs leave little room for surprises.'):fb('great','A home you can afford, with a cushion left over. Rent money now builds equity.')};}},
  sellHouse:{tab:'big',name:'Sell your home',emoji:'🪧',color:'c-clay',
   cost:()=>0,
-  monthly:s=>priced(BASE_PRICES.home[s.profile.home].cost,s)-(s.homeLoan?s.homeLoan.emi:0)-priced(A.house.maintenance,s),
+  monthly:s=>priced(BASE_PRICES.home[s.profile.home].cost,s)-(s.homeLoan?s.homeLoan.emi:0)-priced(houseSpec(s.homeType).maintenance,s),
   available:s=>s.ownsHome?null:'You do not own a home.',
   describe:s=>'Sell for about '+money(Math.round(s.homeValue*(1-A.house.sellCostShare)))+' after 3% costs. The home loan ('+money(s.homeLoan?s.homeLoan.balance:0)+') is repaid and the rest goes to savings. You go back to renting ('+BASE_PRICES.home[s.profile.home].label+').',
-  apply:s=>{const proceeds=Math.round(s.homeValue*(1-A.house.sellCostShare)),owed=s.homeLoan?s.homeLoan.balance:0,net=proceeds-owed;s.homeLoan=null;s.ownsHome=false;s.homeValue=0;s.costs.housing=BASE_PRICES.home[s.profile.home].cost;
+  apply:s=>{const proceeds=Math.round(s.homeValue*(1-A.house.sellCostShare)),owed=s.homeLoan?s.homeLoan.balance:0,net=proceeds-owed;s.homeLoan=null;s.ownsHome=false;s.homeType='';s.homeValue=0;s.costs.housing=BASE_PRICES.home[s.profile.home].cost;
    if(net>=0)s.cash+=net;else s.unsecuredDebt+=-net;record('Sold the home at '+ageLabel()+': '+money(net)+' after repaying the loan.',{major:true,kind:'home'});
    return{text:'Home sold. '+(net>=0?money(net)+' added to savings after repaying the loan.':money(-net)+' of the loan was left over and became debt.'),feedback:fb('solid','Selling frees you from the EMI. You are back to paying rent, which rises every year.')};}}
 };
 function investFeedback(s,amount){s.invested+=amount;const m=monthsOfCushion(s);return{text:'Moved '+money(amount)+' into investments. Savings now '+money(s.cash)+'.',feedback:s.unsecuredDebt>0?fb('risky','You are investing while carrying debt at 1% a month. Paying debt first is a guaranteed return.'):m<1?fb('risky','Your savings now cover less than a month of expenses. A surprise may become debt.'):m<3?fb('solid','Investing builds long-term growth. Keep building your cash cushion toward three months too.'):fb('great','You kept a healthy cushion and gave this money time to compound. Returns are not guaranteed.')};}
-function optionalBlocker(id){
+// With variants: optionalBlocker(id) says whether any version is possible;
+// optionalBlocker(id, variant) checks that exact version.
+function optionalBlocker(id,variant){
  const s=state,o=OPTIONAL[id];if(!o)return 'Unknown choice.';
  if(s.status!=='playing')return 'This run has ended.';
  if(s.event)return 'Resolve the current life event first.';
  if(s.optionalUsedMonth===s.month)return 'You already made an optional choice this month.';
  const a=o.available(s);if(a)return a;
- if(o.cost(s)>s.cash)return 'Needs '+money(o.cost(s))+' in savings; you have '+money(s.cash)+'.';
+ if(o.variants){const vs=o.variants(s);
+  if(variant===undefined){const ok=vs.find(v=>!v.block);return ok?null:vs.slice().sort((x,y)=>(x.price||0)-(y.price||0))[0].block;}
+  const v=vs.find(x=>x.id===variant);if(!v)return 'Choose an option.';if(v.block)return v.block;}
+ if(o.cost(s,variant)>s.cash)return 'Needs '+money(o.cost(s,variant))+' in savings; you have '+money(s.cash)+'.';
  return null;
 }
-function chooseOptional(id){
- const s=state;if(optionalBlocker(id))return null;
- const o=OPTIONAL[id];s.cash-=o.cost(s);s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
- const r=o.apply(s);s.feedback=Object.assign({source:o.name,art:o.emoji},r.feedback);s.message=r.text;return r;
+function chooseOptional(id,variant){
+ const s=state,o=OPTIONAL[id];if(!o||(o.variants&&variant===undefined)||optionalBlocker(id,variant))return null;
+ s.cash-=o.cost(s,variant);s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
+ const r=o.apply(s,variant);s.feedback=Object.assign({source:o.name,art:o.emoji,rings:r.rings||null},r.feedback);s.message=r.text;return r;
+}
+/* Pace: how hard you work. Free to change while racing; the next pit stops (Phase 3) will ask too. */
+const PACES={hustle:{emoji:'🚀',label:'Hustle',blurb:'Higher promotion odds and raises (+1%/yr). Less time for people and yourself.'},balanced:{emoji:'⚖️',label:'Balanced',blurb:'Work hard, go home.'},chill:{emoji:'🌿',label:'Chill',blurb:'Lower promotion odds and raises (−1%/yr). More time for everyone, you included.'}};
+Object.keys(PACES).forEach(k=>{PACES[k].rings=LIFESTYLE_RINGS.pace[k];});
+function paceBlocker(p){const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';if(!PACES[p])return 'Unknown pace.';if(p===s.pace)return 'Already set.';if(s.employment==='retired')return 'Retired: your pace is your own now.';return null;}
+function setPace(p){
+ const s=state;if(paceBlocker(p))return null;s.pace=p;record('Switched to a '+PACES[p].label.toLowerCase()+' pace at '+ageLabel()+'.',{kind:'pace'});
+ const text='Pace set to '+PACES[p].label+'.',feedback=p==='hustle'?fb('solid','Faster career, less time. Watch your Family & Friends and Me rings.'):p==='chill'?fb('solid','More life, slower career. Make sure the money still adds up.'):fb('great','Balanced: steady career, time for your people.');
+ s.feedback=Object.assign({source:'Pace',art:PACES[p].emoji},feedback);s.message=text;return{text,feedback};
 }
 
 /* =====================================================================
@@ -1291,12 +1535,12 @@ function previewExpenseChange(key,value){
  const copy=JSON.parse(JSON.stringify(state));const before=monthlyBudget(state);applyExpenseTo(copy,key,value);const after=monthlyBudget(copy);
  return{before,after,debtChange:totalDebt(copy)-totalDebt(state),soldLoan:!!state.vehicleLoan&&!copy.vehicleLoan};
 }
-function applyExpenseTo(s,key,value){
+function applyExpenseTo(s,key,value,model){
  if(key==='home'){s.profile.home=value;s.costs.housing=BASE_PRICES.home[value].cost;}
  else if(key==='food'){s.profile.food=value;s.costs.food=BASE_PRICES.food[value].cost;}
  else if(key==='social'){s.profile.social=value;s.costs.social=BASE_PRICES.social[value].cost;}
  else if(key==='other'){s.profile.other=value;s.costs.other=BASE_PRICES.other[value].cost;}
- else if(key==='commute'){const ride=BASE_PRICES.commute[value];if(s.vehicleLoan){s.unsecuredDebt+=Math.round(s.vehicleLoan.balance*(1-A.vehicleResaleShare));s.vehicleLoan=null;}s.vehicle=value;s.profile.commute=value;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;if(ride.loan)s.vehicleLoan=makeLoan(value,priced(ride.loan,s));}
+ else if(key==='commute'){const ride=rideSpec(value,model);if(s.vehicleLoan){s.unsecuredDebt+=Math.round(s.vehicleLoan.balance*(1-A.vehicleResaleShare));s.vehicleLoan=null;}s.vehicle=value;s.carModel=value==='car'?(model||'hatch'):'hatch';s.profile.commute=value;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;if(ride.loan)s.vehicleLoan=makeLoan(value,priced(ride.loan,s));}
  else if(key==='homeUpgrade'){s.homeUpgraded=false;s.costs.homeUpgrade=0;}
  else if(key==='insurance'){s.insured=false;s.parentsCovered=false;}
  else if(key==='parentsCover'){s.parentsCovered=false;}
@@ -1304,10 +1548,10 @@ function applyExpenseTo(s,key,value){
 }
 function applyExpenseChange(key,value){
  const s=state;if(expenseChangeBlocker(key,value))return null;
- const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldVehicle=s.vehicle;applyExpenseTo(s,key,value);const after=monthlyBudget(s);
+ const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldLabel=vehicleLabel(s);applyExpenseTo(s,key,value);const after=monthlyBudget(s);
  const labels={home:'Rent',food:'Food',social:'Social life',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover'};
  let text=labels[key]+' updated. Monthly expenses '+money(before.total)+' → '+money(after.total)+'.';
- if(key==='commute'&&hadLoan&&!s.vehicleLoan){const left=Math.round(hadLoan*(1-A.vehicleResaleShare));text+=' Sold the '+BASE_PRICES.commute[oldVehicle].label.toLowerCase()+': resale repaid '+money(hadLoan-left)+' of the loan; the remaining '+money(left)+' became unsecured debt.';record('Sold the '+BASE_PRICES.commute[oldVehicle].label.toLowerCase()+' at '+ageLabel()+'; '+money(left)+' of the loan became debt.',{major:true,kind:'vehicle'});}
+ if(key==='commute'&&hadLoan&&!s.vehicleLoan){const left=Math.round(hadLoan*(1-A.vehicleResaleShare));text+=' Sold the '+oldLabel.toLowerCase()+': resale repaid '+money(hadLoan-left)+' of the loan; the remaining '+money(left)+' became unsecured debt.';record('Sold the '+oldLabel.toLowerCase()+' at '+ageLabel()+'; '+money(left)+' of the loan became debt.',{major:true,kind:'vehicle'});}
  if(key==='homeUpgrade')record('Moved out of the upgraded home at '+ageLabel()+'.',{kind:'home'});
  if(key==='insurance'||key==='parentsCover'||key==='term')record('Cancelled '+labels[key].toLowerCase()+' at '+ageLabel()+'.',{kind:'cover'});
  let feedback;
@@ -1342,15 +1586,19 @@ function endSummary(){
  if(s.stats.interestPaid>1000)reasons.push('Debt interest added '+money(s.stats.interestPaid)+' over the run.');
  if(s.stats.recoveries>0)reasons.push('You recovered from '+s.stats.recoveries+' strained period'+(s.stats.recoveries>1?'s':'')+'. Getting back to a fully paid month mattered.');
  if(completed&&s.stats.strainedMonths===0)reasons.push('Every month was fully paid. A steady surplus and reserves carried you through.');
+ const ending=lifeEnding(s),avg=ending.avg;
+ const strong=RINGS.filter(r=>avg[r[0]]>=A.rings.healthy).map(r=>r[1]),weak=RINGS.filter(r=>avg[r[0]]<A.rings.low).map(r=>r[1]);
+ if(strong.length)reasons.unshift('Strong rings: '+strong.join(', ')+'.'+(weak.length?' Weak: '+weak.join(', ')+'.':''));else if(weak.length)reasons.unshift('Your weakest rings were '+weak.join(' and ')+'.');
  const decisions=s.history.filter(h=>h.major).map(h=>h.text);
- return{completed,reasons,decisions,budget:b};
+ return{completed,reasons,decisions,budget:b,ending,score:Math.round(s.score)};
 }
 
 window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
- severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense};
+ severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
+ RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,setPace,paceBlocker,houseSpec,rideSpec,vehicleLabel};
 })();
 </script>
 <script>
@@ -1649,7 +1897,7 @@ function hydrateIcons(){document.querySelectorAll('[data-icon]').forEach(el=>{el
 /* ---------- UI-only state (never financial) ---------- */
 const ui={modal:null,paused:false,hidden:document.hidden,elapsed:0,timer:null,lastTick:0,countdown:false,
  optionalTab:'one-time',financeDetail:{},lastBalances:null,renderedEventId:null,shownEventId:null,renderedEnd:false,
- pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,
+ pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pacePick:null,
  setup:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes'}};
 
 /* ---------- Sound wiring ---------- */
@@ -1754,30 +2002,54 @@ const IDLE_LINES={
  'Freedom years':['Morning walks, afternoon naps, evening chai.','Grandparent WhatsApp forwards: activated.','Finally reading all the books you bought.'],
  'Golden years':['The finish line is in sight.','Telling stories about the good old days.','Every month is a victory lap.']
 };
+/* ---------- Life rings ---------- */
+const RING_ICON={me:'🧍',fam:'👨‍👩‍👧',com:'🏘️'},RING_NAME={me:'Me',fam:'Family & Friends',com:'Community'};
+// Up to `max` chips for a ring effect, biggest first ({me,fam,com} or [me,fam,com]).
+function ringChips(fx,max,suffix){
+ if(!fx)return '';if(Array.isArray(fx))fx={me:fx[0],fam:fx[1],com:fx[2]};
+ const list=Object.keys(RING_ICON).filter(k=>fx[k]).sort((a,b)=>Math.abs(fx[b])-Math.abs(fx[a])).slice(0,max||3);
+ return list.map(k=>'<span class="rchip '+(fx[k]>0?'up':'down')+'" aria-label="'+RING_NAME[k]+' '+(fx[k]>0?'plus ':'minus ')+Math.abs(fx[k])+'">'+RING_ICON[k]+' '+(fx[k]>0?'+':'−')+Math.abs(fx[k])+(suffix||'')+'</span>').join('');
+}
+function bragChip(n){return n?'<span class="rchip brag" aria-label="Show-off value '+n+' of 3, worth 0 points">'+'✨'.repeat(n)+' brag</span>':'';}
+function renderRings(){
+ const s=S(),t=M.ringTargets(),drivers=M.ringDrivers();
+ $('hudRings').innerHTML=M.RINGS.map(([k,name,icon])=>'<span class="ring r-'+k+(s.rings[k]<A.rings.low?' low':'')+'" style="--v:'+Math.round(s.rings[k])+'">'+em(icon)+'</span>').join('');
+ $('hudRings').setAttribute('aria-label','Life rings: '+M.RINGS.map(([k,name])=>name+' '+Math.round(s.rings[k])).join(', '));
+ $('ringRows').innerHTML=M.RINGS.map(([k,name,icon],i)=>{
+  const v=Math.round(s.rings[k]),gap=t[k]-s.rings[k],trend=gap>2?'<em class="up">▲ rising</em>':gap<-2?'<em class="down">▼ falling</em>':'<em>steady</em>';
+  const mine=drivers.map(d=>({label:d.label,v:d.v[i]})).filter(d=>d.v),best=mine.filter(d=>d.v>0).sort((a,b)=>b.v-a.v)[0],worst=mine.filter(d=>d.v<0).sort((a,b)=>a.v-b.v)[0];
+  const why=[best?'＋ '+best.label:'',worst?'− '+worst.label:''].filter(Boolean).join(' · ')||'Nothing much is feeding this ring.';
+  return '<div class="ring-row r-'+k+'">'+em(icon)+'<div><b>'+esc(name)+'</b><div class="ring-track"><i style="width:'+v+'%"></i></div><small>'+esc(why)+'</small></div><div class="ring-val">'+v+trend+'</div></div>';
+ }).join('');
+ const pace=M.PACES[s.pace];$('paceEmoji').textContent=pace.emoji;$('paceTitle').textContent='Pace: '+pace.label;
+ $('paceNote').textContent=s.employment==='retired'?'Retired: all the time in the world.':pace.blurb;
+ $('paceBtn').disabled=!!s.event||s.status!=='playing'||s.employment==='retired';
+}
 function renderPlay(){
  const s=S(),age=M.preciseAge(),b=M.monthlyBudget(),res=M.resilience();
  $('ageValue').textContent=M.ageLabel();
  const years=A.endAge-A.startAge,yr=Math.min(years,Math.floor((Math.max(1,s.month)-1)/12)+1),lap=$('yearLap');
  lap.textContent=age>=79?'FINAL LAP!':'YEAR '+yr+' / '+years;lap.classList.toggle('final',age>=79);
  $('hudCash').textContent=compact(s.cash);
- $('hearts').innerHTML=[0,1,2,3,4].map(i=>'<span class="'+(i<res.level?'':'off')+'">♥</span>').join('');
- $('hearts').setAttribute('aria-label','Resilience: '+res.label+', '+res.level+' of 5 hearts');
+ renderRings();
  renderStatus();renderClock();
  $('speedBtn').textContent=prefs.speed+'×';
  $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause');$('pauseBtn').setAttribute('aria-label',ui.paused?'Resume':'Pause');$('pauseBtn').disabled=!!s.event||s.status!=='playing';
  $('retireBtn').classList.toggle('hidden',!(s.status==='playing'&&age>=A.retireMinAge&&s.employment!=='retired'));
  // Story bubble from your character.
  const stage=stageName(age),lines=IDLE_LINES[stage];
- const face=s.distressMonths>0?'😰':res.level<=2?'😟':s.employment==='retired'?'😌':res.level>=4?'😄':'🙂';
+ const low=Math.min(s.rings.me,s.rings.fam,s.rings.com);
+ const face=s.distressMonths>0?'😰':s.rings.me<A.burnout.lowMe?'🫠':res.level<=2||low<A.rings.low-10?'😟':s.employment==='retired'?'😌':low>=A.rings.healthy&&res.level>=3?'😄':'🙂';
  $('bubbleFace').textContent=face;
  $('sceneMessage').textContent=s.story||lines[Math.floor(s.month/7)%lines.length];
- $('sceneSub').textContent=(s.employment==='retired'?'Retired · living off your savings':s.employment==='laidoff'?(s.breakReason==='recovery'?'Recovering · ':'Between jobs · ')+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left':stage)+' · '+compact(s.salary)+'/month salary';
- const tags=[[s.ownsHome?'🏡':P.home[s.profile.home].emoji,s.ownsHome?'Own home':P.home[s.profile.home].label+(s.homeUpgraded?' +':'')],[P.commute[s.vehicle].emoji,P.commute[s.vehicle].label+(s.vehicleLoan?' (loan)':'')]];
+ $('sceneSub').textContent=(s.employment==='retired'?'Retired · living off your savings':s.employment==='laidoff'?(s.breakReason==='recovery'?'Recovering · ':s.breakReason==='break'?'Recharging · ':'Between jobs · ')+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left':stage)+' · '+compact(s.salary)+'/month salary';
+ const ride=M.rideSpec(s.vehicle,s.carModel),home=s.ownsHome?M.houseSpec(s.homeType):null;
+ const tags=[[home?home.emoji:P.home[s.profile.home].emoji,home?'Own '+home.label.toLowerCase():P.home[s.profile.home].label+(s.homeUpgraded?' +':'')],[ride.emoji,ride.label+(s.vehicleLoan?' (loan)':'')]];
  if(s.married)tags.push(['💞','Married']);const kids=M.activeChildren().length;if(kids)tags.push(['👶',kids+' kid'+(kids>1?'s':'')]);if(s.pet)tags.push(['🐶','Pet']);if(s.insured)tags.push(['🛡️',(s.married||kids?'Family cover':'Health cover')+(s.parentsCovered?' + parents':'')]);if(s.termCover)tags.push(['☂️','Term cover']);tags.push(['⭐','XP '+s.career+'/'+A.maxXp]);if(s.promotions)tags.push(['🏆',s.promotions+' promotion'+(s.promotions>1?'s':'')]);
  $('lifeTags').innerHTML=tags.map(t=>'<span>'+em(t[0])+esc(t[1])+'</span>').join('');
  // Decision feedback: reaction face + label + text (never colour alone).
  const f=s.feedback,fc=$('feedbackCard');
- if(f){const key=f.title+f.why;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+'</em>':'')+'</b><p>'+esc(f.why)+'</p></div>';}}
+ if(f){const chips=ringChips(f.rings),key=f.title+f.why+chips;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
  else{fc.className='feedback hidden';fc.dataset.key='';}
  const strain=$('strainNote');
  if(s.distressMonths>0){strain.classList.remove('hidden');strain.innerHTML=em('🌧️')+'<span>Rainy patch: bills could not be fully paid for '+s.distressMonths+' month'+(s.distressMonths>1?'s':'')+' in a row. Six in a row ends the race. One fully paid month clears the sky.</span>';}
@@ -1827,7 +2099,7 @@ function animateBalances(){
  Object.keys(vals).forEach(k=>{const card=document.querySelector('[data-finance-detail="'+k+'"]');card.querySelectorAll('.money-delta').forEach(n=>n.remove());const d=Math.round(vals[k]-prev[k]);if(!d)return;const tag=document.createElement('span');tag.className='money-delta '+((k==='debt'?d<0:d>0)?'up':'down');tag.textContent=(d>0?'+':'−')+compact(Math.abs(d));tag.setAttribute('aria-hidden','true');card.appendChild(tag);});
 }
 function signed(v){return (v<0?'−':'+')+compact(Math.abs(v));}
-function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(id==='buyHouse')return compact(c)+' down · EMI '+compact(M.houseLoanEmi());if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
+function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
 const TAB_HINTS={'one-time':'Spend once. One power-up per month.','recurring':'Adds to every month’s costs. One power-up per month.','big':'Bought on a loan. Banks approve if all EMIs stay under 50% of your pay. One power-up per month.'};
 function renderOptional(){
  const s=S(),tab=ui.optionalTab;
@@ -1839,7 +2111,8 @@ function renderOptional(){
   const block=M.optionalBlocker(id),locked=block&&!/event|ended/.test(block);
   const m=o.monthly(s),after=s.cash-o.cost(s),left=M.monthlyBudget().leftover;
   const effect=o.cost(s)?'Savings after: '+compact(Math.max(0,after)):'Left over: '+compact(left)+' → '+compact(left-m);
-  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(o.describe(s))+'</small>'+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
+  const desc=o.variants?o.variants(s).map(v=>v.emoji+' '+v.label).join(' · '):o.describe(s);
+  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(o.rings?'<span class="rchips">'+ringChips(o.rings,2)+'</span>':'')+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
  }).join('');
 }
 function snapshotHTML(){const s=S(),b=M.monthlyBudget();return '<div><span>🐷 SAVINGS</span><strong>'+money(s.cash)+'</strong></div><div><span>🌱 INVESTED</span><strong>'+money(s.invested)+'</strong></div><div><span>⛓️ LOANS & DEBT</span><strong>'+money(M.totalDebt())+'</strong></div><div><span>'+(b.leftover<0?'📉 SHORT / MONTH':'🪙 LEFT / MONTH')+'</span><strong>'+money(b.leftover)+'</strong></div>';}
@@ -1857,7 +2130,7 @@ function renderEvent(){
  $('eventKicker').textContent=e.kicker;$('eventAge').textContent='Age '+M.ageLabel();$('eventTitle').textContent=e.title;$('eventDescription').textContent=e.description;
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
- $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small></span></button>').join('');
+ $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
  $('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
  playRace.bump();sfx('bump');
@@ -1875,19 +2148,23 @@ function renderEnd(){
  const s=S();
  if(s.status!=='ended'){ui.renderedEnd=false;hideOverlay('endOverlay');return;}
  if(ui.renderedEnd)return;ui.renderedEnd=true;
- const sum=M.endSummary(),age=M.ageLabel(),best=updateBest(Number(age));
- $('endArt').textContent=sum.completed?'🏆':'🌧️';
+ const sum=M.endSummary(),age=M.ageLabel(),end=sum.ending,best=updateBest(sum.score);
+ $('endArt').textContent=end.emoji;
  $('endKicker').textContent=(sum.completed?'FINISH LINE':'RACE OVER')+' · AGE '+age;
- $('endTitle').textContent=sum.completed?'You crossed the finish line at 80!':'Your money ran out of fuel.';
- $('endLead').textContent=sum.completed?'You kept up with your costs all the way to 80. That is the win; the balances below are the bonus round.':'For six months in a row, income and savings could not cover your costs, so this race ends at '+age+'. It is a lesson about this simulated life, not about you.';
+ $('endTitle').textContent=end.title;
+ $('endLead').textContent=end.line+(sum.completed?'':' For six months in a row, savings and investments could not cover your costs. It is a lesson about this simulated life, not about you.');
  const stat=(l,v)=>'<div><span>'+l+'</span><strong>'+v+'</strong></div>';
- $('endBody').innerHTML='<div class="snapshot end-stats">'+stat('🏁 AGE REACHED',age)+stat('🥇 PERSONAL BEST',best.toFixed(1))+stat('🐷 SAVINGS',money(s.cash))+stat('🌱 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('⛓️ LOANS & DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
+ const rings=M.RINGS.map(([k,name,icon])=>{const v=Math.round(end.avg[k]);return '<div class="ring-row r-'+k+'">'+em(icon)+'<div><b>'+esc(name)+'</b><div class="ring-track"><i style="width:'+v+'%"></i></div><small>'+(v>=A.rings.healthy?'Healthy':v<A.rings.low?'Running low':'Okay')+' (lifetime average)</small></div><div class="ring-val">'+v+'</div></div>';}).join('');
+ $('endBody').innerHTML='<div class="end-score"><div><span>LIFE SCORE</span><strong>'+sum.score.toLocaleString('en-IN')+'</strong></div><div><span>PERSONAL BEST</span><strong>'+best.toLocaleString('en-IN')+'</strong></div></div>'
+  +'<p class="res-note" style="text-align:center">Each month adds up to 10 points, mostly from your weakest ring. Money scores nothing by itself.</p>'
+  +rings
+  +'<h3>Your money at '+esc(age)+'</h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('🌱 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('⛓️ LOANS & DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
   +(sum.reasons.length?'<h3>What shaped this race</h3><ul class="end-list">'+sum.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>':'')
   +'<h3>Big moments</h3><ul class="end-list">'+sum.decisions.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul>'
   +'<p class="res-note">Illustrative game outcome, not a forecast. Run code: '+s.seed+'.</p>';
  showOverlay('endOverlay');
 }
-function updateBest(score){let best=score;try{const prior=Number(localStorage.getItem('lifeHappensBestAge')||0);best=Math.max(score,prior);localStorage.setItem('lifeHappensBestAge',best.toFixed(1));}catch(e){}return best;}
+function updateBest(score){let best=score;try{const prior=Number(localStorage.getItem('lifeHappensBestScore')||0);best=Math.max(score,prior);localStorage.setItem('lifeHappensBestScore',String(best));}catch(e){}return best;}
 
 /* ---------- Monthly plan editor ---------- */
 function renderExpenses(){
@@ -1934,17 +2211,41 @@ function sipBody(){
 function syncSip(){$('sipPreview').innerHTML=sipPreview();$('confirmOk').disabled=ui.sipPick===null||!!M.sipBlocker(ui.sipPick);$('confirmBody').querySelectorAll('[data-sip]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.sip)===ui.sipPick)));}
 function openSip(){const s=S();if(s.event||s.status!=='playing')return;ui.sipPick=null;openConfirm({kicker:'MONTHLY SIP',title:'🌱 Invest every month',body:sipBody(),okLabel:'Set SIP',okDisabled:true,onOk:()=>{const r=M.setSip(ui.sipPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});}
 
+/* ---------- Big-buy versions (home, car) ---------- */
+function variantBody(id){
+ const s=S(),o=M.OPTIONAL[id],vs=o.variants(s),pick=vs.find(v=>v.id===ui.variantPick),before=M.monthlyBudget();
+ let h='<p class="lead">Each version trades comfort, people and show-off value differently. Show-off value earns no points.</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong><small>'+esc(v.blurb)+'</small><small>'+(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo</small><span class="rchips">'+ringChips(v.rings,3,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
+ if(pick){const cost=o.cost(s,pick.id),m=o.monthly(s,pick.id),rows=[['Cost now',cost?money(cost):'None'],['Savings',money(s.cash)+' → '+money(s.cash-cost)],['Monthly expenses',money(before.total)+' → '+money(before.total+m)],[before.leftover-m<0?'Monthly shortfall':'Left over',money(before.leftover)+' → '+money(before.leftover-m)]];
+  h+='<p class="res-note">'+esc(o.describe(s,pick.id))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div>';}
+ return h+'<p class="res-note">This uses your one power-up for this month.</p>';
+}
+function syncVariant(id){$('confirmBody').innerHTML=variantBody(id);$('confirmOk').disabled=!ui.variantPick||!!M.optionalBlocker(id,ui.variantPick);}
+function openVariants(id){const o=M.OPTIONAL[id],first=o.variants(S()).find(v=>!v.block);ui.variantPick=first?first.id:null;
+ openConfirm({kicker:'BIG BUY',title:o.emoji+' '+o.name,body:variantBody(id),okLabel:'Buy it',okDisabled:!first,onOk:()=>{const r=M.chooseOptional(id,ui.variantPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});
+ $('confirmBody').dataset.variantFor=id;}
+function paceBody(){
+ const s=S();return '<p class="lead">How hard do you work? Pace changes your raises and promotion odds, and how much time is left for you and your people. Changing it is free.</p><div class="variant-list">'+Object.entries(M.PACES).map(([id,p])=>'<button type="button" class="variant" data-pace="'+id+'" aria-pressed="'+(id===ui.pacePick)+'">'+em(p.emoji)+'<span><strong>'+esc(p.label)+(id===s.pace?' (now)':'')+'</strong><small>'+esc(p.blurb)+'</small><span class="rchips">'+ringChips(p.rings,3,' lasting')+'</span></span></button>').join('')+'</div>';
+}
+function openPace(){const s=S();if(s.event||s.status!=='playing'||s.employment==='retired')return;ui.pacePick=s.pace;
+ openConfirm({kicker:'PACE',title:'🏎️ Set your pace',body:paceBody(),okLabel:'Set pace',okDisabled:true,onOk:()=>{const r=M.setPace(ui.pacePick);if(r)sfx('good');}});}
+
 /* ---------- About ---------- */
 function renderAbout(){
- const rows=[['Start / finish','Age 23.0 to 80.0, one month at a time (month 685 = age 80.0)'],['Pacing','About 5 seconds per month at 1× (1 year ≈ 1 minute). Speeds 0.5× to 10×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
+ const rows=[['Goal','Reach 80 with all three life rings healthy: 🧍 Me, 👨‍👩‍👧 Family & Friends and 🏘️ Community. Money is the fuel, not the score'],
+  ['Life rings','Each ring runs from 0 to 100. Every month it moves 4% of the way toward a target set by how you live: food, extras, social life, home, ride, savings cushion, debt, marriage, kids, pets, parents, pace and life stage. Choices in life events add one-off bumps that fade over time, so people need regular attention'],
+  ['Life Score','Each month adds up to 10 points: 60% from your weakest ring and 40% from the average of all three. Running out of money early forfeits every month you do not reach. Your ending title comes from your lifetime ring averages (55+ is healthy, under 40 is low)'],
+  ['Pace','Hustle: +1% on yearly raises and 1.5× promotion odds; costs Me −8, Family & Friends −12 and Community −6 on ring targets. Chill: −1% raises and 0.6× promotion odds; adds Me +6, Family & Friends +8, Community +5. If you slow down for your family when asked, promotion odds drop to 0.6× for 2 years'],
+  ['Burnout','If your Me ring stays under 35 for 9 months while working, burnout hits: take a 2-month unpaid break, switch to Chill, or push through with a doctor’s bill'],
+  ['Ring power-ups','A day with your people (₹6,000), volunteering (free) and donating (₹10,000), at age-23 prices. Each can be used once a year'],
+  ['Start / finish','Age 23.0 to 80.0, one month at a time (month 685 = age 80.0)'],['Pacing','About 5 seconds per month at 1× (1 year ≈ 1 minute). Speeds 0.5× to 10×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
   ['Salary','Monthly pay before tax. First review at month 7 (+5%, +1% per Career XP). Then a yearly appraisal of 11% to 28, 8.5% to 35, 6.5% to 45 and 4.5% after that'],
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],
   ['Education loan','Optional at the start: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI) for a 25% higher first salary'],
   ['Investments','About 7% a year on average with monthly ups and downs, plus occasional booms and dips. Gains are not taxed in this model'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
-  ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Car ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
-  ['Home loan','A 2BHK at ₹35 lakh in age-23 prices (rises 6% a year). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops; maintenance ₹3,000/month. Home value grows 5% a year. Selling costs 3%'],
+  ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; Family & Friends +6) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; Me +8, most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
+  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹35 lakh (maintenance ₹3,000/month; Community +12), an independent villa at ₹63 lakh (₹6,000/month; Me +16, Community −4, most show-off value) or a flat near family at ₹29.75 lakh (₹2,500/month; Family & Friends +12). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
   ['Bank check','New loans need a salary, and all EMIs together (including an education loan) must stay within 50% of take-home pay'],
   ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
@@ -1955,7 +2256,7 @@ function renderAbout(){
   ['Health cover','₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
   ['Term cover','₹1 crore cover (today’s money) until 65 with a disability benefit of 20% if an accident stops you working. ₹800/month at 23, about 4.5% more for every year older you buy it; the premium is locked when bought. You never die in this game'],['Home upgrade','Unlocks at age 26 with 2 Career XP: ₹18,000 once + ₹8,000/month'],
   ['Music','An original chiptune written for this game, played with the Web Audio API']];
- $('aboutBody').innerHTML='<p class="lead">A playful race through life about how everyday money decisions add up.</p><ul><li>Costs, salaries, returns and events are illustrative, and outcomes vary from run to run.</li><li>This is educational entertainment, not personal financial, tax, insurance or investment advice.</li><li>Investment outcomes are uncertain. Past or simulated returns do not predict real ones.</li><li>Taxes, insurance, benefits and legal rules are simplified or left out.</li><li>No account or personal data. Only your personal best age and sound and speed settings are saved, in this browser.</li></ul><h3>Assumptions</h3><table class="about-table">'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>';
+ $('aboutBody').innerHTML='<p class="lead">A playful race through life about how everyday money decisions add up.</p><ul><li>Costs, salaries, returns and events are illustrative, and outcomes vary from run to run.</li><li>This is educational entertainment, not personal financial, tax, insurance or investment advice.</li><li>Investment outcomes are uncertain. Past or simulated returns do not predict real ones.</li><li>Taxes, insurance, benefits and legal rules are simplified or left out.</li><li>No account or personal data. Only your best Life Score and sound and speed settings are saved, in this browser.</li></ul><h3>Assumptions</h3><table class="about-table">'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>';
 }
 
 /* ---------- Actions (UI handlers call the model; one click → one transaction) ---------- */
@@ -1985,17 +2286,20 @@ $('pauseBtn').addEventListener('click',()=>{const s=S();if(s.event||s.status!=='
 $('speedBtn').addEventListener('click',()=>{const frac=ui.elapsed/monthMs(),sp=A.speeds;prefs.speed=sp[(sp.indexOf(prefs.speed)+1)%sp.length];M.savePrefs();ui.elapsed=frac*monthMs();sfx('tap');render();});
 $('retireBtn').addEventListener('click',()=>{if(M.requestRetirement())render();});
 $('sipBtn').addEventListener('click',openSip);
+$('paceBtn').addEventListener('click',openPace);
 $('eventChoices').addEventListener('click',e=>{const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(id,b.dataset.choice);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('wallet').addEventListener('click',e=>{const c=e.target.closest('[data-finance-detail]');if(!c)return;const k=c.dataset.financeDetail;ui.financeDetail[k]=!ui.financeDetail[k];renderPlay();});
 const TABS=['one-time','recurring','big'],TAB_IDS={'one-time':'tabOneTime',recurring:'tabRecurring',big:'tabBig'};
 document.querySelector('.choice-tabs').addEventListener('click',e=>{const t=e.target.closest('[data-choice-tab]');if(!t)return;ui.optionalTab=t.dataset.choiceTab;renderOptional();});  // switching tabs never triggers a choice
 document.querySelector('.choice-tabs').addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;const i=TABS.indexOf(ui.optionalTab);ui.optionalTab=TABS[(i+(e.key==='ArrowRight'?1:2))%3];renderOptional();$(TAB_IDS[ui.optionalTab]).focus();});
 $('moveDeck').addEventListener('click',e=>{const b=e.target.closest('[data-move]');if(!b||b.disabled)return;const id=b.dataset.move,o=M.OPTIONAL[id],s=S(),before=M.monthlyBudget(),cost=o.cost(s),m=o.monthly(s);
+ if(o.variants){openVariants(id);return;}
  const rows=[['Cost now',cost?money(cost):'None'],['Savings',money(s.cash)+' → '+money(s.cash-cost)]];if(m){rows.push(['Monthly expenses',money(before.total)+' → '+money(before.total+m)]);rows.push([before.leftover-m<0?'Monthly shortfall':'Left over',money(before.leftover)+' → '+money(before.leftover-m)]);}
- if(id==='buyHouse')rows.push(['Home loan',money(Math.round(M.housePrice()*(1-A.house.downShare)))+' over 20 years']);
  const kick={'one-time':'ONE-TIME POWER-UP',recurring:'MONTHLY POWER-UP',big:'BIG BUY'}[o.tab];
  openConfirm({kicker:kick,title:o.emoji+' '+o.name,okLabel:'Confirm',body:'<p class="lead">'+esc(o.describe(s))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div><p class="res-note">This uses your one power-up for this month.</p>',onOk:()=>{const r=M.chooseOptional(id);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});});
-$('confirmBody').addEventListener('click',e=>{const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);const c=$('sipCustom');if(c)c.value='';syncSip();sfx('tap');});
+$('confirmBody').addEventListener('click',e=>{const v=e.target.closest('[data-variant]');if(v&&!v.disabled){ui.variantPick=v.dataset.variant;syncVariant($('confirmBody').dataset.variantFor);const again=$('confirmBody').querySelector('[data-variant="'+ui.variantPick+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+ const pc=e.target.closest('[data-pace]');if(pc){ui.pacePick=pc.dataset.pace;$('confirmBody').innerHTML=paceBody();$('confirmOk').disabled=!!M.paceBlocker(ui.pacePick);const again=$('confirmBody').querySelector('[data-pace="'+ui.pacePick+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+ const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);const c=$('sipCustom');if(c)c.value='';syncSip();sfx('tap');});
 $('confirmBody').addEventListener('input',e=>{if(e.target.id!=='sipCustom')return;const v=e.target.value.trim();ui.sipPick=v===''?null:Math.round(Number(v));if(Number.isNaN(ui.sipPick))ui.sipPick=null;syncSip();});
 $('confirmOk').addEventListener('click',()=>{const act=ui.confirmAction;ui.confirmAction=null;closeModal('confirmOverlay');if(act)act();render();});
 $('confirmCancel').addEventListener('click',()=>{ui.confirmAction=null;closeModal('confirmOverlay');});
