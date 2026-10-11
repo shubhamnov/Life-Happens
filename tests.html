@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Life Happens — Tests</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--bg:#F2F0E8;--ink:#2C3B33;--ok:#2F6B4A;--bad:#9A3B2C}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,sans-serif;padding:16px;max-width:820px}
+h1{font-size:20px;margin:0 0 4px}
+#summary{font-weight:800;margin:8px 0 12px}
+.t{padding:6px 8px;border-bottom:1px solid #D6D9CE}
+.t b{display:inline-block;min-width:44px}
+.pass b{color:var(--ok)}.fail b{color:var(--bad)}
+.t pre{margin:4px 0 0;white-space:pre-wrap;color:var(--bad);font-size:12px}
+iframe{position:absolute;left:-9999px;width:390px;height:844px;border:0}
+</style>
+</head>
+<body>
+<h1>Life Happens — deterministic tests</h1>
+<p>Loads <code>index.html?test=1&amp;seed=N</code> in a hidden frame and drives the game's own functions. Same seed → same run.</p>
+<div id="summary" role="status">Running…</div>
+<div id="results"></div>
+<script>
+(async function(){
+'use strict';
+const results=[];
+function assert(cond,msg){if(!cond)throw new Error(msg);}
+function eq(a,b,msg){if(a!==b)throw new Error(msg+' (expected '+b+', got '+a+')');}
+function near(a,b,tol,msg){if(Math.abs(a-b)>tol)throw new Error(msg+' (expected ≈'+b+', got '+a+')');}
+function loadGame(seed){return new Promise((res,rej)=>{const f=document.createElement('iframe');f.src='index.html?test=1&seed='+seed;f.onload=()=>{const L=f.contentWindow.LifeHappens;if(!L)return rej(new Error('Test API missing'));res({f,L,win:f.contentWindow});};document.body.appendChild(f);});}
+async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none'},profile||{}));g.L.render();return g;}
+const SAFE={savings:1,save:1,full:0};
+// Deterministic auto-player used by long-run scenarios.
+function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event,ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
+ const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep'].find(x=>ch.includes(x))||ch[0];
+ const pick=ch.includes(want)?want:ch[0];const r=L.resolveEvent(e.id,pick);assert(r,'event '+e.type+' failed to resolve with '+pick);}
+function run(L,months,policy){for(let i=0;i<months&&L.state.status==='playing';i++){autoResolve(L,policy);L.advanceMonth();}autoResolve(L,policy);}
+function noNaN(s){const walk=(o,p)=>{for(const k in o){const v=o[k];if(typeof v==='number')assert(Number.isFinite(v),'non-finite '+p+k);else if(v&&typeof v==='object')walk(v,p+k+'.');}};walk(s,'state.');}
+async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(e){results.push({name,ok:false,err:e.message});}document.querySelectorAll('iframe').forEach(f=>f.remove());}
+
+/* 1 */ await test('1. Normal run through several years; age/month convention',async()=>{const {L}=await game(11);
+ eq(L.ageLabel(),'22.0','start age');run(L,60);eq(L.state.month,61,'month');eq(L.ageLabel(),'27.0','age at month 61');assert(L.state.cash>=0,'cash never negative');noNaN(L.state);
+ const s=L.state;s.month=2;eq(L.ageLabel(),'22.1','month 2');s.month=697;eq(L.ageLabel(),'80.0','month 697');eq(L.A.endMonth,697,'end month');});
+/* 2 */ await test('2. Invest when savings exactly equal the amount',async()=>{const {L}=await game(12);const s=L.state;s.cash=5000;s.invested=0;s.optionalUsedMonth=0;
+ const r=L.chooseOptional('invest5k');assert(r,'investment accepted');eq(s.cash,0,'savings');eq(s.invested,5000,'investments');});
+/* 3 */ await test('3. Investing with insufficient savings is blocked',async()=>{const {L}=await game(13);const s=L.state;s.cash=4999;s.invested=0;
+ assert(L.optionalBlocker('invest5k'),'blocker reported');eq(L.chooseOptional('invest5k'),null,'rejected');eq(s.cash,4999,'savings unchanged');eq(s.invested,0,'investments unchanged');eq(s.optionalUsedMonth===s.month,false,'choice not consumed');});
+/* 4 */ await test('4. Monthly shortfall with and without existing debt',async()=>{const {L}=await game(14,{salary:35000,home:'premium',social:'big',food:'foodie'});const s=L.state;
+ s.cash=0;s.invested=0;s.unsecuredDebt=0;s.distressMonths=0;const b=L.monthlyBudget();assert(b.leftover<0,'budget shows a shortfall');const debt0=s.unsecuredDebt;L.advanceMonth();const o=s.lastSettlement;
+ eq(o.expenses,b.total,'settlement charged exactly the displayed monthly expenses');eq(s.cash,0,'savings floor at zero');near(s.unsecuredDebt,debt0+o.unpaid,1,'unpaid became debt once (no debt before)');eq(s.distressMonths,1,'one strained month');
+ s.event=null;const debt1=s.unsecuredDebt,b2=L.monthlyBudget();assert(b2.lines.some(l=>l.key==='debtMin'),'minimum repayment included in expenses');L.advanceMonth();eq(s.lastSettlement.expenses,b2.total,'with debt: displayed = charged');eq(s.distressMonths,2,'consecutive count');
+ s.event=null;s.cash=500000;const debt2=s.unsecuredDebt;L.advanceMonth();eq(s.distressMonths,0,'fully paid month resets the count');assert(debt1>0&&s.unsecuredDebt<debt2,'minimum repayment reduces debt');});
+/* 5 */ await test('5. Vehicle loan: successful EMIs, missed EMI, no double counting',async()=>{const {L}=await game(15,{commute:'bike'});const s=L.state;
+ eq(s.vehicleLoan.emi,L.emiFor(100000),'EMI');near(s.vehicleLoan.emi,3300,40,'≈₹3,300 EMI');eq(L.totalDebt(),s.vehicleLoan.balance,'loan counted once in debt');
+ s.nextEventMonth=9999;for(let m=0;m<40;m++){s.event=null;s.cash+=50000;L.advanceMonth();}eq(s.vehicleLoan,null,'loan repaid after 36 EMIs');eq(s.unsecuredDebt,0,'no leftover debt');
+ const g=await game(16,{commute:'car'});const t=g.L.state;near(t.vehicleLoan.emi,19900,60,'car EMI ≈ ₹19,900');t.cash=0;t.unsecuredDebt=0;t.employment='laidoff';t.laidOffMonthsLeft=3;const bal=t.vehicleLoan.balance;g.L.advanceMonth();
+ assert(t.vehicleLoan.balance<bal,'loan still amortises on schedule');const due=g.L.monthlyBudget().lines.find(l=>l.key==='emi');assert(due,'EMI shown in expenses');
+ near(t.unsecuredDebt,t.lastSettlement.unpaid,1,'missed EMI + bills became unsecured debt exactly once');eq(t.vehicleLoan.monthsLeft,34,'term counts down (month 1 already paid one EMI)');});
+/* 6 */ await test('6. Medical event with and without health cover',async()=>{const {L}=await game(17);const s=L.state;
+ L.startEvent('medical');const e1=s.event;eq(e1.amount,e1.total,'uninsured pays all');L.resolveEvent(e1.id,'borrow');
+ s.insured=true;s.costs.insurance=1000;L.startEvent('medical');const e2=s.event;eq(e2.amount,Math.round(e2.total*0.35),'cover pays 65%');assert(e2.amount>0,'covered player still pays something');
+ const cash=s.cash=1000000;L.resolveEvent(e2.id,'savings');eq(s.cash,cash-e2.amount,'paid once');assert(L.monthlyBudget().lines.some(l=>l.key==='insurance'),'premium in expenses');});
+/* 7 */ await test('7. Marriage, then child after 4+ years; recurring costs once',async()=>{const {L}=await game(18);const s=L.state;s.month=50;s.cash=500000;
+ L.startEvent('relationship');const e=s.event;L.resolveEvent(e.id,'modest');eq(L.resolveEvent(e.id,'modest'),null,'cannot resolve twice');eq(s.costs.household,L.A.householdMonthly,'household cost added once');
+ assert(!L.EVENTS.child.eligible(s),'child not eligible right after marriage');s.month=s.marriageMonth+48;assert(L.EVENTS.child.eligible(s),'child eligible after 48 months');
+ L.startEvent('child');const c=s.event;L.resolveEvent(c.id,'yes');eq(s.children.length,1,'one child');eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,1,'child cost charged once');
+ s.month+=21*12;eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,0,'child cost stops at 21');});
+/* 8 */ await test('8. Layoff: severance once, three months without pay, recovery',async()=>{const {L}=await game(19);const s=L.state;s.month=80;s.nextEventMonth=9999;const pay=s.salary;
+ L.startEvent('layoff');const e=s.event,c0=s.cash;L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
+ const incomes=[];for(let i=0;i<4;i++){s.event=null;L.advanceMonth();incomes.push(s.lastSettlement.income);}
+ eq(incomes.slice(0,3).join(','),'0,0,0','no salary for 3 months');assert(incomes[3]>=pay,'salary resumes in month 4');eq(s.employment,'employed','employed again');});
+/* 9 */ await test('9. Retirement only from 40; salary stops, expenses continue',async()=>{const {L}=await game(20);const s=L.state;s.month=100;eq(L.requestRetirement(),false,'blocked before 40');
+ s.month=(40-22)*12+1;s.nextEventMonth=9999;assert(L.requestRetirement(),'available at 40');L.resolveEvent(s.event.id,'retire');eq(s.employment,'retired','retired');
+ s.cash=0;s.invested=1000000;const b=L.monthlyBudget();eq(b.income,0,'no salary');L.advanceMonth();eq(s.lastSettlement.income,0,'settled without salary');eq(s.lastSettlement.drawdown,s.lastSettlement.expenses,'investments drawn down for costs');eq(s.distressMonths,0,'covered month is not strained');});
+/* 10 */ await test('10. Investment withdrawal to fund an event',async()=>{const {L}=await game(21);const s=L.state;s.invested=10000;s.cash=50000;
+ L.startEvent('laptop');const e=s.event;assert(L.EVENTS.laptop.choices(e,s).some(c=>c.id==='invest'),'withdrawal offered');L.resolveEvent(e.id,'invest');
+ eq(s.invested,0,'cannot sell more than held');eq(s.cash,50000-(e.amount-10000),'rest from savings');
+ const g=await game(22);g.L.state.invested=0;g.L.startEvent('laptop');assert(!g.L.EVENTS.laptop.choices(g.L.state.event,g.L.state).some(c=>c.id==='invest'),'not offered with no investments');});
+/* 11 */ await test('11. Inflation over several years, never applied twice',async()=>{const {L}=await game(23);const s=L.state;s.nextEventMonth=9999;
+ const rent=()=>L.monthlyBudget().lines.find(l=>l.key==='housing').amount;s.month=12;const r12=rent();s.month=13;eq(rent(),Math.round(14000*1.06),'year 2 price');s.month=24;eq(rent(),Math.round(14000*1.06),'same within year');s.month=25;eq(rent(),Math.round(14000*1.06*1.06),'year 3');eq(r12,14000,'year 1');
+ s.month=1;s.lastSettledMonth=1;s.lastRaiseYear=0;for(let i=0;i<36;i++){s.event=null;s.cash+=1e6;const b=L.monthlyBudget();L.advanceMonth();const after=s.lastSettlement.expenses;if(s.month%12!==1)eq(after,b.total,'displayed = charged at month '+s.month);}
+ s.month=40;L.applyExpenseChange('food','foodie');eq(L.monthlyBudget().lines.find(l=>l.key==='food').amount,Math.round(10000*Math.pow(1.06,3)),'new cost enters at current price');});
+/* 12 */ await test('12. Reach age 80 and stop',async()=>{const {L}=await game(24,{home:'starter',social:'quiet'});const s=L.state;
+ const pol={relationship:'wait',child:'later',secondchild:'later',retire:'work',bonus:'invest',crunch:'buffer'};
+ for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);if(!s.event&&s.optionalUsedMonth!==s.month&&s.cash>6*L.monthlyBudget().total&&s.unsecuredDebt===0)L.chooseOptional(s.cash>200000?'invest50k':'invest5k');L.advanceMonth();}
+ eq(s.status,'ended','ended');eq(s.finalReason,'completed','completed');eq(s.month,697,'month 697');eq(L.ageLabel(),'80.0','age 80.0');
+ eq(L.advanceMonth(),false,'clock cannot advance');eq(s.month,697,'still 697');noNaN(s);});
+/* 13 */ await test('13. Early insolvency after six strained months; frozen afterwards',async()=>{const {L}=await game(25,{salary:35000,home:'premium',social:'big',food:'foodie',commute:'car'});const s=L.state;
+ for(let i=0;i<40&&s.status==='playing';i++){autoResolve(L,{crunch:'keep'});L.advanceMonth();}
+ eq(s.status,'ended','ended');eq(s.finalReason,'insolvent','insolvent');eq(s.distressMonths,6,'exactly six strained months in a row');
+ const snap=JSON.stringify(s);eq(L.chooseOptional('invest5k'),null,'optional blocked');eq(L.applyExpenseChange('home','starter'),null,'expense edit blocked');eq(L.advanceMonth(),false,'no advance');eq(L.requestRetirement(),false,'no retire');eq(JSON.stringify(s),snap,'state untouched');
+ const sum=L.endSummary();assert(sum.reasons.length>0,'causal summary present');assert(sum.decisions.length>0,'decisions listed');});
+/* 14 */ await test('14. Restart after success and after failure gives a clean run',async()=>{const {L}=await game(26,{salary:35000,home:'premium',social:'big',food:'foodie',commute:'car'});
+ for(let i=0;i<40&&L.state.status==='playing';i++){autoResolve(L,{crunch:'keep'});L.advanceMonth();}eq(L.state.status,'ended','ended first');const oldRun=L.state.runId;
+ L.goToSetup();const s=L.state;assert(s.runId!==oldRun,'new run id');eq(s.status,'setup','setup');eq(s.month,0,'month reset');eq(s.cash+s.invested+s.unsecuredDebt,0,'balances reset');eq(s.vehicleLoan,null,'loan reset');eq(s.history.length,0,'history reset');eq(s.event,null,'no event');
+ L.beginLife({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none'});eq(L.state.status,'playing','new run playing');eq(L.state.month,1,'month 1');
+ L.state.status='ended';L.state.finalReason='completed';L.goToSetup();eq(L.state.status,'setup','restart after success');});
+/* 15 */ await test('15. Rapid speed changes and tab switching while an event is open',async()=>{const {L,win}=await game(27);const s=L.state;L.startEvent('laptop');L.render();const id=s.event.id,month=s.month,cash=s.cash;
+ const d=win.document;for(let i=0;i<21;i++)d.getElementById('speedBtn').click();for(let i=0;i<10;i++){d.getElementById('tabRecurring').click();d.getElementById('tabOneTime').click();}
+ d.getElementById('pauseBtn').click();L.advanceMonth();eq(s.month,month,'no advance past a pending decision');eq(s.event&&s.event.id,id,'same event still pending');eq(s.cash,cash,'no money moved');eq(s.optionalUsedMonth===s.month,false,'tabs did not trigger a choice');
+ assert(L.prefs.speed===1||L.A.speeds.includes(L.prefs.speed),'speed valid');const amount=s.event.amount,debt=s.unsecuredDebt,btn=d.querySelector('#eventChoices [data-choice="savings"]');btn.click();btn.click();eq(s.event,null,'resolved');
+ eq(s.cash,cash-Math.min(cash,amount),'paid exactly once');eq(s.unsecuredDebt,debt+Math.max(0,amount-cash),'any gap became debt once');});
+/* Extra invariants */
+await test('Vehicle: selling a financed vehicle repays 80%, rest becomes debt once',async()=>{const {L}=await game(34,{salary:35000,commute:'car'});const s=L.state;const bal=s.vehicleLoan.balance;
+ assert(!L.expenseChangeBlocker('commute','public'),'selling allowed');assert(L.expenseChangeBlocker('commute','bike'),'cannot buy a second financed vehicle');const debt=s.unsecuredDebt;
+ L.applyExpenseChange('commute','public');eq(s.vehicleLoan,null,'loan closed');eq(s.unsecuredDebt,debt+Math.round(bal*0.2),'20% of balance became debt');eq(L.monthlyBudget().lines.some(l=>l.key==='emi'),false,'no EMI after sale');});
+
+await test('Invariant: one optional choice per month; events do not consume it',async()=>{const {L}=await game(28);const s=L.state;s.cash=1e6;s.month=60;s.career=2;
+ L.startEvent('laptop');eq(L.chooseOptional('invest5k'),null,'blocked during event');L.resolveEvent(s.event.id,'savings');assert(L.chooseOptional('invest5k'),'still available after event');
+ eq(L.chooseOptional('upgrade'),null,'second optional choice blocked');eq(s.homeUpgraded,false,'upgrade not applied');s.event=null;L.advanceMonth();s.event=null;assert(L.chooseOptional('upgrade'),'available next month');eq(L.chooseOptional('upgrade'),null,'no duplicate');});
+await test('Invariant: home upgrade lock and recurring cost in every later month',async()=>{const {L}=await game(29);const s=L.state;s.cash=1e6;s.month=30;s.career=1;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked below 2 XP');s.career=2;s.month=40;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked before 26');s.month=50;
+ assert(L.chooseOptional('upgrade'),'applied');for(let i=0;i<3;i++){s.event=null;L.advanceMonth();assert(L.monthlyBudget().lines.some(l=>l.key==='homeUpgrade'),'still charged');}});
+await test('Invariant: expense preview does not mutate state',async()=>{const {L}=await game(30);const s=L.state,snap=JSON.stringify(s);L.previewExpenseChange('commute','car');L.previewExpenseChange('home','premium');eq(JSON.stringify(s),snap,'unchanged');});
+await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
+await test('Invariant: no two severe shocks in a row; event cadence 30–42 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
+ for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
+ const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t));for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=30,'gap ≥ 30 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ assert(rnd.length>=8&&rnd.length<=24,'reasonable number of events: '+rnd.length);});
+await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
+await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={relationship:'big',child:'yes',secondchild:'yes',crunch:'keep'};
+ for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);L.advanceMonth();}
+ if(s.finalReason==='completed')assert(s.unsecuredDebt<L.monthlyBudget().total*24,'completed runs have manageable debt');});
+
+const pass=results.filter(r=>r.ok).length;
+document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
+document.getElementById('results').innerHTML=results.map(r=>'<div class="t '+(r.ok?'pass':'fail')+'"><b>'+(r.ok?'PASS':'FAIL')+'</b> '+r.name.replace(/</g,'&lt;')+(r.ok?'':'<pre>'+r.err.replace(/</g,'&lt;')+'</pre>')+'</div>').join('');
+window.__TEST_RESULTS=results;
+})();
+</script>
+</body>
+</html>
