@@ -113,7 +113,7 @@ function feedback(type,title,text){
 function choice(icon,title,sub,cost,action,selected,disabled){
  return '<button class="choice'+(selected?' selected':'')+'" data-action="'+action+'" '+(disabled?'disabled':'')+'><span class="choice-icon">'+icon+'</span><span class="choice-text"><span class="choice-title">'+title+'</span><span class="choice-sub">'+sub+'</span></span><span class="choice-cost">'+cost+'</span><span class="radio-dot" aria-hidden="true"></span></button>';
 }
-function setScene(mode,kicker,sticker,left,right,note){
+function setScene(mode,kicker,left,right,note){
  $('scene').className='scene '+mode;$('sceneKicker').textContent=kicker;$('sticker').textContent=left;$('stickerRight').textContent=right;$('sceneNote').textContent=note;
 }
 function setStory(eyebrow,headline,description){$('eyebrow').textContent=eyebrow;$('headline').innerHTML=headline;$('description').textContent=description}
@@ -205,7 +205,7 @@ function act(action){
   state.budget='balanced';state.cash-=8000;state.savings+=5000;state.joy+=1;feedback('good','BALANCED MOVE · A LITTLE OF BOTH','You put ₹5,000 aside and spent ₹3,000 on fun. It’s not about never spending—it’s about making room for both today and tomorrow.');
  }else if(action==='buffer'&&state.phase===3&&!state.surprise){
   const used=Math.min(state.savings,18000);state.savings-=used;const rest=18000-used;state.cash-=rest;state.surprise='buffer';
-  if(used>0)feedback('good','GREAT MOVE · YOUR BUFFER DID ITS JOB','Your rainy-day fund covered '+money(used)+(rest>0?', and '+money(rest)+' came from this month’s cash.':'—no new debt needed.'); 
+  if(used>0)feedback('good','GREAT MOVE · YOUR BUFFER DID ITS JOB','Your rainy-day fund covered '+money(used)+(rest>0?', and '+money(rest)+' came from this month’s cash.':'—no new debt needed.')); 
   else feedback('solid','SOLID MOVE · CASH TO THE RESCUE','You had no savings buffer yet, so this came from your regular cash. You avoided borrowing, but your remaining month is tighter.');
  }else if(action==='cash'&&state.phase===3&&!state.surprise){
   state.cash-=18000;state.surprise='cash';feedback('solid','SOLID MOVE · SAVINGS STAY INTACT','You paid from this month’s cash and kept your rainy-day fund intact. Your wallet is now much tighter until the next payday.');
