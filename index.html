@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#19162b">
-<meta name="application-version" content="2026.10.11-life-sim-3">
+<meta name="application-version" content="2026.10.11-life-sim-4">
 <title>Life Happens — Your life, your money, your moves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -643,7 +643,7 @@ function applyExpenseChoice(key,value){
  if(key==='home'){state.profile.home=value;state.rent=Math.round(PROFILE_OPTIONS.home[value].cost*inflationFactor());state.lastMessage='Your rent is now '+money(state.rent)+' per month.';}
  else if(key==='food'){state.profile.food=value;state.groceries=Math.round(PROFILE_OPTIONS.food[value].cost*inflationFactor());state.lastMessage='Your food budget is now '+money(state.groceries)+' per month.';}
  else if(key==='social'){state.socialCost=Math.round(PROFILE_OPTIONS.social[value].cost*inflationFactor());state.profile.social=value;state.lastMessage='Your social-life budget is now '+money(state.socialCost)+' per month.';}
- else if(key==='custom'){state.customMonthlyExpense=Number(value);state.lastMessage='Your other monthly expenses are now '+money(state.customMonthlyExpense)+' per month.';}
+ else if(key==='custom'){state.customMonthlyExpense=Math.round(Number(value)*inflationFactor());state.lastMessage='Your other monthly expenses are now '+money(state.customMonthlyExpense)+' per month.';}
  else if(key==='upgrade'){if(state.age<26||state.career<2||state.homeUpgraded){state.lastMessage='This upgrade is not available yet.';renderPlay();return;}const upfront=Math.round(18000*inflationFactor()),monthly=Math.round(8000*inflationFactor());if(state.cash<upfront){state.lastMessage='You need '+money(upfront)+' in savings for the upfront cost.';renderPlay();return;}state.cash-=upfront;state.homeUpgraded=true;state.homeUpgradeMonthly=monthly;state.lastMessage='You upgraded your home. Monthly expenses increased by '+money(monthly)+'.';state.animateMoneyChanges=true;addLog('Home upgrade · '+money(upfront)+' upfront, +'+money(monthly)+'/month.');ping('good');}
  syncLifestyleExtra();$('planModalDeck').innerHTML=expenseEditorMarkup();renderPlay();
 }
