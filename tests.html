@@ -30,19 +30,19 @@ function assert(cond,msg){if(!cond)throw new Error(msg);}
 function eq(a,b,msg){if(a!==b)throw new Error(msg+' (expected '+b+', got '+a+')');}
 function near(a,b,tol,msg){if(Math.abs(a-b)>tol)throw new Error(msg+' (expected ≈'+b+', got '+a+')');}
 function loadGame(seed){return new Promise((res,rej)=>{const f=document.createElement('iframe');f.src='index.html?test=1&seed='+seed;f.onload=()=>{const L=f.contentWindow.LifeHappens;if(!L)return rej(new Error('Test API missing'));res({f,L,win:f.contentWindow});};document.body.appendChild(f);});}
-async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none'},profile||{}));g.L.render();return g;}
+async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'no'},profile||{}));g.L.render();return g;}
 const SAFE={savings:1,save:1,full:0};
 // Deterministic auto-player used by long-run scenarios.
 function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event,ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
- const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep','budget','one','shagun','regular','half','train','home','cake','gift','report','pass','small','accept','foster','take','skip','pay','ride','fan'].find(x=>ch.includes(x))||ch[0];
+ const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep','budget','one','shagun','regular','half','train','home','cake','gift','report','pass','small','accept','foster','take','skip','pay','ride','fan','k1','govHospital','private','share','mediate','join'].find(x=>ch.includes(x))||ch[0];
  const pick=ch.includes(want)?want:ch[0];const r=L.resolveEvent(e.id,pick);assert(r,'event '+e.type+' failed to resolve with '+pick);}
 function run(L,months,policy){for(let i=0;i<months&&L.state.status==='playing';i++){autoResolve(L,policy);L.advanceMonth();}autoResolve(L,policy);}
 function noNaN(s){const walk=(o,p)=>{for(const k in o){const v=o[k];if(typeof v==='number')assert(Number.isFinite(v),'non-finite '+p+k);else if(v&&typeof v==='object')walk(v,p+k+'.');}};walk(s,'state.');}
 async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(e){results.push({name,ok:false,err:e.message});}document.querySelectorAll('iframe').forEach(f=>f.remove());}
 
 /* 1 */ await test('1. Normal run through several years; age/month convention',async()=>{const {L}=await game(11);
- eq(L.ageLabel(),'22.0','start age');run(L,60);eq(L.state.month,61,'month');eq(L.ageLabel(),'27.0','age at month 61');assert(L.state.cash>=0,'cash never negative');noNaN(L.state);
- const s=L.state;s.month=2;eq(L.ageLabel(),'22.1','month 2');s.month=697;eq(L.ageLabel(),'80.0','month 697');eq(L.A.endMonth,697,'end month');});
+ eq(L.ageLabel(),'23.0','start age');run(L,60);eq(L.state.month,61,'month');eq(L.ageLabel(),'28.0','age at month 61');assert(L.state.cash>=0,'cash never negative');noNaN(L.state);
+ const s=L.state;s.month=2;eq(L.ageLabel(),'23.1','month 2');s.month=685;eq(L.ageLabel(),'80.0','month 685');eq(L.A.endMonth,685,'end month');});
 /* 2 */ await test('2. Invest when savings exactly equal the amount',async()=>{const {L}=await game(12);const s=L.state;s.cash=5000;s.invested=0;s.optionalUsedMonth=0;
  const r=L.chooseOptional('invest5k');assert(r,'investment accepted');eq(s.cash,0,'savings');eq(s.invested,5000,'investments');});
 /* 3 */ await test('3. Investing with insufficient savings is blocked',async()=>{const {L}=await game(13);const s=L.state;s.cash=4999;s.invested=0;
@@ -62,17 +62,21 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
  L.startEvent('medical');const e1=s.event;eq(e1.amount,e1.total,'uninsured pays all');L.resolveEvent(e1.id,'borrow');
  s.insured=true;s.costs.insurance=1000;L.startEvent('medical');const e2=s.event;eq(e2.amount,Math.round(e2.total*0.35),'cover pays 65%');assert(e2.amount>0,'covered player still pays something');
  const cash=s.cash=1000000;L.resolveEvent(e2.id,'savings');eq(s.cash,cash-e2.amount,'paid once');assert(L.monthlyBudget().lines.some(l=>l.key==='insurance'),'premium in expenses');});
-/* 7 */ await test('7. Marriage, then child after 4+ years; recurring costs once',async()=>{const {L}=await game(18);const s=L.state;s.month=50;s.cash=500000;
- L.startEvent('relationship');const e=s.event;L.resolveEvent(e.id,'modest');eq(L.resolveEvent(e.id,'modest'),null,'cannot resolve twice');eq(s.costs.household,L.A.householdMonthly,'household cost added once');
- assert(!L.EVENTS.child.eligible(s),'child not eligible right after marriage');s.month=s.marriageMonth+48;assert(L.EVENTS.child.eligible(s),'child eligible after 48 months');
- L.startEvent('child');const c=s.event;L.resolveEvent(c.id,'yes');eq(s.children.length,1,'one child');eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,1,'child cost charged once');
+/* 7 */ await test('7. Marriage and kids follow the life-stage schedule; recurring costs once',async()=>{const {L}=await game(18);const s=L.state;s.nextEventMonth=9999;
+ assert(s.life.askMonth>=4&&s.life.askMonth<=19,'marriage question scheduled at 23–24');s.month=s.life.askMonth;eq(L.lifeEventDue(s),'marriageQ','asked when due');
+ L.startEvent('marriageQ');L.resolveEvent(s.event.id,'yes');const age=m=>23+(m-1)/12;assert(age(s.life.weddingMonth)>=25&&age(s.life.weddingMonth)<=33,'wedding between 25 and 33: '+age(s.life.weddingMonth));
+ s.month=s.life.weddingMonth;s.cash=500000;eq(L.lifeEventDue(s),'wedding','wedding due');L.startEvent('wedding');const e=s.event;L.resolveEvent(e.id,'modest');eq(L.resolveEvent(e.id,'modest'),null,'cannot resolve twice');
+ eq(s.married,true,'married');eq(L.monthlyBudget().lines.filter(l=>l.key==='household').length,1,'spouse costs charged once');
+ eq(L.lifeEventDue(s),null,'kids not asked right away');s.month=s.life.kidsAskMonth;eq(L.lifeEventDue(s),'kidsQ','kids asked 1–2 years later');
+ L.startEvent('kidsQ');L.resolveEvent(s.event.id,'k1');assert(s.life.nextBirthMonth>s.month,'birth scheduled');s.month=s.life.nextBirthMonth;L.startEvent('birth');L.resolveEvent(s.event.id,'govHospital');
+ eq(s.children.length,1,'one child');eq(s.life.nextBirthMonth,0,'no second birth planned');eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,1,'child cost charged once');
  s.month+=21*12;eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,0,'child cost stops at 21');});
 /* 8 */ await test('8. Layoff: severance once, three months without pay, recovery',async()=>{const {L}=await game(19);const s=L.state;s.month=80;s.nextEventMonth=9999;const pay=s.salary;
- L.startEvent('layoff');const e=s.event,c0=s.cash;eq(e.severance,Math.round(s.salary*(1+0.5*6)),'severance = 1 month notice + 15 days per year (6 years)');L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
+ L.startEvent('layoff');const e=s.event,c0=s.cash;eq(e.severance,Math.round(s.salary*(1+0.5*6)),'severance = 1 month notice + 15 days per year (6 years)');const take=L.monthlyIncome();L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
  const incomes=[];for(let i=0;i<4;i++){s.event=null;L.advanceMonth();incomes.push(s.lastSettlement.income);}
- eq(incomes.slice(0,3).join(','),'0,0,0','no salary for 3 months');assert(incomes[3]>=pay,'salary resumes in month 4');eq(s.employment,'employed','employed again');});
+ eq(incomes.slice(0,3).join(','),'0,0,0','no salary for 3 months');assert(incomes[3]>=take,'salary resumes in month 4');eq(s.employment,'employed','employed again');});
 /* 9 */ await test('9. Retirement only from 40; salary stops, expenses continue',async()=>{const {L}=await game(20);const s=L.state;s.month=100;eq(L.requestRetirement(),false,'blocked before 40');
- s.month=(40-22)*12+1;s.nextEventMonth=9999;assert(L.requestRetirement(),'available at 40');L.resolveEvent(s.event.id,'retire');eq(s.employment,'retired','retired');
+ s.month=(40-23)*12+1;s.nextEventMonth=9999;assert(L.requestRetirement(),'available at 40');L.resolveEvent(s.event.id,'retire');eq(s.employment,'retired','retired');
  s.cash=0;s.invested=1000000;const b=L.monthlyBudget();eq(b.income,0,'no salary');L.advanceMonth();eq(s.lastSettlement.income,0,'settled without salary');eq(s.lastSettlement.drawdown,s.lastSettlement.expenses,'investments drawn down for costs');eq(s.distressMonths,0,'covered month is not strained');});
 /* 10 */ await test('10. Investment withdrawal to fund an event',async()=>{const {L}=await game(21);const s=L.state;s.invested=10000;s.cash=50000;
  L.startEvent('laptop');const e=s.event;assert(L.EVENTS.laptop.choices(e,s).some(c=>c.id==='invest'),'withdrawal offered');L.resolveEvent(e.id,'invest');
@@ -81,12 +85,12 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
 /* 11 */ await test('11. Inflation over several years, never applied twice',async()=>{const {L}=await game(23);const s=L.state;s.nextEventMonth=9999;
  const rent=()=>L.monthlyBudget().lines.find(l=>l.key==='housing').amount;s.month=12;const r12=rent();s.month=13;eq(rent(),Math.round(14000*1.06),'year 2 price');s.month=24;eq(rent(),Math.round(14000*1.06),'same within year');s.month=25;eq(rent(),Math.round(14000*1.06*1.06),'year 3');eq(r12,14000,'year 1');
  s.month=1;s.lastSettledMonth=1;s.lastRaiseYear=0;for(let i=0;i<36;i++){s.event=null;s.cash+=1e6;const b=L.monthlyBudget();L.advanceMonth();const after=s.lastSettlement.expenses;if(s.month%12!==1)eq(after,b.total,'displayed = charged at month '+s.month);}
- s.month=40;L.applyExpenseChange('food','foodie');eq(L.monthlyBudget().lines.find(l=>l.key==='food').amount,Math.round(10000*Math.pow(1.06,3)),'new cost enters at current price');});
+ s.event=null;s.month=40;L.applyExpenseChange('food','foodie');eq(L.monthlyBudget().lines.find(l=>l.key==='food').amount,Math.round(10000*Math.pow(1.06,3)),'new cost enters at current price');});
 /* 12 */ await test('12. Reach age 80 and stop',async()=>{const {L}=await game(24,{home:'starter',social:'quiet'});const s=L.state;
- const pol={relationship:'wait',child:'later',secondchild:'later',retire:'work',bonus:'invest',crunch:'buffer'};
+ const pol={marriageQ:'no',retire:'work',bonus:'invest',crunch:'buffer'};
  for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);if(!s.event&&s.optionalUsedMonth!==s.month&&s.cash>6*L.monthlyBudget().total&&s.unsecuredDebt===0)L.chooseOptional(s.cash>200000?'invest50k':'invest5k');L.advanceMonth();}
- eq(s.status,'ended','ended');eq(s.finalReason,'completed','completed');eq(s.month,697,'month 697');eq(L.ageLabel(),'80.0','age 80.0');
- eq(L.advanceMonth(),false,'clock cannot advance');eq(s.month,697,'still 697');noNaN(s);});
+ eq(s.status,'ended','ended');eq(s.finalReason,'completed','completed');eq(s.month,685,'month 685');eq(L.ageLabel(),'80.0','age 80.0');
+ eq(L.advanceMonth(),false,'clock cannot advance');eq(s.month,685,'still 685');noNaN(s);});
 /* 13 */ await test('13. Early insolvency after six strained months; frozen afterwards',async()=>{const {L}=await game(25,{salary:35000,home:'premium',social:'big',food:'foodie',commute:'car'});const s=L.state;
  for(let i=0;i<40&&s.status==='playing';i++){autoResolve(L,{crunch:'keep'});L.advanceMonth();}
  eq(s.status,'ended','ended');eq(s.finalReason,'insolvent','insolvent');eq(s.distressMonths,6,'exactly six strained months in a row');
@@ -110,16 +114,16 @@ await test('Vehicle: selling a financed vehicle repays 80%, rest becomes debt on
 await test('Invariant: one optional choice per month; events do not consume it',async()=>{const {L}=await game(28);const s=L.state;s.cash=1e6;s.month=60;s.career=2;
  L.startEvent('laptop');eq(L.chooseOptional('invest5k'),null,'blocked during event');L.resolveEvent(s.event.id,'savings');assert(L.chooseOptional('invest5k'),'still available after event');
  eq(L.chooseOptional('upgrade'),null,'second optional choice blocked');eq(s.homeUpgraded,false,'upgrade not applied');s.event=null;L.advanceMonth();s.event=null;assert(L.chooseOptional('upgrade'),'available next month');eq(L.chooseOptional('upgrade'),null,'no duplicate');});
-await test('Invariant: home upgrade lock and recurring cost in every later month',async()=>{const {L}=await game(29);const s=L.state;s.cash=1e6;s.month=30;s.career=1;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked below 2 XP');s.career=2;s.month=40;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked before 26');s.month=50;
+await test('Invariant: home upgrade lock and recurring cost in every later month',async()=>{const {L}=await game(29);const s=L.state;s.cash=1e6;s.month=30;s.career=1;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked below 2 XP');s.career=2;s.month=30;assert(/Locked/.test(L.optionalBlocker('upgrade')),'locked before 26');s.month=50;
  assert(L.chooseOptional('upgrade'),'applied');for(let i=0;i<3;i++){s.event=null;L.advanceMonth();assert(L.monthlyBudget().lines.some(l=>l.key==='homeUpgrade'),'still charged');}});
 await test('Invariant: expense preview does not mutate state',async()=>{const {L}=await game(30);const s=L.state,snap=JSON.stringify(s);L.previewExpenseChange('commute','car');L.previewExpenseChange('home','premium');eq(JSON.stringify(s),snap,'unchanged');});
 await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
 await test('Invariant: no two severe shocks in a row; event cadence 12–20 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
  for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
- const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t));for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t)&&!L.EVENTS[t].life);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
  assert(rnd.length>=25&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
 await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
-await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={relationship:'big',child:'yes',secondchild:'yes',crunch:'keep'};
+await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={marriageQ:'yes',wedding:'big',kidsQ:'k2',crunch:'keep'};
  for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);L.advanceMonth();}
  if(s.finalReason==='completed')assert(s.unsecuredDebt<L.monthlyBudget().total*24,'completed runs have manageable debt');});
 
@@ -131,8 +135,8 @@ await test('Promotions: bigger and more frequent early, slower later',async()=>{
  for(const seed of [61,62,63,64,65,66]){const {L}=await game(seed);const s=L.state;s.career=3;
   for(let i=0;i<500&&s.status==='playing';i++){if(s.event){if(s.event.type==='layoff'||s.event.type==='retire'||s.event.type==='startup'){L.resolveEvent(s.event.id,L.EVENTS[s.event.type].choices(s.event,s).map(c=>c.id).find(x=>['cut','work','stay'].includes(x)));}else autoResolve(L);}s.cash=Math.max(s.cash,1e7);s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();}
   s.history.filter(h=>/^Promoted at/.test(h.text)).forEach(h=>{const age=Number(h.age),pct=Number(h.text.match(/\(\+(\d+)%\)/)[1]);if(age<28)early.push(pct);if(age<30)earlyCount++;if(age>=50&&age<62){late.push(pct);lateCount++;}});}
- assert(early.length>0,'some early promotions');assert(Math.min(...early)>=27,'early promotion raises ≥ 27%: '+early);
- assert(late.every(p=>p<=10),'late promotion raises ≤ 10%: '+late);assert(earlyCount/8>lateCount/12,'promotions slow down with age ('+earlyCount+' early vs '+lateCount+' late)');});
+ assert(early.length>0,'some early promotions');assert(Math.min(...early)>=35,'early promotion raises ≥ 35%: '+early);
+ assert(late.every(p=>p<=12),'late promotion raises ≤ 12%: '+late);assert(earlyCount/8>lateCount/12,'promotions slow down with age ('+earlyCount+' early vs '+lateCount+' late)');});
 await test('Monthly SIP: invested after bills, skipped (not strained) when cash is short',async()=>{const {L}=await game(53);const s=L.state;s.nextEventMonth=9999;s.invested=0;
  assert(L.setSip(5000),'SIP set');eq(s.optionalUsedMonth===s.month,false,'SIP does not use the power-up');s.cash=100000;const c0=s.cash,b=L.monthlyBudget();L.advanceMonth();
  eq(s.invested,5000,'5,000 invested');eq(s.cash,c0+b.income-b.total-5000,'cash after bills and SIP');eq(s.lastSettlement.sip,5000,'settlement records the SIP');
@@ -142,15 +146,64 @@ await test('Monthly SIP: invested after bills, skipped (not strained) when cash 
 await test('Big buys: two-wheeler and home loans with a bank check',async()=>{const {L}=await game(54);const s=L.state;s.month=100;s.nextEventMonth=9999;s.cash=5e6;
  s.salary=40000;assert(/bank/i.test(L.optionalBlocker('buyHouse')||''),'bank refuses a home loan on a small salary');
  assert(L.chooseOptional('buyBike'),'bike bought');assert(s.vehicleLoan&&s.vehicle==='bike','bike loan active');s.event=null;L.advanceMonth();
- s.salary=300000;const up=L.houseUpfront(),cash=s.cash;assert(L.chooseOptional('buyHouse'),'home bought');eq(s.cash,cash-up,'down payment + fees paid once');assert(s.ownsHome&&s.homeLoan,'home loan active');
+ s.event=null;s.salary=300000;const up=L.houseUpfront(),cash=s.cash;assert(L.chooseOptional('buyHouse'),'home bought');eq(s.cash,cash-up,'down payment + fees paid once');assert(s.ownsHome&&s.homeLoan,'home loan active');
  const b=L.monthlyBudget();assert(b.lines.some(l=>l.key==='homeEmi'),'home EMI in expenses');eq(b.lines.find(l=>l.key==='housing').label,'Home maintenance','rent replaced by maintenance');
  const bal=s.homeLoan.balance;s.event=null;L.advanceMonth();assert(s.homeLoan.balance<bal,'home loan amortises');assert(L.totalDebt()>=s.homeLoan.balance,'home loan counted in debt');
- s.event=null;L.advanceMonth();const owed=s.homeLoan.balance,val=s.homeValue,c2=s.cash;assert(L.chooseOptional('sellHouse'),'home sold');eq(s.cash,c2+Math.round(val*0.97)-owed,'sale repays the loan, rest to savings');eq(s.homeLoan,null,'no home loan');});
+ s.event=null;L.advanceMonth();s.event=null;const owed=s.homeLoan.balance,val=s.homeValue,c2=s.cash;assert(L.chooseOptional('sellHouse'),'home sold');eq(s.cash,c2+Math.round(val*0.97)-owed,'sale repays the loan, rest to savings');eq(s.homeLoan,null,'no home loan');});
 await test('Every event and every choice resolves cleanly',async()=>{const {L}=await game(55);const s=L.state;
- for(const type of Object.keys(L.EVENTS)){s.event=null;s.status='playing';const probe=()=>{s.event=null;s.cash=1e6;s.invested=2e5;s.month=200;L.startEvent(type);return s.event;};const e0=probe();const ids=L.EVENTS[type].choices(e0,s).map(c=>c.id);
+ for(const type of Object.keys(L.EVENTS)){s.event=null;s.status='playing';const probe=()=>{s.event=null;s.cash=1e6;s.invested=2e5;s.month=200;s.employment='employed';s.married=true;s.marriageMonth=100;s.life.divorced=false;s.life.kidsPlan=2;s.children=[{birthMonth:140,base:9000,school:null}];L.startEvent(type);return s.event;};const e0=probe();const ids=L.EVENTS[type].choices(e0,s).map(c=>c.id);
   for(const id of ids){const e=probe();const r=L.resolveEvent(e.id,id);assert(r&&r.feedback&&r.feedback.label,type+'/'+id+' gives feedback');assert(r.text,type+'/'+id+' gives text');noNaN(s);assert(s.cash>=0,type+'/'+id+' cash ≥ 0');}}});
 await test('Variation: openers at months 3 and 24 differ between lives',async()=>{const m3=new Set(),m24=new Set();for(const seed of [71,72,73,74,75,76,77,78]){const {L}=await game(seed);const s=L.state;for(let i=0;i<24;i++){if(s.event){if(s.month===3)m3.add(s.event.type);if(s.month===24)m24.add(s.event.type);autoResolve(L);}L.advanceMonth();}}
  assert(m3.size>=3,'month-3 events vary: '+[...m3]);assert(m24.size>=3,'month-24 events vary: '+[...m24]);});
+
+await test('Income tax: new-regime slabs, ₹12L rebate with marginal relief, 4% cess, indexed slabs',async()=>{const {L}=await game(81);const s=L.state;s.month=1;
+ eq(L.annualTax(1275000),0,'₹12.75L salary pays no tax (₹75K standard deduction + rebate)');eq(L.annualTax(1300000),26000,'marginal relief just above the rebate line');
+ eq(L.annualTax(3000000),475800,'₹30L salary: slab tax + 4% cess');s.month=13;eq(L.annualTax(3000000*1.06),Math.round(475800*1.06),'slabs rise with inflation');
+ s.month=1;s.salary=250000;const b=L.monthlyBudget();eq(b.tax,39650,'monthly tax');eq(b.income,250000-39650,'income shown is take-home');
+ s.nextEventMonth=9999;s.cash=0;const paid=s.stats.taxPaid;L.advanceMonth();eq(s.lastSettlement.income,L.monthlyBudget().income,'settlement credits take-home pay');assert(s.stats.taxPaid>paid,'tax paid is tracked');
+ s.employment='laidoff';eq(L.monthlyBudget().tax,0,'no tax without a salary');});
+await test('Education loan: +25% salary, EMI for 8 years, counted as debt and in the bank check',async()=>{const {L}=await game(82,{eduLoan:'yes'});const s=L.state;s.nextEventMonth=9999;
+ eq(s.salary,56250,'25% higher first salary');assert(s.eduLoan,'loan active');eq(s.eduLoan.emi,L.emiFor(800000,0.10/12,96),'EMI from 10% over 96 months');near(s.eduLoan.emi,12140,30,'≈ ₹12,140 EMI');
+ assert(L.monthlyBudget().lines.some(l=>l.key==='eduEmi'),'EMI in expenses');eq(L.totalDebt(),s.eduLoan.balance,'counted once in debt');
+ for(let m=0;m<100;m++){s.event=null;s.cash+=100000;L.advanceMonth();}eq(s.eduLoan,null,'repaid after 96 EMIs');eq(s.unsecuredDebt,0,'nothing left over');
+ const g=await game(83);eq(g.L.state.salary,45000,'no loan: chosen salary');eq(g.L.state.eduLoan,null,'no loan');});
+await test('Fuel: your own vehicle adds a fuel line; bus or Metro does not',async()=>{const a=(await game(84,{commute:'bike'})).L;const f=a.monthlyBudget().lines.find(l=>l.key==='fuel');assert(f&&f.amount===2500,'two-wheeler fuel ₹2,500');
+ const b=(await game(85,{commute:'car'})).L;eq(b.monthlyBudget().lines.find(l=>l.key==='fuel').amount,8000,'car fuel ₹8,000');
+ const c=(await game(86)).L;eq(c.monthlyBudget().lines.some(l=>l.key==='fuel'),false,'no fuel on public transport');assert(['bus','metro'].includes(c.state.transit),'rides a bus or Metro');
+ c.state.cash=1e6;c.state.month=30;assert(c.chooseOptional('buyBike'),'buys a bike');eq(c.monthlyBudget().lines.find(l=>l.key==='fuel').amount,Math.round(2500*Math.pow(1.06,2)),'fuel starts at today’s price');});
+await test('Life stages: weddings 25–38, at most two kids, no births after 40, “no” means no',async()=>{let weds=0,births=0;
+ for(const seed of [91,92,93,94,95,96]){const {L}=await game(seed);const s=L.state;const pol={marriageQ:seed%3===0?'unsure':'yes',kidsQ:'k2'};
+  for(let i=0;i<300&&s.status==='playing';i++){autoResolve(L,pol);s.cash=Math.max(s.cash,2e6);s.distressMonths=0;L.advanceMonth();}
+  s.history.forEach(h=>{const a=Number(h.age);if(/^Married/.test(h.text)){weds++;assert(a>=25&&a<=38.1,'wedding at '+a);}if(/born at/.test(h.text)){births++;assert(a<=40,'birth at '+a);}});assert(s.children.length<=2,'at most two kids');}
+ assert(weds>=4,'most planned weddings happen: '+weds);assert(births>=4,'planned births happen: '+births);
+ const {L}=await game(97);const s=L.state;for(let i=0;i<400&&s.status==='playing';i++){autoResolve(L,{marriageQ:'no'});s.cash=Math.max(s.cash,2e6);s.distressMonths=0;L.advanceMonth();}
+ eq(s.married,false,'never married after saying no');eq(s.children.length,0,'no kids');assert(!L.RANDOM_POOL.includes('wedding')&&!L.RANDOM_POOL.includes('birth'),'weddings and births are never random');});
+await test('School: chosen at 4, fees until 18; ageing parents add support',async()=>{const {L}=await game(98);const s=L.state;s.nextEventMonth=9999;s.cash=1e6;s.life.marriagePlan='no';s.life.parentsMonth=9999;
+ s.children=[{birthMonth:1,base:9000,school:null}];s.month=1+3*12;eq(L.lifeEventDue(s),null,'not before 4');s.month=1+4*12;eq(L.lifeEventDue(s),'schoolQ','asked at 4');
+ L.startEvent('schoolQ');const c0=s.cash;L.resolveEvent(s.event.id,'private');eq(s.children[0].school,'private','private school');eq(s.cash,c0-L.priced(30000),'admission fee once');
+ assert(L.monthlyBudget().lines.some(l=>l.key==='school0'),'fees charged');s.month=1+18*12;eq(L.monthlyBudget().lines.some(l=>l.key==='school0'),false,'fees stop at 18');
+ s.life.parentsMonth=s.month;eq(L.lifeEventDue(s),'parentsCare','parents need support');L.startEvent('parentsCare');L.resolveEvent(s.event.id,'support');eq(L.monthlyBudget().lines.find(l=>l.key==='parents').amount,L.priced(8000),'monthly support');eq(L.lifeEventDue(s),null,'asked once');});
+await test('Health cover: family policy premium grows; parents add-on covers parents’ bills',async()=>{const {L}=await game(99,{health:'yes'});const s=L.state;s.month=100;s.nextEventMonth=9999;
+ assert(s.insured,'health cover from the setup choice');const solo=L.healthPremium();s.married=true;const duo=L.healthPremium();s.children=[{birthMonth:90,base:9000,school:null}];const fam=L.healthPremium();
+ assert(solo<duo&&duo<fam,'premium grows with the family');eq(L.monthlyBudget().lines.find(l=>l.key==='insurance').label,'Family health cover','family policy label');
+ L.startEvent('parentmedical');eq(s.event.amount,s.event.total,'parents not covered by default');L.resolveEvent(s.event.id,'savings');s.cash=1e6;s.month=101;
+ assert(L.chooseOptional('parentsCover'),'parents added');assert(L.healthPremium()>fam,'add-on raises the premium');L.startEvent('parentmedical');eq(s.event.amount,Math.round(s.event.total*0.35),'cover pays 65% of parents’ bills');});
+await test('Term cover: cheap when young, premium locked, pays a disability benefit after an accident',async()=>{const {L}=await game(100,{health:'yes'});const s=L.state;s.nextEventMonth=9999;s.cash=1e6;
+ const young=L.termQuote().premium;eq(young,800,'₹800/month at 23');assert(L.chooseOptional('term'),'bought');const prem=s.termCover.premium;
+ s.month=200;assert(L.termQuote().premium>L.priced(800)*1.5,'buying at 39 costs far more');eq(L.monthlyBudget().lines.find(l=>l.key==='term').amount,prem,'premium stays locked');
+ const c0=s.cash;L.startEvent('accident');const e=s.event;eq(e.payout,Math.round(s.termCover.cover*0.2),'20% disability benefit');L.resolveEvent(e.id,'savings');
+ eq(s.cash,c0+e.payout-e.amount,'payout and bill applied once');eq(s.employment,'laidoff','off work');eq(s.breakReason,'recovery','recovering');eq(s.laidOffMonthsLeft,12,'for 12 months');
+ for(let i=0;i<13;i++){s.event=null;L.advanceMonth();}eq(s.employment,'employed','back at work');
+ const g=await game(101);const t=g.L.state;t.month=200;t.cash=1e6;g.L.startEvent('accident');eq(t.event.payout,0,'no cover, no payout');eq(t.event.amount,t.event.total,'no health cover, full bill');});
+await test('Divorce: splits savings and investments, removes spouse costs',async()=>{const {L}=await game(102);const s=L.state;s.month=200;s.married=true;s.marriageMonth=100;s.costs.household=9000;s.cash=1e6;s.invested=2e6;
+ assert(L.EVENTS.divorce.eligible(s),'eligible after 3+ years of marriage');L.startEvent('divorce');const e=s.event;L.resolveEvent(e.id,'mediate');
+ eq(s.cash,Math.round((1e6-e.mediate)*0.5),'savings split after fees');eq(s.invested,1e6,'investments split');eq(s.married,false,'single again');eq(L.monthlyBudget().lines.some(l=>l.key==='household'),false,'spouse costs removed');
+ assert(!L.EVENTS.divorce.eligible(s),'not again');});
+await test('Setup screen: avatar, education loan and health cover choices reach the game',async()=>{const {L,win}=await loadGame(103);const d=win.document;L.goToSetup();L.render();
+ d.querySelector('#avatarChoice [data-value="woman"]').click();d.querySelector('#eduLoanChoice [data-value="yes"]').click();d.querySelector('#healthChoice [data-value="no"]').click();
+ assert(/56,250/.test(d.getElementById('profilePreview').textContent),'preview shows the higher salary');assert(/EMI/.test(d.getElementById('eduHint').textContent),'loan hint shows the EMI');
+ d.getElementById('beginGameBtn').click();const s=L.state;eq(s.status,'playing','started');eq(s.profile.avatar,'woman','avatar');assert(s.eduLoan,'education loan');eq(s.insured,false,'no cover');
+ assert(/23\.0/.test(d.getElementById('ageValue').textContent),'starts at 23');});
 
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
