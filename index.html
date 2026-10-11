@@ -417,7 +417,7 @@ function startNextMonth(){
  settleMonth();
  if(state.laidOffMonths>0){state.laidOffMonths--;if(state.laidOffMonths===0&&!state.isRetired){state.salary=Math.max(1,Math.round(state.salaryBeforeLayoff*.85));state.storyMessage='You found a new role after three months without pay. Your salary restarted at 85% of its previous level.';state.lastMessage=state.storyMessage;}}
  addLog('Month '+String(state.month).padStart(3,'0')+' · age '+ageLabel()+' · pay '+money(state.lastSummary.salary)+', recurring bills '+money(state.lastSummary.bills)+'.');renderPlay();
- if(state.month>=(80-22+1)*12){showRetirement('completed');return;}
+ if(state.month>=(80-22)*12+1){showRetirement('completed');return;}
  if(state.insolventMonths>=6){showRetirement('insolvent');return;}
  const ev=eventForMonth(state.month);
  if(ev){state.event=ev;state.paused=true;renderEvent();updateClockUI();ping('pop');}
