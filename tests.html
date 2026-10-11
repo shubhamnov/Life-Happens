@@ -143,6 +143,10 @@ await test('Monthly SIP: invested after bills, skipped (not strained) when cash 
  s.event=null;s.cash=0;s.salary=1000;L.advanceMonth();eq(s.lastSettlement.sipSkipped,true,'skipped when short');
  s.event=null;s.salary=200000;s.cash=0;s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();eq(s.distressMonths,0,'a skipped SIP alone is not strain');
  s.employment='retired';eq(L.monthlyBudget().sip,0,'no SIP in retirement');assert(L.sipBlocker(10000),'cannot start a SIP when retired');});
+await test('Shortfalls: investments are sold before anything becomes debt, while working too',async()=>{const {L}=await game(58);const s=L.state;s.nextEventMonth=9999;s.event=null;s.month=30;
+ s.salary=1000;s.cash=0;s.invested=1000000;s.unsecuredDebt=0;L.advanceMonth();const o=s.lastSettlement;assert(o.drawdown>0,'investments sold');eq(o.unpaid,0,'nothing unpaid');eq(s.unsecuredDebt,0,'no new debt');eq(s.distressMonths,0,'not strained');
+ s.event=null;s.cash=1000;s.invested=50000;const r=L.fundExpense(100000,'savings');eq(s.cash,0,'savings used first');eq(s.invested,0,'then investments');eq(r.borrowed,49000,'only the rest becomes debt');
+ s.event=null;s.cash=0;s.invested=0;s.unsecuredDebt=0;s.distressMonths=0;for(let i=0;i<6&&s.status==='playing';i++){s.event=null;L.advanceMonth();}eq(s.status,'ended','ends only once both are gone');});
 await test('Monthly SIP: custom amounts within limits',async()=>{const {L}=await game(57);const s=L.state;s.nextEventMonth=9999;s.event=null;
  eq(L.sipBlocker(7500),null,'7,500 is allowed');assert(L.setSip(7500),'custom SIP set');eq(s.sip,7500,'SIP is 7,500');
  assert(L.sipBlocker(300),'below the minimum is blocked');assert(L.sipBlocker(2e6),'above the maximum is blocked');assert(L.sipBlocker(1234.5),'fractions are blocked');assert(L.sipBlocker(-500),'negative is blocked');eq(L.sipBlocker(0),null,'Off is allowed');});

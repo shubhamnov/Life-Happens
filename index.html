@@ -465,7 +465,6 @@ const A=Object.freeze({
  schoolYears:[4,18],
  petMonthly:2500,
  eventGap:[12,20],             // months between random life events after the first two years
- crunchCooldown:6
 });
 const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years elapsed)
  home:{starter:{label:'Starter Nest',emoji:'🛏️',cost:8000},comfort:{label:'Comfort Zone',emoji:'🛋️',cost:14000},premium:{label:'Main Character',emoji:'🏙️',cost:22000}},
@@ -523,7 +522,7 @@ function createState(){
   homeUpgraded:false,insured:false,parentsCovered:false,termCover:null,taxpayer:false,pet:false,receivables:[],
   optionalUsedMonth:0,optionalUsedName:'',
   distressMonths:0,lastSettledMonth:0,lastRaiseYear:0,
-  event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,lastCrunchMonth:-99,seen:{},
+  event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,seen:{},
   feedback:null,message:'',story:'',milestone:'',celebration:null,celebSeq:0,
   history:[],
   stats:{shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,taxPaid:0,insurancePaid:0,claims:0},
@@ -642,14 +641,14 @@ function celebrate(kind,emoji,title,text,s=state){s.celebration={seq:++s.celebSe
      4. Loan EMIs (education, vehicle, then home) are paid from savings. Loans amortise on
         schedule either way; any unpaid EMI becomes unsecured debt (nothing is counted twice).
      5. Unsecured debt accrues 1% interest; the minimum repayment is paid from savings.
-     6. Anything still unpaid: in retirement, investments are sold to cover it
-        (the drawdown disclosed when retiring); otherwise unpaid bills/EMIs become
-        unsecured debt. Savings never go negative.
+     6. Anything still unpaid: investments are sold automatically to cover it
+        (working or retired). Only once investments are also gone do unpaid
+        bills/EMIs become unsecured debt. Savings never go negative.
      7. Monthly SIP: if every obligation was paid and savings cover it, the SIP
         moves from savings into investments. Otherwise it is skipped this month
         (a skipped SIP is not a strained month).
      8. Strain rule: a month is "strained" if any obligation in steps 3–5 could
-        not be paid. Strained months count consecutively; a fully paid month
+        not be paid even after selling investments. Strained months count consecutively; a fully paid month
         resets the count to zero. Six strained months in a row end the run.
    ===================================================================== */
 function monthlyReturn(){const z=(rand()+rand()+rand()+rand()-2)*Math.sqrt(3);return A.investMonthlyMean+A.investMonthlyVol*z;}
@@ -676,7 +675,7 @@ function settleMonth(s=state){
   s.unsecuredDebt+=interest;out.interest=interest;s.stats.interestPaid+=interest;
   const short=pay(due);s.unsecuredDebt=Math.max(0,s.unsecuredDebt-(due-short));missed=short;
  }
- if((unpaid>0||missed>0)&&s.employment==='retired'&&s.invested>0){
+ if((unpaid>0||missed>0)&&s.invested>0){
   const draw=Math.min(s.invested,unpaid+missed);s.invested-=draw;out.drawdown=draw;s.stats.investmentsSold+=draw;
   let d=draw;const u=Math.min(d,unpaid);unpaid-=u;d-=u;if(d>0){s.unsecuredDebt=Math.max(0,s.unsecuredDebt-d);missed-=d;}
  }
@@ -695,8 +694,8 @@ function settlementMessage(o){
  let t='';
  if(o.income>0)t='Pay '+money(o.income)+' in'+(o.tax>0?' (after '+money(o.tax)+' tax)':'')+', expenses '+money(o.expenses)+' out.';
  else t=(state.employment==='retired'?'No salary in retirement. ':state.breakReason==='recovery'?'No salary while you recover. ':'No salary this month. ')+'Expenses '+money(o.expenses)+' came from savings.';
- if(o.drawdown>0)t+=' Sold '+money(o.drawdown)+' of investments to cover costs.';
- if(o.unpaid>0||o.missedDebt>0)t+=' Savings ran out: '+money(o.unpaid+o.missedDebt)+' could not be paid'+(o.unpaid>0?' and became debt':'')+'.';
+ if(o.drawdown>0)t+=' Savings ran short, so '+money(o.drawdown)+' of investments were sold to cover bills.';
+ if(o.unpaid>0||o.missedDebt>0)t+=' Savings and investments ran out: '+money(o.unpaid+o.missedDebt)+' could not be paid'+(o.unpaid>0?' and became debt':'')+'.';
  else if(o.income>o.expenses)t+=' '+money(o.income-o.expenses)+' left over.';
  if(o.sip>0)t+=' SIP '+money(o.sip)+' invested.';
  if(o.sipSkipped)t+=' SIP skipped: not enough savings.';
@@ -715,20 +714,21 @@ function fundExpense(amount,method,fun){
  let fromCash=0,fromInvest=0,borrowed=0;
  if(method==='invest'){fromInvest=Math.min(s.invested,amount);s.invested-=fromInvest;s.stats.investmentsSold+=fromInvest;}
  if(method==='borrow')borrowed=amount;
- else{const rest=amount-fromInvest;fromCash=Math.min(s.cash,rest);s.cash-=fromCash;borrowed=rest-fromCash;}
+ else{const rest=amount-fromInvest;fromCash=Math.min(s.cash,rest);s.cash-=fromCash;borrowed=rest-fromCash;
+  if(method==='savings'&&borrowed>0&&s.invested>0){const sell=Math.min(s.invested,borrowed);s.invested-=sell;s.stats.investmentsSold+=sell;fromInvest+=sell;borrowed-=sell;}}
  s.unsecuredDebt+=borrowed;if(fun)s.stats.fun+=amount;else s.stats.shocks+=amount;
  const parts=[];if(fromCash)parts.push(money(fromCash)+' from savings');if(fromInvest)parts.push(money(fromInvest)+' from investments');if(borrowed)parts.push(money(borrowed)+' as new debt');
  const text='Paid '+money(amount)+': '+parts.join(', ')+'.';
  let feedback;
  const monthsAfter=monthsOfCushion(s);
- if(method==='savings')feedback=borrowed>0?fb('risky','Savings did not cover it, so '+money(borrowed)+' became debt at 1% a month. A cash cushion is what keeps a surprise from turning into debt.'):monthsAfter>=1?fb('great','Your savings absorbed the hit with no new debt, and you still have about '+monthsAfter.toFixed(1)+' months of expenses in cash.'):fb('solid','No new debt, but your cash cushion is now thin. Rebuilding it gives you room for the next surprise.');
+ if(method==='savings')feedback=borrowed>0?fb('risky','Savings and investments did not cover it, so '+money(borrowed)+' became debt at 1% a month. A cash cushion is what keeps a surprise from turning into debt.'):fromInvest>0?fb('solid','Savings fell short, so '+money(fromInvest)+' of investments were sold. No new debt, but less is left to compound. A bigger cash cushion avoids that.'):monthsAfter>=1?fb('great','Your savings absorbed the hit with no new debt, and you still have about '+monthsAfter.toFixed(1)+' months of expenses in cash.'):fb('solid','No new debt, but your cash cushion is now thin. Rebuilding it gives you room for the next surprise.');
  else if(method==='invest')feedback=cashBefore>=amount&&cushionBefore>=2?fb('missed','You had the savings for this. Selling investments leaves less invested to compound over the years ahead.'):fb('solid','Selling investments avoided debt that charges interest. The trade-off: less is left invested to grow.');
  else feedback=cashBefore>=amount?fb('risky','You had the cash, but chose debt at 1% a month. Borrowing keeps savings intact today and costs more over time.'):fb('risky','Borrowing covered a real need, but the debt charges 1% a month and adds a minimum repayment to your monthly expenses.');
  return {text,feedback,borrowed};
 }
 function fundingChoices(amount){
  const s=state,cashPart=Math.min(s.cash,amount),gap=amount-cashPart,c=[];
- c.push({id:'savings',emoji:'🐷',title:'Pay from savings',detail:gap?'Uses all '+money(cashPart)+' of savings; the other '+money(gap)+' becomes debt at 1% a month.':'Savings '+money(s.cash)+' → '+money(s.cash-amount)+'. No new debt.'});
+ c.push({id:'savings',emoji:'🐷',title:'Pay from savings',detail:gap?'Uses all '+money(cashPart)+' of savings; the other '+money(gap)+(s.invested>=gap?' comes from selling investments.':s.invested>0?' comes from investments ('+money(s.invested)+') and debt at 1% a month.':' becomes debt at 1% a month.'):'Savings '+money(s.cash)+' → '+money(s.cash-amount)+'. No new debt.'});
  if(s.invested>0){const sell=Math.min(s.invested,amount);c.push({id:'invest',emoji:'📈',title:'Sell investments',detail:'Sell '+money(sell)+' of investments'+(sell<amount?' and pay the rest from savings':'')+'. Less stays invested to compound.'});}
  c.push({id:'borrow',emoji:'💳',title:'Put it on credit',detail:'Keep savings and investments. Adds '+money(amount)+' debt at 1% a month plus a minimum monthly repayment.'});
  return c;
@@ -1012,13 +1012,7 @@ const EVENTS={
   choices:()=>[{id:'retire',emoji:'🏖️',title:'Retire now',detail:'Salary stops this month. Expenses continue; investments are drawn down when savings run out.'},{id:'work',emoji:'💼',title:'Keep working',detail:'Keep earning. You can retire later.'}],
   resolve:(e,c)=>{const s=state;if(c==='work')return{text:'You chose to keep working.',feedback:fb('solid','More working years mean more saving and fewer years your assets must fund.')};
    s.employment='retired';s.laidOffMonthsLeft=0;s.retiredAtAge=ageLabel();record('Retired at '+s.retiredAtAge+'.',{major:true,kind:'retire'});celebrate('retire','🌅','Retired!','Your savings and investments take over from here.');
-   return{text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}},
- crunch:{kicker:'UH-OH',art:'🌧️',title:'Your savings ran out this month.',snapshot:true,
-  create:s=>{const b=monthlyBudget(s);return{clearAmount:Math.min(s.invested,s.unsecuredDebt),bufferAmount:Math.min(s.invested,s.unsecuredDebt+b.total*3),description:'Your bills were bigger than your cash, and the gap became debt at 1% a month. You have '+money(s.invested)+' invested. Six strained months in a row end the run.',foot:'Using investments for a real need avoids interest, but leaves less to compound.'};},
-  choices:(e)=>{const c=[];if(e.bufferAmount>e.clearAmount)c.push({id:'buffer',emoji:'🛟',title:'Clear debt + 3 months cushion',detail:'Sell '+money(e.bufferAmount)+' of investments. Repays debt, then keeps the rest as savings.'});if(e.clearAmount>0)c.push({id:'clear',emoji:'🧹',title:'Clear the debt only',detail:'Sell '+money(e.clearAmount)+' of investments to repay unsecured debt.'});c.push({id:'keep',emoji:'🤞',title:'Keep investments',detail:'Debt stays and keeps growing at 1% a month.'});return c;},
-  resolve:(e,c)=>{const s=state;if(c==='keep')return{text:'You kept your investments. Debt stays at '+money(s.unsecuredDebt)+'.',feedback:fb('risky','Your debt grows at 1% a month while your monthly budget runs short. Strained months count toward the six-month limit.')};
-   const amt=Math.min(s.invested,c==='buffer'?e.bufferAmount:e.clearAmount);s.invested-=amt;s.stats.investmentsSold+=amt;const toDebt=Math.min(s.unsecuredDebt,amt);s.unsecuredDebt-=toDebt;s.cash+=amt-toDebt;record('Sold '+money(amt)+' of investments to cover a cash shortfall at '+ageLabel()+'.',{major:true,kind:'withdraw'});
-   return{text:'Sold '+money(amt)+' of investments: '+money(toDebt)+' repaid debt'+(amt>toDebt?', '+money(amt-toDebt)+' to savings':'')+'.',feedback:fb('solid','This stops 1%-a-month interest. It reduces what stays invested, and the monthly gap still needs fixing in your Monthly Plan.')};}}
+   return{text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}}
 };
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
@@ -1075,7 +1069,6 @@ function startEvent(type,opts){
 function maybeStartEvent(){
  const s=state,m=s.month;if(s.event)return;
  const st=s.lastSettlement;
- if(st&&(st.unpaid>0||st.missedDebt>0)&&s.employment!=='retired'&&s.invested>0&&m-s.lastCrunchMonth>=A.crunchCooldown){s.lastCrunchMonth=m;startEvent('crunch');return;}
  if(m===3){const t=pickRandomEvent(s,OPENERS.shock);if(t)startEvent(t);return;}
  if(m===12&&s.employment==='employed'){startEvent('bonus',{first:true});return;}
  if(m===24){const t=pickRandomEvent(s,OPENERS.social);if(t)startEvent(t,{first:true});return;}
@@ -1166,7 +1159,7 @@ function resolveEvent(eventId,choiceId){
  return r;
 }
 function requestRetirement(){const s=state;if(s.status!=='playing'||s.event||s.employment==='retired'||preciseAge(s)<A.retireMinAge)return false;return startEvent('retire');}
-function endRun(reason){const s=state;if(s.status!=='playing')return;s.status='ended';s.finalReason=reason;s.event=null;record(reason==='completed'?'Reached age 80.':'Run ended at '+ageLabel()+' after six strained months in a row.',{major:true,kind:'end'});}
+function endRun(reason){const s=state;if(s.status!=='playing')return;s.status='ended';s.finalReason=reason;s.event=null;record(reason==='completed'?'Reached age 80.':'Run ended at '+ageLabel()+': savings and investments were gone and bills went unpaid for six months in a row.',{major:true,kind:'end'});}
 
 /* =====================================================================
    10. OPTIONAL CHOICES (at most one per simulated month)
@@ -1357,7 +1350,7 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
- severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge};
+ severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense};
 })();
 </script>
 <script>
@@ -1750,7 +1743,7 @@ function renderSetup(){
  $('eduHint').textContent=edu?'An ₹'+(A.eduLoan.principal/1e5)+' lakh education loan at 10% a year got you into a better college: your first salary is '+money(salary)+' instead of '+money(p.salary)+', but the EMI is '+money(study)+' a month for 8 years.':'No loan EMI. You start on the salary you picked.';
  $('commuteHint').textContent=ride.loan?ride.label+': '+money(ride.loan)+' loan (counted as debt), about '+money(emi)+' EMI a month for 36 months, plus '+money(ride.fuel)+' fuel and '+money(ride.running)+' upkeep a month. You can also buy one later in Big buys.':ride.label+': no loan, '+money(ride.running)+' a month. You can buy a two-wheeler or car later in Big buys.';
  const costs=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+ride.running+ride.fuel+emi+study+cover,take=salary-tax,left=take-costs;
- $('profilePreview').innerHTML='<strong>'+money(salary)+'</strong> pay'+(tax?' − <strong>'+money(tax)+'</strong> tax':' (no income tax yet)')+' − <strong>'+money(costs)+'</strong> monthly costs'+(emi||study?' (incl. EMIs)':'')+' = <strong>'+(left<0?'−':'')+money(Math.abs(left))+'</strong> '+(left<0?'short every month. Costs above income become debt, and six strained months in a row end the race. Try cheaper options.':'left over each month to save, invest or spend. 🎉');
+ $('profilePreview').innerHTML='<strong>'+money(salary)+'</strong> pay'+(tax?' − <strong>'+money(tax)+'</strong> tax':' (no income tax yet)')+' − <strong>'+money(costs)+'</strong> monthly costs'+(emi||study?' (incl. EMIs)':'')+' = <strong>'+(left<0?'−':'')+money(Math.abs(left))+'</strong> '+(left<0?'short every month. Costs above income eat savings, then investments, then become debt. Try cheaper options.':'left over each month to save, invest or spend. 🎉');
 }
 function stageName(age){return age<28?'Early career':age<36?'Building your life':age<46?'Mid-career':age<60?'Later career':age<70?'Freedom years':'Golden years';}
 const IDLE_LINES={
@@ -1953,7 +1946,7 @@ function renderAbout(){
   ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Car ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
   ['Home loan','A 2BHK at ₹35 lakh in age-23 prices (rises 6% a year). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops; maintenance ₹3,000/month. Home value grows 5% a year. Selling costs 3%'],
   ['Bank check','New loans need a salary, and all EMIs together (including an education loan) must stay within 50% of take-home pay'],
-  ['Shortfalls','Bills are paid from savings. Anything unpaid becomes unsecured debt; savings never go below zero'],['Race ends early','After 6 strained months in a row (a month where some costs could not be paid). One fully paid month resets the count'],
+  ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
