@@ -143,6 +143,9 @@ await test('Monthly SIP: invested after bills, skipped (not strained) when cash 
  s.event=null;s.cash=0;s.salary=1000;L.advanceMonth();eq(s.lastSettlement.sipSkipped,true,'skipped when short');
  s.event=null;s.salary=200000;s.cash=0;s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();eq(s.distressMonths,0,'a skipped SIP alone is not strain');
  s.employment='retired';eq(L.monthlyBudget().sip,0,'no SIP in retirement');assert(L.sipBlocker(10000),'cannot start a SIP when retired');});
+await test('Monthly SIP: custom amounts within limits',async()=>{const {L}=await game(57);const s=L.state;s.nextEventMonth=9999;s.event=null;
+ eq(L.sipBlocker(7500),null,'7,500 is allowed');assert(L.setSip(7500),'custom SIP set');eq(s.sip,7500,'SIP is 7,500');
+ assert(L.sipBlocker(300),'below the minimum is blocked');assert(L.sipBlocker(2e6),'above the maximum is blocked');assert(L.sipBlocker(1234.5),'fractions are blocked');assert(L.sipBlocker(-500),'negative is blocked');eq(L.sipBlocker(0),null,'Off is allowed');});
 await test('Big buys: two-wheeler and home loans with a bank check',async()=>{const {L}=await game(54);const s=L.state;s.month=100;s.nextEventMonth=9999;s.cash=5e6;
  s.salary=40000;assert(/bank/i.test(L.optionalBlocker('buyHouse')||''),'bank refuses a home loan on a small salary');
  assert(L.chooseOptional('buyBike'),'bike bought');assert(s.vehicleLoan&&s.vehicle==='bike','bike loan active');s.event=null;L.advanceMonth();

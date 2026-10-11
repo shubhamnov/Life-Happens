@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#F3EFE6">
-<meta name="application-version" content="2026.10.11-life-stages-1">
+<meta name="application-version" content="2026.10.11-life-stages-2">
 <meta name="description" content="Life Happens: race through life from 23 to 80 and see how everyday money decisions add up.">
 <title>Life Happens — Race from 23 to 80</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23DCE7D9%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 text-anchor=%27middle%27%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
@@ -248,6 +248,11 @@ button:disabled{cursor:not-allowed}
 .sip-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}
 .sip-options button{min-height:52px;border-radius:14px;border:2px solid #fff;background:#EFEADD;font:700 15px var(--display);box-shadow:0 2px 0 #2E3A3312}
 .sip-options button[aria-pressed=true]{background:var(--mint);border-color:var(--sage-strong)}
+.sip-custom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 8px;font-weight:700;font-size:14px}
+.sip-input{display:flex;align-items:center;gap:4px;background:#fff;border:2px solid #E2DCCB;border-radius:12px;padding:0 10px;min-height:44px;flex:1;min-width:120px}
+.sip-input:focus-within{border-color:var(--sage-strong)}
+.sip-input input{border:0;outline:0;background:transparent;font:700 16px var(--display);width:100%;min-width:0}
+.sip-custom small{color:#6B675D;font-size:12px}
 .res-note{margin:0;font-size:12px;line-height:1.4;color:var(--muted);font-weight:600}
 
 /* ---------- Plan editor ---------- */
@@ -437,7 +442,7 @@ const A=Object.freeze({
  vehicleResaleShare:0.8,       // selling a financed vehicle: resale repays 80% of the outstanding loan, the rest becomes unsecured debt
  house:{basePrice:3500000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,maintenance:3000,appreciation:0.05,sellCostShare:0.03},
  maxEmiShare:0.5,              // a bank approves a new loan only if all EMIs stay within 50% of take-home pay
- sipOptions:[0,2000,5000,10000,25000,50000],
+ sipOptions:[0,2000,5000,10000,25000,50000],sipMin:500,sipMax:1000000,
  failureMonths:6,              // six consecutive strained months end the run (see settleMonth)
  // Layoff: one month's notice pay plus 15 days' pay per completed year in the job (capped), then 3 months without salary.
  layoffMonths:3,noticeMonths:1,severancePerYear:0.5,severanceCapMonths:12,layoffCutPct:0.2,
@@ -1255,7 +1260,7 @@ function chooseOptional(id){
 /* =====================================================================
    11. MONTHLY SIP — an automatic monthly investment (changing it is free)
    ===================================================================== */
-function sipBlocker(amount){const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';if(!A.sipOptions.includes(amount))return 'Unknown amount.';if(amount===s.sip)return 'Already set.';if(amount>0&&s.employment==='retired')return 'SIPs need a salary. You are retired.';return null;}
+function sipBlocker(amount){const s=state;if(s.status!=='playing')return 'This run has ended.';if(s.event)return 'Resolve the current life event first.';if(!Number.isInteger(amount)||amount<0)return 'Enter a whole amount in rupees.';if(amount>0&&amount<A.sipMin)return 'The smallest SIP is '+money(A.sipMin)+' a month.';if(amount>A.sipMax)return 'The largest SIP is '+money(A.sipMax)+' a month.';if(amount===s.sip)return 'Already set.';if(amount>0&&s.employment==='retired')return 'SIPs need a salary. You are retired.';return null;}
 function setSip(amount){
  const s=state;if(sipBlocker(amount))return null;
  const before=s.sip;s.sip=amount;const b=monthlyBudget(s);
@@ -1921,13 +1926,19 @@ function renderExpenses(){
 }
 
 /* ---------- SIP chooser ---------- */
-function sipBody(){
- const s=S(),pick=ui.sipPick,b=M.monthlyBudget();
- let h='<p class="lead">A SIP moves a fixed amount from savings into investments every month, after your bills are paid. If savings cannot cover it, that month is skipped. Changing it is free and does not use your power-up.</p><div class="sip-options">'+A.sipOptions.map(v=>'<button type="button" data-sip="'+v+'" aria-pressed="'+(pick===v)+'">'+(v?compact(v):'Off')+'</button>').join('')+'</div>';
- if(pick!==null){const free=b.leftover-pick;h+='<div class="preview"><table><tr><td>Monthly SIP</td><td>'+money(s.sip)+' → '+money(pick)+'</td></tr><tr><td>Left after bills and SIP</td><td class="'+(free<0?'neg':'')+'">'+money(b.leftover-s.sip)+' → '+money(free)+'</td></tr><tr><td>Invested over 10 years*</td><td>≈ '+compact(pick*120)+' paid in</td></tr></table></div><p class="res-note">*Before any market growth or losses. Returns are uncertain.</p>';
-  const block=M.sipBlocker(pick);if(block)h+='<p class="res-note" style="color:var(--danger-ink)">'+esc(block)+'</p>';}
+function sipPreview(){
+ const s=S(),pick=ui.sipPick,b=M.monthlyBudget();if(pick===null)return '';
+ const free=b.leftover-pick;let h='<div class="preview"><table><tr><td>Monthly SIP</td><td>'+money(s.sip)+' → '+money(pick)+'</td></tr><tr><td>Left after bills and SIP</td><td class="'+(free<0?'neg':'')+'">'+money(b.leftover-s.sip)+' → '+money(free)+'</td></tr><tr><td>Invested over 10 years*</td><td>≈ '+compact(pick*120)+' paid in</td></tr></table></div><p class="res-note">*Before any market growth or losses. Returns are uncertain.</p>';
+ const block=M.sipBlocker(pick);if(block)h+='<p class="res-note" style="color:var(--danger-ink)">'+esc(block)+'</p>';
  return h;
 }
+function sipBody(){
+ const pick=ui.sipPick,preset=A.sipOptions.includes(pick);
+ return '<p class="lead">A SIP moves a fixed amount from savings into investments every month, after your bills are paid. If savings cannot cover it, that month is skipped. Changing it is free and does not use your power-up.</p><div class="sip-options">'+A.sipOptions.map(v=>'<button type="button" data-sip="'+v+'" aria-pressed="'+(pick===v)+'">'+(v?compact(v):'Off')+'</button>').join('')+'</div>'
+  +'<label class="sip-custom"><span>Custom amount</span><span class="sip-input"><b aria-hidden="true">₹</b><input id="sipCustom" type="number" inputmode="numeric" min="'+A.sipMin+'" max="'+A.sipMax+'" step="500" placeholder="e.g. 7,500" value="'+(pick!==null&&!preset?pick:'')+'"></span><small>per month</small></label>'
+  +'<div id="sipPreview" aria-live="polite">'+sipPreview()+'</div>';
+}
+function syncSip(){$('sipPreview').innerHTML=sipPreview();$('confirmOk').disabled=ui.sipPick===null||!!M.sipBlocker(ui.sipPick);$('confirmBody').querySelectorAll('[data-sip]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.sip)===ui.sipPick)));}
 function openSip(){const s=S();if(s.event||s.status!=='playing')return;ui.sipPick=null;openConfirm({kicker:'MONTHLY SIP',title:'🌱 Invest every month',body:sipBody(),okLabel:'Set SIP',okDisabled:true,onOk:()=>{const r=M.setSip(ui.sipPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});}
 
 /* ---------- About ---------- */
@@ -1937,7 +1948,7 @@ function renderAbout(){
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],
   ['Education loan','Optional at the start: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI) for a 25% higher first salary'],
-  ['Investments','About 7% a year on average with monthly ups and downs, plus occasional booms and dips. Gains are not taxed in this model'],['Monthly SIP','A fixed amount moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
+  ['Investments','About 7% a year on average with monthly ups and downs, plus occasional booms and dips. Gains are not taxed in this model'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
   ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Car ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
   ['Home loan','A 2BHK at ₹35 lakh in age-23 prices (rises 6% a year). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops; maintenance ₹3,000/month. Home value grows 5% a year. Selling costs 3%'],
@@ -1991,7 +2002,8 @@ $('moveDeck').addEventListener('click',e=>{const b=e.target.closest('[data-move]
  if(id==='buyHouse')rows.push(['Home loan',money(Math.round(M.housePrice()*(1-A.house.downShare)))+' over 20 years']);
  const kick={'one-time':'ONE-TIME POWER-UP',recurring:'MONTHLY POWER-UP',big:'BIG BUY'}[o.tab];
  openConfirm({kicker:kick,title:o.emoji+' '+o.name,okLabel:'Confirm',body:'<p class="lead">'+esc(o.describe(s))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div><p class="res-note">This uses your one power-up for this month.</p>',onOk:()=>{const r=M.chooseOptional(id);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});});
-$('confirmBody').addEventListener('click',e=>{const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);$('confirmBody').innerHTML=sipBody();$('confirmOk').disabled=!!M.sipBlocker(ui.sipPick);sfx('tap');const again=$('confirmBody').querySelector('[data-sip="'+ui.sipPick+'"]');if(again)again.focus({preventScroll:true});});
+$('confirmBody').addEventListener('click',e=>{const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);const c=$('sipCustom');if(c)c.value='';syncSip();sfx('tap');});
+$('confirmBody').addEventListener('input',e=>{if(e.target.id!=='sipCustom')return;const v=e.target.value.trim();ui.sipPick=v===''?null:Math.round(Number(v));if(Number.isNaN(ui.sipPick))ui.sipPick=null;syncSip();});
 $('confirmOk').addEventListener('click',()=>{const act=ui.confirmAction;ui.confirmAction=null;closeModal('confirmOverlay');if(act)act();render();});
 $('confirmCancel').addEventListener('click',()=>{ui.confirmAction=null;closeModal('confirmOverlay');});
 $('editExpensesBtn').addEventListener('click',()=>{if(S().event||S().status!=='playing')return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');});
