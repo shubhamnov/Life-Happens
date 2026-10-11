@@ -46,6 +46,7 @@ body,button{font-family:"Space Grotesk","Avenir Next",system-ui,sans-serif}
 .voice-button{width:auto;min-width:40px;padding:0 8px;font-size:8px;letter-spacing:.01em}.voice-button.active{border-color:var(--lime);background:#383e26;color:var(--lime)}
 @media(max-height:740px){.wallet-card{padding:7px}.wallet-card span{font-size:6.5px}.wallet-card b{font-size:12px}.buffer-line{padding:4px 7px}}
 .buffer-line.hidden{display:none}
+.scene.future{background:linear-gradient(140deg,#a3e5ca,#79b7df 48%,#a895ff)}.scene.investing{background:linear-gradient(140deg,#d8ff63,#7bd9b9 45%,#8d83f0)}.scene.inflation{background:linear-gradient(140deg,#f6cb73,#ff8b80 48%,#a894ff)}.scene.insurance{background:linear-gradient(140deg,#9fdcf3,#9b91f4 50%,#ffc1a5)}.scene.retire{background:linear-gradient(140deg,#d8ff63,#94e6b7 48%,#a895ff)}.buffer-line.hidden{display:none}.ending-stat{background:#28233d;border:1px solid #48415e;border-radius:13px;padding:10px}.ending-stat span{display:block;color:#bcb4d0;font-size:7px;font-weight:900;letter-spacing:.06em}.ending-stat b{display:block;color:#d8ff63;font:600 15px "IBM Plex Mono",monospace;margin-top:4px}
 </style>
 </head>
 <body>
@@ -56,7 +57,7 @@ body,button{font-family:"Space Grotesk","Avenir Next",system-ui,sans-serif}
   </header>
   <div class="progressrow">
     <div class="progresslabel"><strong id="progressName">YOUR FIRST PAYCHECK</strong><span id="progressCount">READY?</span></div>
-    <div class="steps" aria-label="Chapter progress"><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div></div>
+    <div class="steps" aria-label="Story progress"><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div><div class="stepbar"><i></i></div></div>
   </div>
   <section class="scene" id="scene" aria-label="Story illustration">
     <div class="scene-kicker" id="sceneKicker">A NEW CHAPTER</div>
@@ -109,7 +110,7 @@ body,button{font-family:"Space Grotesk","Avenir Next",system-ui,sans-serif}
 const $=id=>document.getElementById(id);
 const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 let audio=null,soundOn=true;
-const state={phase:0,cash:0,savings:0,invested:0,debt:0,joy:0,essentials:false,budget:null,surprise:null,feedback:null};
+const state={phase:0,cash:0,savings:0,invested:0,debt:0,joy:0,essentials:false,budget:null,surprise:null,feedback:null,salary:45000,lifestyleChoice:null,insurance:false,insuranceChoice:null,retirementMove:null,inflationChoice:null,investChoice:null,yearGrowth:0};
 let voiceOn=false;
 function ping(kind){
  if(!soundOn)return;
@@ -171,104 +172,107 @@ function setFeedback(){
 function render(){
  const p=state.phase,steps=document.querySelectorAll('.stepbar i');
  $('wallet').classList.toggle('hidden',p===0);
- $('chapterPill').textContent=p===4?'CHAPTER COMPLETE':'CHAPTER 01';
- $('progressName').textContent=p===0?'YOUR FIRST PAYCHECK':p===1?'COVER THE BASICS':p===2?'MAKE IT YOURS':p===3?'THE PLOT TWIST':'YOUR MONTH, REVIEWED';
- $('progressCount').textContent=p===0?'READY?':p===4?'4 / 4':p+' / 4';
- steps.forEach((el,i)=>el.style.width=i<p?'100%':'0%');
- $('choices').innerHTML='';$('actions').innerHTML='';$('bottomNote').textContent=p===4?'Next up: lifestyle creep, investing + compounding':'A playful money adventure · Not financial advice';
+ const chapter=p<=4?1:p===5?2:p===6?3:p===7?4:p===8?5:6;
+ $('chapterPill').textContent=p===0?'CHAPTER 01':p===4?'CHAPTER 01 ✓':p===10?'YOUR STORY':'CHAPTER 0'+chapter;
+ const names={0:'YOUR FIRST PAYCHECK',1:'COVER THE BASICS',2:'MAKE YOUR MONEY MOVE',3:'THE PLOT TWIST',4:'CHAPTER 01 RECAP',5:'LIFESTYLE CREEP',6:'INVESTING & TIME',7:'INFLATION HITS',8:'PROTECT YOURSELF',9:'RETIRE ON YOUR TERMS',10:'YOUR LIFE, YOUR MONEY'};
+ $('progressName').textContent=names[p]||'YOUR STORY';$('progressCount').textContent=p===0?'READY':p===10?'COMPLETE':(p<=4?'1':p-3)+' / 6';
+ const progress=p===0?0:p<=4?1:p===5?2:p===6?3:p===7?4:p===8?5:6;steps.forEach((el,i)=>el.style.width=i<progress?'100%':'0%');
+ $('choices').innerHTML='';$('actions').innerHTML='';$('bottomNote').textContent=p>=9?'The goal: more freedom to choose.':'A playful money adventure · Not financial advice';
  if(p===0){
-  setScene('','A NEW CHAPTER','PAYDAY ENERGY','₹45,000','NEW JOB · NEW POSSIBILITIES');
-  setStory('THE STARTING LINE','₹45,000 is yours.<br>Let’s give it a job.','Cover the basics. Make one money move. Handle a surprise.');
-  $('choices').innerHTML='<button class="primary" data-action="start">Start my first month <span aria-hidden="true">→</span></button>';
-  $('actions').innerHTML='<div class="microcopy">Four quick moments. Your choices shape the story.</div>';
+  setScene('','A NEW CHAPTER','PAYDAY ENERGY','₹45,000','NEW JOB · NEW POSSIBILITIES');setStory('THE STARTING LINE','₹45,000 is yours.<br>Let’s give it a job.','Cover the basics. Make one money move. Handle a surprise.');
+  $('choices').innerHTML='<button class="primary" data-action="start">Start my first month <span>→</span></button>';$('actions').innerHTML='<div class="microcopy">6 chapters · Real trade-offs · Your choices carry forward</div>';
  }else if(p===1){
   setScene('essentials','MOMENT 01 · THE BASICS','ADULTING UNLOCKED','🔑 + 🥑','HOME BASE SECURED?');
-  if(!state.essentials){
-   setStory('MOMENT 01 · ESSENTIALS','Home and food.<br>First.','One tap covers both.');
-   $('choices').innerHTML=choice('🏠','Pay rent + groceries','Rent ₹12k · Food ₹5k','−₹17k','essentials',false,false);
-   $('actions').innerHTML='<div class="microcopy">One clear move. You’ll see your new balance right away.</div>';
-  }else{
-   setStory('BASICS · DONE ✓','₹28,000 left.','Now choose what matters this month.');
-   $('actions').innerHTML='<button class="primary" data-action="continue">Choose my next move <span>→</span></button>';
-  }
+  if(!state.essentials){setStory('MOMENT 01 · ESSENTIALS','Home and food.<br>First.','One tap covers both.');$('choices').innerHTML=choice('🏠','Pay rent + groceries','Rent ₹12k · Food ₹5k','−₹17k','essentials',false,false);$('actions').innerHTML='<div class="microcopy">Your balance updates right away.</div>'}
+  else{setStory('BASICS · DONE ✓','₹28,000 left.','Now choose what matters this month.');$('actions').innerHTML='<button class="primary" data-action="continue">Choose my next move →</button>'}
  }else if(p===2){
-  setScene('budget','MOMENT 02 · YOUR CALL','MAKE A MOVE','₹28K LEFT','SAVE · INVEST · ENJOY');
-  if(!state.budget){
-   setStory('MOMENT 02 · YOUR MONEY','Pick your move.','What you choose changes the numbers.');
-   $('choices').innerHTML=
-    choice('🛟','Build a safety buffer','Cash −₹8k · buffer +₹8k','MOVE ₹8K','save',false,false)+
-    choice('📈','Start investing','Cash −₹8k · invested +₹8k','MOVE ₹8K','invest',false,false)+
-    choice('🎟️','Spend on a good time','Fun now. Less cash later.','−₹7K','fun',false,false);
-   $('actions').innerHTML='<div class="microcopy">No perfect move. Just different trade-offs.</div>';
-  }else{
-   setStory('MOVE MADE ✓','Your money moved.','Check the numbers. Then face real life.');
-   $('actions').innerHTML='<button class="primary" data-action="continue">See what life throws at me <span>→</span></button>';
-  }
+  setScene('budget','MOMENT 02 · YOUR MONEY','MAKE A MOVE','₹28K LEFT','SAVE · INVEST · ENJOY');
+  if(!state.budget){setStory('MOMENT 02 · YOUR MONEY','Pick your move.','Each choice changes the numbers.');$('choices').innerHTML=choice('🛟','Build a safety buffer','Cash −₹8k · buffer +₹8k','MOVE ₹8K','save',false,false)+choice('📈','Start investing','Cash −₹8k · invested +₹8k','MOVE ₹8K','invest',false,false)+choice('🎟️','Spend on a good time','Fun now. Less cash later.','−₹7K','fun',false,false);$('actions').innerHTML='<div class="microcopy">No perfect move. Different trade-offs.</div>'}
+  else{setStory('MOVE MADE ✓','Your money moved.','Check the numbers. Then face real life.');$('actions').innerHTML='<button class="primary" data-action="continue">See what life throws at me →</button>'}
  }else if(p===3){
   setScene('surprise','MOMENT 03 · SURPRISE','REPAIR BILL','₹18K','YOUR LAPTOP BROKE');
-  if(!state.surprise){
-   setStory('LIFE HAPPENED','Laptop repair: ₹18K.','Choose how to cover it.');
-   const bufferChoice=state.savings>0
-    ?choice('🛟','Use rainy-day buffer','Buffer '+money(state.savings)+' · cash covers rest','USE BUFFER','buffer',false,false)
-    :state.invested>0
-      ?choice('📉','Sell investments first','Sell '+money(Math.min(18000,state.invested))+' · cash covers rest','SELL','buffer',false,false)
-      :'';
-   $('choices').innerHTML=bufferChoice+
-    choice('💵','Pay from cash','Cash −₹18k · no new debt','−₹18K','cash',false,false)+
-    choice('💳','Borrow the money','Cash stays · debt goes up','DEBT +₹18K','borrow',false,false);
-   $('actions').innerHTML='<div class="microcopy">Debt can mean interest and future repayments.</div>';
-  }else{
-   setStory('CRISIS · HANDLED ✓','Your laptop works.','Here’s what that choice changed.');
-   $('actions').innerHTML='<button class="primary" data-action="continue">See my month-one recap <span>→</span></button>';
-  }
+  if(!state.surprise){setStory('LIFE HAPPENED','Laptop repair: ₹18K.','Choose how to cover it.');const bc=state.savings>0?choice('🛟','Use rainy-day buffer','Buffer '+money(state.savings)+' · cash covers rest','USE BUFFER','buffer',false,false):state.invested>0?choice('📉','Sell investments first','Sell '+money(Math.min(18000,state.invested))+' · cash covers rest','SELL','buffer',false,false):'';$('choices').innerHTML=bc+choice('💵','Pay from cash','Cash −₹18k · no new debt','−₹18K','cash',false,false)+choice('💳','Borrow the money','Cash stays · debt goes up','DEBT +₹18K','borrow',false,false);$('actions').innerHTML='<div class="microcopy">Debt can mean interest and future repayments.</div>'}
+  else{setStory('CRISIS · HANDLED ✓','Your laptop works.','Here’s what that choice changed.');$('actions').innerHTML='<button class="primary" data-action="continue">See my month-one recap →</button>'}
+ }else if(p===4){
+  setScene('recap','CHAPTER 01 · COMPLETE','YOU SHOWED UP','✦ NEXT LEVEL','MONEY SKILLS ARE BUILT, NOT BORN');setStory('MONTH ONE · COMPLETE','A surprise happened.<br>You adapted.','You covered essentials, made a money move, and handled a bill.');
+  $('choices').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><div style="background:#e8e1ff;border-radius:13px;padding:10px"><div style="font-size:8px;font-weight:900">CASH</div><b>'+money(state.cash)+'</b></div><div style="background:#e4ddff;border-radius:13px;padding:10px"><div style="font-size:8px;font-weight:900">INVESTED</div><b>'+money(state.invested)+'</b></div><div style="background:#ffe5de;border-radius:13px;padding:10px"><div style="font-size:8px;font-weight:900">DEBT</div><b>'+money(state.debt)+'</b></div><div style="background:#dcf6e7;border-radius:13px;padding:10px"><div style="font-size:8px;font-weight:900">RAINY-DAY BUFFER</div><b>'+money(state.savings)+'</b></div></div>';
+  $('actions').innerHTML='<button class="primary" data-action="next">Keep going: life gets pricier →</button><button class="secondary" data-action="restart">Replay Chapter 1</button>';
+  $('feedback').className='feedback show solid';$('feedback').innerHTML='<strong>THE TAKEAWAY</strong>'+(state.savings>0?'Your buffer gave you more ways to respond. ':'A buffer can turn a crisis into an inconvenience. ')+(state.debt>0?'Borrowing solves today’s problem, but repayments reduce tomorrow’s choices.':'Flexibility matters as much as a plan.');
+ }else if(p===5){
+  setScene('future','CHAPTER 02 · PAY RISE','LEVEL UP','₹65K','YOUR SALARY JUST GREW');
+  if(!state.lifestyleChoice){setStory('ONE YEAR LATER · SALARY +₹20K','More money.<br>More temptation.','Your pay rises to ₹65K. A nicer flat, subscriptions, weekend plans… what changes?');$('choices').innerHTML=choice('✨','Upgrade the lifestyle','More comfort · higher recurring costs','SPEND ₹18K','upgrade',false,false)+choice('🛟','Keep life mostly the same','Put ₹12K toward a buffer','SAVE ₹12K','steady',false,false)+choice('📈','Invest before upgrading','Move ₹10K toward your future','INVEST ₹10K','earlyinvest',false,false);$('actions').innerHTML='<div class="microcopy">A raise can grow your options—or your bills.</div>'}
+  else{setStory('PAY RISE · DECIDED','Your new normal is set.','Lifestyle costs can stick around after the excitement fades.');$('actions').innerHTML='<button class="primary" data-action="continue">Fast-forward one year →</button>'}
+ }else if(p===6){
+  setScene('investing','CHAPTER 03 · TIME','LET IT GROW','📈','TIME CAN HELP · NOT GUARANTEE');
+  if(!state.investChoice){setStory('INVESTING · YEAR TWO','Make time your teammate.','You have '+money(state.invested)+' invested. How much will you put to work now?');$('choices').innerHTML=choice('🚀','Invest ₹15K','More invested · less cash today','−₹15K','invest15',false,false)+choice('🌱','Invest ₹5K','A smaller step, more cash stays','−₹5K','invest5',false,false)+choice('🧊','Hold cash for now','Flexible today · less market exposure','₹0','holdcash',false,false);$('actions').innerHTML='<div class="microcopy">One illustrative year of growth—not a promise.</div>'}
+  else{setStory('TIME MOVED FORWARD','Your money had a year.','In this game scenario, investments change by 7%. Real markets can fall, too.');$('actions').innerHTML='<button class="primary" data-action="continue">See what inflation does →</button>'}
+ }else if(p===7){
+  setScene('inflation','CHAPTER 04 · REALITY CHECK','PRICES UP','+6%','YOUR MONEY BUYS A LITTLE LESS');
+  if(!state.inflationChoice){setStory('INFLATION · YEAR THREE','Same money.<br>Smaller shopping bag.','Prices rise in this story. Pick a response.');$('choices').innerHTML=choice('🧾','Trim recurring costs','Free up ₹5K this month','CASH +₹5K','trim',false,false)+choice('🧰','Build earning power','Spend ₹2K on training; pay-off uncertain','CASH −₹2K','skills',false,false)+choice('🙈','Ignore it for now','Easy today · purchasing power slips','NO CHANGE','ignoreinflation',false,false);$('actions').innerHTML='<div class="microcopy">Inflation means the same rupees buy less over time.</div>'}
+  else{setStory('INFLATION · ANSWERED','You adapted—or didn’t.','Small decisions can help protect future choices.');$('actions').innerHTML='<button class="primary" data-action="continue">One more thing: risk →</button>'}
+ }else if(p===8){
+  setScene('insurance','CHAPTER 05 · THE SAFETY NET','PLOT TWIST','₹25K','A MEDICAL BILL ARRIVES');
+  if(!state.insuranceChoice){setStory('HEALTH SHOCK','Medical bill: ₹25K.','Choose before the bill hits.');$('choices').innerHTML=choice('🛡️','Buy basic cover','Pay ₹3K premium · pay ₹5K of bill','PREMIUM ₹3K','insure',false,false)+choice('🎲','Skip the cover','Save ₹3K now · pay full bill','SAVE ₹3K','skipinsurance',false,false);$('actions').innerHTML='<div class="microcopy">Real policies have limits and exclusions.</div>'}
+  else{setStory('BILL · SETTLED','Risk had a price.','Insurance can limit financial damage.');$('actions').innerHTML='<button class="primary" data-action="continue">Think about future-you →</button>'}
+ }else if(p===9){
+  setScene('retire','CHAPTER 06 · YOUR FUTURE','MORE OPTIONS','YOUR CALL','RETIREMENT IS ABOUT FREEDOM');
+  if(!state.retirementMove){setStory('RETIREMENT · ON YOUR TERMS','What does freedom<br>look like to you?','Choose what to prioritize next.');$('choices').innerHTML=choice('📈','Build the freedom fund','Move up to ₹15K to investments','INVEST ₹15K','freedom',false,false)+choice('🧹','Clear some debt','Use cash to reduce debt','PAY DEBT','paydebt',false,false)+choice('🌴','Enjoy the present','Spend up to ₹10K on something meaningful','SPEND ₹10K','enjoy',false,false);$('actions').innerHTML='<div class="microcopy">This is a game, not a retirement forecast.</div>'}
+  else{setStory('YOUR LAST MOVE','You chose your priority.','Now see the financial shape of your story.');$('actions').innerHTML='<button class="primary" data-action="continue">See my ending →</button>'}
  }else{
-  setScene('recap','CHAPTER 01 · COMPLETE','YOU SHOWED UP','✦ NEXT LEVEL','MONEY SKILLS ARE BUILT, NOT BORN');
-  setStory('MONTH ONE · COMPLETE','A surprise happened.<br>You adapted.','You covered essentials, made a money move, and handled a bill. That’s the first rep.');
+  setScene('retire','YOUR STORY · COMPLETE','LIFE HAPPENS','✦','MORE CHOICES. MORE FREEDOM.');
   const net=state.cash+state.savings+state.invested-state.debt;
-  $('choices').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><div style="background:#e8e1ff;border-radius:13px;padding:10px"><div style="font-size:8px;color:#665797;font-weight:900">CASH</div><b style="font:600 16px \'IBM Plex Mono\',monospace">'+money(state.cash)+'</b></div><div style="background:#e4ddff;border-radius:13px;padding:10px"><div style="font-size:8px;color:#665797;font-weight:900">INVESTED</div><b style="font:600 16px \'IBM Plex Mono\',monospace">'+money(state.invested)+'</b></div><div style="background:#ffe5de;border-radius:13px;padding:10px"><div style="font-size:8px;color:#915047;font-weight:900">DEBT</div><b style="font:600 16px \'IBM Plex Mono\',monospace">'+money(state.debt)+'</b></div><div style="background:#dcf6e7;border-radius:13px;padding:10px"><div style="font-size:8px;color:#426e5c;font-weight:900">RAINY-DAY BUFFER</div><b style="font:600 16px \'IBM Plex Mono\',monospace">'+money(state.savings)+'</b></div></div>';
-  $('actions').innerHTML='<button class="primary" data-action="preview">Peek at Chapter 2 <span>↗</span></button><button class="secondary" data-action="restart">Play this month again</button>';
-  $('feedback').className='feedback show solid';$('feedback').innerHTML='<strong>THE TAKEAWAY</strong>'+(state.savings>0?'Your buffer gave you more ways to respond when life happened. ': 'A buffer can turn a surprise bill from a crisis into an inconvenience. ')+(state.debt>0?'Borrowing can solve today’s problem, but repayments reduce tomorrow’s choices.':'Keeping some flexibility matters just as much as making a plan.');
+  const score=Math.max(0,Math.min(100,Math.round(30+state.savings/1000*1.5+state.invested/1000*1.1+state.cash/1000*.25-state.debt/1000*1.3+(state.insurance?8:0)+(state.inflationChoice==='skills'?4:state.inflationChoice==='trim'?3:0))));
+  setStory('YOUR FINANCIAL ADVENTURE','No perfect path.<br>More informed moves.','Your choices shaped your cash, buffer, investments and debt. The goal is not a perfect score—it’s more control over what happens next.');
+  $('choices').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><div class="ending-stat"><span>CASH</span><b>'+money(state.cash)+'</b></div><div class="ending-stat"><span>INVESTED</span><b>'+money(state.invested)+'</b></div><div class="ending-stat"><span>RAINY-DAY BUFFER</span><b>'+money(state.savings)+'</b></div><div class="ending-stat"><span>DEBT</span><b>'+money(state.debt)+'</b></div><div class="ending-stat" style="grid-column:1/-1"><span>GAME FINANCIAL FLEXIBILITY · NOT A FORECAST</span><b>'+score+' / 100</b></div></div>';
+  $('actions').innerHTML='<button class="primary" data-action="restart">Play the whole story again ↻</button>';$('feedback').className='feedback show solid';$('feedback').innerHTML='<strong>WHAT YOU PRACTISED</strong>Emergency buffers · lifestyle inflation · investing and uncertainty · purchasing power · insurance · financial freedom.';
  }
- if(p!==4)setFeedback();
+ if(p!==4&&p!==10)setFeedback();
  $('choices').querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.action)));
  $('actions').querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.action)));
- meter();
- if(voiceOn)speakCurrent();
+ meter();if(voiceOn)speakCurrent();
 }
 function act(action){
- if(action==='start'){
-  state.phase=1;state.cash=45000;state.feedback=null;ping('coin');render();return;
- }
- if(action==='essentials'&&state.phase===1&&!state.essentials){
-  state.cash-=17000;state.essentials=true;feedback('good','BASICS COVERED','Rent and groceries are paid.','CASH −₹17K');render();return;
- }
+ if(action==='start'){state.phase=1;state.cash=45000;state.salary=45000;state.feedback=null;ping('coin');render();return}
  if(action==='continue'){
-  if(state.phase===1&&state.essentials){state.phase=2;state.feedback=null;ping('tap');render();return}
-  if(state.phase===2&&state.budget){state.phase=3;state.feedback=null;ping('plot');render();return}
-  if(state.phase===3&&state.surprise){state.phase=4;state.feedback=null;ping('win');render();return}
+  if(state.phase===1&&state.essentials)state.phase=2;
+  else if(state.phase===2&&state.budget)state.phase=3;
+  else if(state.phase===3&&state.surprise)state.phase=4;
+  else if(state.phase===5&&state.lifestyleChoice)state.phase=6;
+  else if(state.phase===6&&state.investChoice){if(!state.yearGrowth){state.yearGrowth=Math.round(state.invested*.07);state.invested+=state.yearGrowth}state.phase=7}
+  else if(state.phase===7&&state.inflationChoice)state.phase=8;
+  else if(state.phase===8&&state.insuranceChoice)state.phase=9;
+  else if(state.phase===9&&state.retirementMove)state.phase=10;
+  else return;
+  state.feedback=null;ping('plot');render();return;
  }
- if(action==='save'&&state.phase===2&&!state.budget){
-  state.budget='save';state.cash-=8000;state.savings+=8000;feedback('good','BUFFER BUILT','₹8K is ready for unexpected bills.','CASH −₹8K · BUFFER +₹8K');
- }else if(action==='fun'&&state.phase===2&&!state.budget){
-  state.budget='fun';state.cash-=7000;state.joy+=1;feedback('solid','FUN IS IN THE BUDGET','Enjoy it. Less cash is left for surprises.','CASH −₹7K');
- }else if(action==='invest'&&state.phase===2&&!state.budget){
-  state.budget='invest';state.cash-=8000;state.invested+=8000;feedback('good','INVESTMENT STARTED','Money goes to your future. Its value can rise or fall.','CASH −₹8K · INVESTED +₹8K');
- }else if(action==='buffer'&&state.phase===3&&!state.surprise){
-  if(state.savings>0){
-   const used=Math.min(state.savings,18000);state.savings-=used;const rest=18000-used;state.cash-=rest;state.surprise='buffer';
-   feedback('good','BUFFER DID ITS JOB','Your buffer covered '+money(used)+(rest>0?'; cash covered '+money(rest)+'.':' — no debt needed.'),'BUFFER −'+money(used)+(rest>0?' · CASH −'+money(rest):''));
-  }else if(state.invested>0){
-   const sold=Math.min(state.invested,18000);state.invested-=sold;const rest=18000-sold;state.cash-=rest;state.surprise='sell';
-   feedback('solid','INVESTMENT SOLD','You sold '+money(sold)+(rest>0?' and used cash for the rest.':' to cover the repair.')+' Selling can interrupt long-term growth.','INVESTED −'+money(sold)+(rest>0?' · CASH −'+money(rest):''));
-  }else{return}
- }else if(action==='cash'&&state.phase===3&&!state.surprise){
-  state.cash-=18000;state.surprise='cash';feedback('solid','PAID FROM CASH','Savings stay untouched. Spendable cash is lower.','CASH −₹18K');
- }else if(action==='borrow'&&state.phase===3&&!state.surprise){
-  state.debt+=18000;state.surprise='borrow';feedback('risky','DEBT ADDED','You kept cash today. Repayments reduce future choices.','DEBT +₹18K');
- }else if(action==='restart'){location.reload();return}
- else if(action==='preview'){
-  $('modal').classList.add('show');ping('win');return;
- }else{return}
+ if(action==='next'&&state.phase===4){state.phase=5;state.salary=65000;state.cash+=65000;state.feedback=null;ping('coin');render();return}
+ if(action==='essentials'&&state.phase===1&&!state.essentials){state.cash-=17000;state.essentials=true;feedback('good','BASICS COVERED','Rent and groceries are paid.','CASH −₹17K');render();return}
+ if(action==='save'&&state.phase===2&&!state.budget){state.budget='save';state.cash-=8000;state.savings+=8000;feedback('good','BUFFER BUILT','₹8K is ready for unexpected bills.','CASH −₹8K · BUFFER +₹8K')}
+ else if(action==='fun'&&state.phase===2&&!state.budget){state.budget='fun';state.cash-=7000;state.joy+=1;feedback('solid','FUN IS IN THE BUDGET','Enjoy it. Less cash is left for surprises.','CASH −₹7K')}
+ else if(action==='invest'&&state.phase===2&&!state.budget){state.budget='invest';state.cash-=8000;state.invested+=8000;feedback('good','INVESTMENT STARTED','Money goes to your future. Its value can rise or fall.','CASH −₹8K · INVESTED +₹8K')}
+ else if(action==='buffer'&&state.phase===3&&!state.surprise){
+  if(state.savings>0){const used=Math.min(state.savings,18000);state.savings-=used;const rest=18000-used;state.cash-=rest;state.surprise='buffer';feedback('good','BUFFER DID ITS JOB','Your buffer covered '+money(used)+(rest>0?'; cash covered '+money(rest)+'.':' — no debt needed.'),'BUFFER −'+money(used)+(rest>0?' · CASH −'+money(rest):''))}
+  else if(state.invested>0){const sold=Math.min(state.invested,18000);state.invested-=sold;const rest=18000-sold;state.cash-=rest;state.surprise='sell';feedback('solid','INVESTMENT SOLD','You sold '+money(sold)+(rest>0?' and used cash for the rest.':' to cover the repair.')+' Selling can interrupt long-term growth.','INVESTED −'+money(sold)+(rest>0?' · CASH −'+money(rest):''))}
+  else return;
+ }else if(action==='cash'&&state.phase===3&&!state.surprise){state.cash-=18000;state.surprise='cash';feedback('solid','PAID FROM CASH','Savings stay untouched. Spendable cash is lower.','CASH −₹18K')}
+ else if(action==='borrow'&&state.phase===3&&!state.surprise){state.debt+=18000;state.surprise='borrow';feedback('risky','DEBT ADDED','You kept cash today. Repayments reduce future choices.','DEBT +₹18K')}
+ else if(action==='upgrade'&&state.phase===5&&!state.lifestyleChoice){state.cash-=18000;state.lifestyle='upgraded';state.lifestyleChoice='upgrade';feedback('solid','LIFESTYLE UPGRADED','More comfort now, but higher recurring costs can become your new normal.','CASH −₹18K · BILLS ↑')}
+ else if(action==='steady'&&state.phase===5&&!state.lifestyleChoice){state.cash-=12000;state.savings+=12000;state.lifestyle='steady';state.lifestyleChoice='steady';feedback('good','RAISE, MEET BUFFER','You kept your lifestyle steady and added breathing room.','CASH −₹12K · BUFFER +₹12K')}
+ else if(action==='earlyinvest'&&state.phase===5&&!state.lifestyleChoice){state.cash-=10000;state.invested+=10000;state.lifestyle='invest';state.lifestyleChoice='earlyinvest';feedback('good','PAY YOUR FUTURE FIRST','You invested before increasing lifestyle spending. Values can go down as well as up.','CASH −₹10K · INVESTED +₹10K')}
+ else if(action==='invest15'&&state.phase===6&&!state.investChoice){const n=Math.min(15000,Math.max(0,state.cash));state.cash-=n;state.invested+=n;state.investChoice='invest15';feedback('good','BIGGER CONTRIBUTION','More is invested, but less is immediately available.','CASH −'+money(n)+' · INVESTED +'+money(n))}
+ else if(action==='invest5'&&state.phase===6&&!state.investChoice){const n=Math.min(5000,Math.max(0,state.cash));state.cash-=n;state.invested+=n;state.investChoice='invest5';feedback('solid','SMALL STEPS COUNT','You invested a smaller amount and kept more cash accessible.','CASH −'+money(n)+' · INVESTED +'+money(n))}
+ else if(action==='holdcash'&&state.phase===6&&!state.investChoice){state.investChoice='holdcash';feedback('solid','FLEXIBILITY FIRST','Cash helps with near-term needs, though it can lose purchasing power over time.','NO MONEY MOVED')}
+ else if(action==='trim'&&state.phase===7&&!state.inflationChoice){state.cash+=5000;state.inflationChoice='trim';feedback('good','COSTS TRIMMED','You freed up money by cutting recurring spending.','CASH +₹5K')}
+ else if(action==='skills'&&state.phase===7&&!state.inflationChoice){state.cash-=2000;state.inflationChoice='skills';feedback('solid','INVESTED IN YOUR SKILLS','Training costs money now; its payoff is uncertain, but skills can improve earning options.','CASH −₹2K')}
+ else if(action==='ignoreinflation'&&state.phase===7&&!state.inflationChoice){state.inflationChoice='ignore';feedback('risky','PURCHASING POWER SLIPS','The same cash buys less as prices rise.','NO MONEY MOVED')}
+ else if(action==='insure'&&state.phase===8&&!state.insuranceChoice){state.cash-=3000;state.insurance=true;state.insuranceChoice='insured';const paid=Math.min(Math.max(0,state.cash),5000);state.cash-=paid;const shortfall=5000-paid;if(shortfall>0)state.debt+=shortfall;feedback('good','COVERAGE SOFTENED THE HIT','You paid the ₹3K premium and ₹5K out of pocket; the game policy covered the rest.','PREMIUM −₹3K · BILL −₹5K'+(shortfall>0?' · DEBT +'+money(shortfall):''))}
+ else if(action==='skipinsurance'&&state.phase===8&&!state.insuranceChoice){state.insurance=false;state.insuranceChoice='skipped';const paid=Math.min(Math.max(0,state.cash),25000);state.cash-=paid;const shortfall=25000-paid;if(shortfall>0)state.debt+=shortfall;feedback('risky','YOU CARRIED THE RISK','Skipping saved the premium, but the full ₹25K bill arrived.','CASH −'+money(paid)+(shortfall>0?' · DEBT +'+money(shortfall):''))}
+ else if(action==='freedom'&&state.phase===9&&!state.retirementMove){const n=Math.min(15000,Math.max(0,state.cash));state.cash-=n;state.invested+=n;state.retirementMove='freedom';feedback('good','FREEDOM FUND GROWS','You moved available cash into long-term investments. Value is not guaranteed.','CASH −'+money(n)+' · INVESTED +'+money(n))}
+ else if(action==='paydebt'&&state.phase===9&&!state.retirementMove){const n=Math.min(state.debt,Math.max(0,state.cash));state.cash-=n;state.debt-=n;state.retirementMove='paydebt';feedback('good','DEBT REDUCED','Lower debt can mean fewer future obligations.','CASH −'+money(n)+' · DEBT −'+money(n))}
+ else if(action==='enjoy'&&state.phase===9&&!state.retirementMove){const n=Math.min(10000,Math.max(0,state.cash));state.cash-=n;state.retirementMove='enjoy';feedback('solid','TODAY MATTERS TOO','Money is a tool for living, not just accumulating.','CASH −'+money(n))}
+ else if(action==='restart'){location.reload();return}
+ else if(action==='preview'){$('modal').classList.add('show');ping('win');return}
+ else return;
  render();
 }
 $('closeModal').addEventListener('click',()=>{$('modal').classList.remove('show')});
