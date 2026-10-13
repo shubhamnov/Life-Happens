@@ -343,7 +343,21 @@ await test('End screen: your wealth could have been, with take-home lessons',asy
  if(s.status==='playing')L.endRun('completed');const sum=L.endSummary();
  assert(sum.lessons.length>=1&&sum.lessons.length<=3,'one to three lessons');assert(sum.lessons.some(l=>l.key==='idle'),'idle cash lesson');assert(sum.lessons.every(l=>l.take&&isFinite(l.gain)),'every lesson has a take-home line');
  for(let i=1;i<sum.lessons.length;i++)assert(sum.lessons[i-1].gain>=sum.lessons[i].gain,'biggest first');eq(sum.couldBe,sum.realWorth+sum.lessons[0].gain,'could have been = actual + the biggest single change');
- L.render();const eb=d.getElementById('endBody');assert(/could have been/i.test(eb.textContent),'shown on the end screen');eq(eb.querySelectorAll('.cb-take li').length,sum.lessons.length,'take-home list');noNaN(s);});
+ L.render();const eb=d.getElementById('endBody');assert(/could have been/i.test(eb.textContent),'shown on the end screen');eq(eb.querySelectorAll('.cb-take li').length,sum.lessons.length+(sum.listened?1:0),'take-home list');assert(sum.listened&&/Never invest/.test(eb.textContent),'fell for an ad: never just listen to others');noNaN(s);});
+
+await test('Tags: Recommended, affordability and red flags; mistakes become lessons',async()=>{const {L,win}=await loadGame(312);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.event=null;s.nextEventMonth=9999;s.adNext=99999;s.month=40;
+ const total=L.monthlyBudget().total;s.cash=total*12;eq(L.affordTag(s,{upfront:1000}).kind,'ok','small buy with a big cushion: affordable');eq(L.affordTag(s,{upfront:total*8}).kind,'stretch','cushion under 6 months: stretch');eq(L.affordTag(s,{upfront:s.cash+s.invested+1}).kind,'no','more than you have: cannot afford');eq(L.affordTag(s,{emi:1e6}).kind,'no','bank says no');
+ s.cash=total*6+400000;L.startEvent('adSip');L.render();const tc=d.getElementById('trackCard');assert(tc.querySelector('[data-card-choice="lump"] .ctag.rec'),'invest idle cash is recommended');assert(/Think/.test(tc.querySelector('[data-card-choice="lump"] .think').textContent),'with a think line');
+ L.resolveEvent(s.event.id,'skip');s.cash=500000;L.startEvent('adScheme');L.render();assert(tc.querySelector('[data-card-choice="in"] .ctag.flag'),'red flag on guaranteed returns');assert(tc.querySelector('[data-card-choice="check"] .ctag.rec'),'checking is recommended');
+ const r=L.resolveEvent(s.event.id,'in');eq(r.feedback.title,'📘 Lesson learnt','a mistake becomes a lesson');assert(/Never invest/.test(r.feedback.lesson),'never just listen to others');eq(s.stats.listened,1,'counted');L.render();assert(/Never invest/.test(d.getElementById('feedbackCard').textContent),'lesson shown on the feedback card');
+ s.salary=40000;s.cash=1e5;L.startEvent('adCar');L.render();assert(tc.querySelector('[data-card-choice="book"] .ctag.no'),'SUV the bank would refuse: cannot afford');L.resolveEvent(s.event.id,'skip');
+ s.month=60;s.nextPitMonth=61;s.cash=1e5;L.stepMonth();if(d.querySelector('.pit-sip'))assert(d.querySelector('.pit-sip .ctag.rec'),'pit SIP is recommended');});
+await test('SIP explainer: shown once, pauses the race, Got it closes it',async()=>{const {L,win}=await loadGame(313);const d=win.document;L.goToSetup();L.beginLifeUI();L.prefs.sipInfo=false;
+ L.maybeSipInfo(true);assert(!d.getElementById('sipInfoOverlay').classList.contains('hidden'),'explainer open');eq(L.ui.modal,'sipinfo','race paused');
+ d.getElementById('sipInfoClose').click();assert(d.getElementById('sipInfoOverlay').classList.contains('hidden'),'closed');eq(L.ui.modal,null,'race resumes');
+ L.maybeSipInfo(true);assert(d.getElementById('sipInfoOverlay').classList.contains('hidden'),'only once');});
+await test('Running out of money: every failure is a lesson',async()=>{const {L,win}=await game(314);const d=win.document;const s=L.state;s.whatIf.idle=5e5;L.endRun('insolvent');L.render();
+ assert(/Every failure is a lesson/.test(d.getElementById('endBody').textContent),'failure framed as a lesson');});
 
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
