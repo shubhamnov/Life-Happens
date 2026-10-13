@@ -2178,7 +2178,7 @@ function renderSound(){$('soundGlyph').innerHTML=iconSVG(prefs.soundOn?'sound':'
 /* ---------- Clock: one interval per run; never advances past a decision ---------- */
 function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
 // While a card waits on the track the race slows down, so there is time to read and tap.
-const CARD_MONTH_MS=900;
+const CARD_MONTH_MS=700;
 function cardWaiting(){const e=S().event;return !!(e&&e.tier==='card');}
 function monthMs(){const ms=A.monthMs/prefs.speed;return cardWaiting()?Math.max(ms,CARD_MONTH_MS):ms;}
 function startClock(){
@@ -2203,7 +2203,7 @@ function tickCard(dt){
  const r=M.resolveEvent(e.id,e.defaultChoice,{auto:true});if(r)sfx('tap');render();return true;
 }
 // A pit stop restarts the race by itself once its bar runs out (unless paused or a panel is open).
-const PIT_MS=7000;
+const PIT_MS=5000;
 function tickPit(dt){
  const e=S().event;if(!e||e.type!=='pitstop'||!ui.pit||ui.pit.id!==e.id||ui.shownEventId!==e.id||ui.paused||ui.hidden||ui.modal)return;
  ui.pit.elapsed+=dt;const bar=$('pitTimer'),n=$('pitCount'),left=Math.max(0,ui.pit.ms-ui.pit.elapsed);
@@ -2562,7 +2562,7 @@ function renderAbout(){
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
   ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 6 seconds to tap (9 for your first two). If you don’t, the cautious default marked on the card happens'],
-  ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race restarts by itself after 7 seconds'],
+  ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race restarts by itself after 5 seconds'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
   ['Health cover','Offered as a card in your second month (and now and then later while you have none), or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
