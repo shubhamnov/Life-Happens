@@ -206,11 +206,13 @@ await test('Divorce: splits savings and investments, removes spouse costs',async
  assert(L.EVENTS.divorce.eligible(s),'eligible after 3+ years of marriage');L.startEvent('divorce');const e=s.event;L.resolveEvent(e.id,'mediate');
  eq(s.cash,Math.round((1e6-e.mediate)*0.5),'savings split after fees');eq(s.invested,1e6,'investments split');eq(s.married,false,'single again');eq(L.monthlyBudget().lines.some(l=>l.key==='household'),false,'spouse costs removed');
  assert(!L.EVENTS.divorce.eligible(s),'not again');});
-await test('Story card: a random life at 23, rerolled with New life; health cover is offered as a card',async()=>{const {L,win}=await loadGame(103);const d=win.document;L.goToSetup();L.render();
+await test('Story card: a random life at 23, male or female, rerolled with New life; health cover is offered as a card',async()=>{const {L,win}=await loadGame(103);const d=win.document;L.goToSetup();L.render();
  const s=L.state;eq(s.status,'setup','story card shown');assert(s.profile.name&&s.profile.city&&s.profile.job,'name, city and job');assert([35000,45000,60000].includes(s.profile.salary),'salary from the list');
  assert(d.getElementById('storyName').textContent.includes(s.profile.name),'card names you');eq(d.querySelectorAll('#storyFacts li').length,5,'five facts');assert(/goal/i.test(d.getElementById('setupScreen').textContent),'the goal is stated');
  const again=await loadGame(103);again.L.goToSetup();eq(again.L.state.profile.name,s.profile.name,'same run code, same character');
  const names=new Set([s.profile.name]);for(let i=0;i<6;i++){d.getElementById('rerollBtn').click();names.add(L.state.profile.name);}assert(names.size>2,'New life rolls different characters');
+ const sal=L.state.profile.salary,job=L.state.profile.job;d.querySelector('[data-gender="woman"]').click();eq(L.state.profile.avatar,'woman','female picked');eq(d.querySelector('[data-gender="woman"]').getAttribute('aria-pressed'),'true','button shows it');eq(L.state.profile.salary,sal,'same life');eq(L.state.profile.job,job,'same job');eq(d.getElementById('storyAvatar').textContent,'👩','female avatar');
+ d.getElementById('rerollBtn').click();eq(L.state.profile.avatar,'woman','New life keeps the choice');d.querySelector('[data-gender="man"]').click();eq(L.state.profile.avatar,'man','male picked');assert(d.getElementById('storyName').textContent.includes(L.state.profile.name),'name updated');
  const p=L.state.profile;d.getElementById('beginGameBtn').click();const g=L.state;eq(g.status,'playing','started');eq(g.profile.name,p.name,'the same character races');
  eq(g.salary,Math.round(p.salary*(p.eduLoan==='yes'?1.25:1)),'salary from the card');eq(!!g.eduLoan,p.eduLoan==='yes','education loan from the card');eq(g.insured,false,'no cover yet');
  assert(/23\.0/.test(d.getElementById('ageValue').textContent),'starts at 23');
