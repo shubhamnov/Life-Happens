@@ -181,9 +181,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .tc-choice>span:not(.emoji){flex:1;min-width:0}
 .tc-choice>.emoji{flex:0 0 auto}
 .tc-choice strong{display:block;font-size:13.5px;line-height:1.25}
-.tc-choice strong em{font:800 9.5px var(--sans);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--forest);background:var(--sage);border-radius:99px;padding:1px 6px;vertical-align:2px}
 .tc-choice small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3;font-weight:600}
-.tc-choice.default{border-color:var(--sage-strong)}
 .tc-choice span.rchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .tc-choice span.rchip{display:inline-block}
 .tc-timer{height:6px;border-radius:99px;background:#ECE6D9;overflow:hidden;margin-top:9px}
@@ -275,9 +273,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .cb-list{list-style:none;padding:0;margin:8px 0 2px}.cb-list li{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed #E2D6B5;font-size:14px}.cb-list .cb-t{flex:1;min-width:0}.cb-list li b{color:var(--forest-dark);white-space:nowrap}
 .cb-note{font-size:11px;color:var(--muted);margin:2px 0 8px}
 .cb-take{margin:4px 0 0;padding-left:20px;font-size:14px}.cb-take li{margin:3px 0}
-.ctag{display:inline-block;font:800 10.5px/1.2 var(--sans);border-radius:99px;padding:2px 8px;margin:3px 0 1px;letter-spacing:.02em}
-.ctag.rec{background:#DCEBDD;color:#2E5A3A}.ctag.ok{background:#E3EFE0;color:#2E5A3A}.ctag.stretch{background:var(--butter);color:#7A5A12}.ctag.no,.ctag.flag{background:var(--danger-bg);color:var(--danger-ink)}
-.think{display:block;font-size:11.5px;line-height:1.3;color:#5B4A1E;font-style:italic;margin-top:2px}
+.tc-class{margin:5px 0 0;font-size:11.5px;font-weight:800;color:#7A5A12}
 .feedback p.lesson{background:#EEF0FA;border-radius:9px;padding:5px 8px;font-weight:700;color:#3B3F6B}
 .fail-lesson{background:#EEF0FA;border:2px solid #B9BEE3;border-radius:16px;padding:10px 12px;margin:12px 0}.fail-lesson h3{margin:0 0 4px}.fail-lesson p{margin:0;font-size:14px}
 .sip-steps{margin:8px 0;padding-left:20px;font-size:14px}.sip-steps li{margin:4px 0}
@@ -599,7 +595,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
  <div class="dialog"><div class="end-art emoji" aria-hidden="true">🌱</div><span class="sticker">QUICK TIP</span><h2 id="sipInfoTitle">What’s a SIP?</h2>
   <p>A <b>Systematic Investment Plan</b>: a fixed amount moves from your savings into investments every month, automatically.</p>
   <ul class="sip-steps"><li>💤 Money in savings earns nothing while prices rise about 6% a year.</li><li>📈 Invested money grows about 7% a year on average, with ups and downs.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
-  <p><b>👍 Recommended:</b> start a SIP as soon as money is left over each month.</p>
+  <p><b>Tip:</b> start a SIP as soon as money is left over each month.</p>
   <div class="dialog-actions single"><button type="button" class="primary" id="sipInfoClose">Got it</button></div></div>
 </div>
 <div class="overlay hidden" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
@@ -872,23 +868,16 @@ function resilience(s=state){
 function record(text,opts={}){state.history.push({month:state.month,age:ageLabel(),text,major:!!opts.major,kind:opts.kind||''});}
 const FEEDBACK={great:'Great move',solid:'Solid move',risky:'Risky move',missed:'Missed opportunity'};
 function fb(label,why){return {label,title:FEEDBACK[label],why};}
-/* Choice tags. A choice may carry tag {kind,text} and a one-line "think" hint.
-   rec: clearly the smart move. flag: a scam sign. ok / stretch / no: can you afford it, from your actual money. */
 const LISTEN='Never invest or buy just because someone told you to: not an ad, a friend, a finfluencer or a relative. 😃';
-const REC={kind:'rec',text:'👍 Recommended'};
-function affordTag(s,o){
- const up=o.upfront||0,emi=o.emi||0;
- if(emi>0&&bankCheck(s,emi))return{kind:'no',text:'❌ Can’t afford: the bank says no'};
- if(up>s.cash)return{kind:'no',text:'❌ Can’t afford: '+(up>s.cash+s.invested?'it becomes card debt':'it eats your investments')};
- const months=(s.cash-up)/Math.max(1,monthlyBudget(s).total+(o.monthly||0)),share=(allEmis(s)+emi)/Math.max(1,monthlyIncome(s));
- if(months<A.cushionMonths)return{kind:'stretch',text:'⚠️ Stretch: leaves '+Math.max(0,months).toFixed(1)+' months of savings'};
- if(share>0.3)return{kind:'stretch',text:'⚠️ Stretch: EMIs take '+Math.round(share*100)+'% of pay'};
- return{kind:'ok',text:'✅ You can afford this'};
-}
-// "Think" hints: what money could grow to by 60 at about 7% a year (not guaranteed).
-function growBy60(s,monthly,lump){const n=Math.max(0,Math.round((60-preciseAge(s))*12)),r=A.investMonthlyMean;return Math.round((monthly||0)*(Math.pow(1+r,n)-1)/r+(lump||0)*Math.pow(1+r,n));}
-function sipThink(s,amount){return preciseAge(s)<55?'🤔 Think: '+compact(amount)+' a month from '+Math.floor(preciseAge(s))+' can grow to about '+compact(growBy60(s,amount))+' by 60 (about 7% a year, not guaranteed).':'🤔 Think: even a few years of investing beats leaving money idle.';}
-function lumpThink(s,amount){return preciseAge(s)<55?'🤔 Think: '+compact(amount)+' invested now could be about '+compact(growBy60(s,0,amount))+' by 60.':'🤔 Think: idle cash shrinks about 6% a year to inflation.';}
+/* Wealth class: what advertisers think you are, from net worth in today's money.
+   Ads use it (and your savings) to sell "must-haves" for your class. */
+const WEALTH_CLASSES=[{min:0,emoji:'🌱',label:'Just starting'},{min:500000,emoji:'🏠',label:'Middle class'},{min:2500000,emoji:'🚗',label:'Upper middle class'},{min:10000000,emoji:'💼',label:'Affluent'},{min:50000000,emoji:'💎',label:'Rich'}];
+function wealthClass(s=state){const w=realNetWorth(s);let c=WEALTH_CLASSES[0];for(const k of WEALTH_CLASSES)if(w>=k.min)c=k;return c;}
+// The "must-have" an ad pushes on your class (price in today's money).
+const STATUS_BUYS={'Just starting':[{item:'a smartwatch and earbuds combo',emoji:'⌚',price:35000}],'Middle class':[{item:'a 75-inch smart TV',emoji:'📺',price:150000},{item:'a Dubai shopping trip',emoji:'✈️',price:180000}],
+ 'Upper middle class':[{item:'a Europe holiday package',emoji:'🗼',price:400000},{item:'a designer sofa set',emoji:'🛋️',price:300000}],'Affluent':[{item:'a Swiss luxury watch',emoji:'⌚',price:800000},{item:'a golf club membership',emoji:'⛳',price:1000000}],
+ 'Rich':[{item:'a superbike for weekends',emoji:'🏍️',price:2500000}]};
+function statusBuy(s){const l=STATUS_BUYS[wealthClass(s).label];const b=l[(s.seen.adStatus||0)%l.length];return Object.assign({},b,{price:priced(b.price,s)});}
 // A mistake becomes a lesson: counted, and shown as "📘 Lesson learnt" with one line to remember.
 function lessonFb(s,why,lesson,listened){s.stats.lessons+=1;if(listened)s.stats.listened+=1;return Object.assign(fb('risky',why),{title:'📘 Lesson learnt',lesson});}
 // A non-blocking "power-up" banner the UI shows over the race scene.
@@ -1128,13 +1117,13 @@ function fundExpense(amount,method,fun){
 }
 function fundingChoices(amount){
  const s=state,cashPart=Math.min(s.cash,amount),gap=amount-cashPart,c=[];
- c.push({id:'savings',emoji:'🐷',title:'Pay from savings',detail:gap?'Uses all '+money(cashPart)+' of savings; the other '+money(gap)+(s.invested>=gap?' comes from selling investments.':s.invested>0?' comes from investments ('+money(s.invested)+') and debt at 1% a month.':' becomes debt at 1% a month.'):'Savings '+money(s.cash)+' → '+money(s.cash-amount)+'. No new debt.'});
- if(s.invested>0){const sell=Math.min(s.invested,amount);c.push({id:'invest',emoji:'📈',title:'Sell investments',detail:'Sell '+money(sell)+' of investments'+(sell<amount?' and pay the rest from savings':'')+'. Less stays invested to compound.'});}
- c.push({id:'borrow',emoji:'💳',title:'Put it on credit',detail:'Keep savings and investments. Adds '+money(amount)+' debt at 1% a month plus a minimum monthly repayment.'});
+ c.push({id:'savings',emoji:'🐷',title:'Pay from savings',detail:gap?'All savings, plus '+money(gap)+(s.invested>=gap?' from investments.':' as debt.'):'Savings '+money(s.cash)+' → '+money(s.cash-amount)+'.'});
+ if(s.invested>0){const sell=Math.min(s.invested,amount);c.push({id:'invest',emoji:'📈',title:'Sell investments',detail:'Sell '+money(sell)+' of investments'+(sell<amount?', rest from savings':'')+'.'});}
+ c.push({id:'borrow',emoji:'💳',title:'Put it on credit',detail:'+'+money(amount)+' card debt at 1% a month.'});
  return c;
 }
 // "How much do you spend?" choices for lifestyle events (trips, weddings, parties).
-function spendDetail(amount){const s=state;if(!amount)return 'Costs nothing.';return money(amount)+' from savings'+(s.cash<amount?'. Savings fall short, so '+money(amount-s.cash)+' becomes debt.':' → '+money(s.cash-amount)+' left.');}
+function spendDetail(amount){const s=state;if(!amount)return 'Costs nothing.';return money(amount)+(s.cash<amount?': '+money(amount-s.cash)+' becomes debt.':' from savings.');}
 function spendChoices(opts){return opts.map(o=>({id:o.id,emoji:o.emoji,title:o.title,detail:(o.note?o.note+' ':'')+spendDetail(o.amount)}));}
 // Lines: {skip, cheap, fine, thin, debt} — short, friendly verdicts for each outcome.
 function spendResolve(e,choiceId,lines){
@@ -1158,20 +1147,20 @@ const EVENTS={
   create:()=>{const amount=priced(18000);return{amount,description:'The repair shop quotes '+money(amount)+'. You need it for work, so it has to be fixed now.',foot:'An emergency fund is what keeps a surprise bill from becoming debt.'};},
   choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
  phone:{kicker:'SPLASH!',art:'📱',titles:['Your phone went for a swim.','Your phone met the floor. Face first.'],snapshot:true,group:'shock',
-  create:()=>{const amount=priced(randInt(6,12)*1000),flagship=priced(60000);return{amount,flagship,description:'A screen-and-board repair costs '+money(amount)+'. The shop also has a shiny new flagship for '+money(flagship)+' on your credit card.',foot:'“No-cost” EMIs still cost you when they become a habit.'};},
-  choices:e=>fundingChoices(e.amount).concat([{id:'flagship',emoji:'✨',title:'Treat yourself to a flagship',detail:'Adds '+money(e.flagship)+' to credit-card debt at 1% a month. Very shiny.'}]),
+  create:()=>{const amount=priced(randInt(6,12)*1000),flagship=priced(60000);return{amount,flagship,description:'Repair: '+money(amount)+'. Or a new flagship for '+money(flagship)+' on credit.',foot:'“No-cost” EMIs still cost you when they become a habit.'};},
+  choices:e=>fundingChoices(e.amount).concat([{id:'flagship',emoji:'✨',title:'Treat yourself to a flagship',detail:'+'+money(e.flagship)+' card debt. Very shiny.'}]),
   resolve:(e,c)=>{if(c!=='flagship')return fundExpense(e.amount,c);const s=state;s.unsecuredDebt+=e.flagship;s.stats.fun+=e.flagship;record('Bought a flagship phone on credit at '+ageLabel()+'.');return{text:'New flagship phone: '+money(e.flagship)+' added to debt.',feedback:fb('risky','It takes great photos of your credit-card statement. The debt charges 1% a month until it is cleared.')};}},
  tooth:{kicker:'OUCH',art:'🦷',titles:['Your wisdom tooth wants out.','A popcorn kernel cracked your tooth.'],snapshot:true,group:'shock',
   create:()=>{const amount=priced(randInt(6,14)*1000);return{amount,description:'The dentist quotes '+money(amount)+'. Dental work is rarely covered by basic health plans.',foot:'Small, boring bills are exactly what a cash cushion is for.'};},
   choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
  ac:{kicker:'HEATWAVE',art:'🥵',titles:['45°C outside. Your AC picked today to quit.','Your cooler is now a very loud fan.'],snapshot:true,group:'shock',
-  create:()=>{const amount=priced(randInt(12,28)*1000),fan=priced(2500);return{amount,fan,description:'A new AC with installation costs '+money(amount)+'. Or a table fan and wet towels for '+money(fan)+'.',foot:'Comfort has a price. So does sweating through summer.'};},
+  create:()=>{const amount=priced(randInt(12,28)*1000),fan=priced(2500);return{amount,fan,description:'A new AC: '+money(amount)+'. A table fan: '+money(fan)+'.',foot:'Comfort has a price. So does sweating through summer.'};},
   choices:e=>fundingChoices(e.amount).map(c=>Object.assign(c,{title:c.title+' (new AC)'})).concat([{id:'fan',emoji:'🪭',title:'Table fan and wet towels',detail:money(e.fan)+' from savings. Character-building.'}]),
   resolve:(e,c)=>{if(c!=='fan')return fundExpense(e.amount,c);const r=fundExpense(e.fan,'savings');return{text:'Bought a table fan. '+r.text,feedback:r.borrowed?fb('risky','Even the fan went on credit. Time to rebuild savings.'):fb('great','Cheap fix, no debt. Your future self says thanks (while sweating).')};}},
  scam:{kicker:'BEEP BEEP',art:'📩',titles:['“Dear customer, your KYC expires TODAY. Click here.”','“Congratulations! You won an iPhone! Pay ₹99 shipping.”'],group:'shock',
   eligible:s=>s.cash>=5000,
-  create:s=>{const amount=Math.min(s.cash,priced(randInt(15,40)*1000));return{amount,description:'The message looks official, comes with a link, and wants your details right now.',foot:'Banks never ask for OTPs, PINs or KYC through SMS links.'};},
-  choices:()=>[{id:'report',emoji:'🚫',title:'Delete and report it',detail:'Costs nothing. Scammer: disappointed.'},{id:'family',emoji:'👵',title:'Forward it to the family group',detail:'Costs nothing. Your aunt replies with three warning emojis.'},{id:'click',emoji:'🎣',title:'Click the link, just to check',detail:'Hmm. What could possibly go wrong?'}],
+  create:s=>{const amount=Math.min(s.cash,priced(randInt(15,40)*1000));return{amount,description:'It looks official and wants your details now.',foot:'Banks never ask for OTPs, PINs or KYC through SMS links.'};},
+  choices:()=>[{id:'report',emoji:'🚫',title:'Delete and report it',detail:'Costs nothing. Scammer: disappointed.'},{id:'family',emoji:'👵',title:'Forward it to the family group',detail:'Your aunt replies with three ⚠️.'},{id:'click',emoji:'🎣',title:'Click the link, just to check',detail:'Hmm. What could possibly go wrong?'}],
   resolve:(e,c)=>{const s=state;if(c==='click'){const lost=Math.min(s.cash,e.amount);s.cash-=lost;s.stats.shocks+=lost;record('Lost '+money(lost)+' to a phishing scam at '+ageLabel()+'.',{major:true,kind:'scam'});return{text:'The link drained '+money(lost)+' from your savings before you could blink.',feedback:lessonFb(s,'Phishing links are built to look real.','Never click “urgent” links or share OTPs. Call the bank yourself.')};}
    return{text:c==='report'?'Reported. Nothing lost.':'Forwarded with a warning. The family group is now 40% safer.',feedback:fb('great','Urgent messages with links are classic scams. Ignoring them is free and the best return of the year.')};}},
 
@@ -1198,7 +1187,7 @@ const EVENTS={
    return{text:'Lent '+money(amt)+'. '+r.text+(back?'':' (Spoiler: “next month” may never come.)'),feedback:r.borrowed>0?fb('risky','You borrowed at 1% a month to lend at 0%. Generous, and expensive.'):fb(c==='half'?'great':'solid',c==='half'?'You helped and capped your risk. If it comes back, nice; if not, it will not sink you.':'Generous. Whether it comes back is now up to them.')};}},
  sibling:{kicker:'FAMILY FIRST',art:'🎓',titles:['Your younger sibling got into a great college!','Your sibling needs a laptop and hostel fees.'],snapshot:true,group:'social',
   eligible:s=>preciseAge(s)>=23&&preciseAge(s)<45,
-  create:(s,opts)=>{const amount=priced(opts&&opts.first?randInt(15,25)*1000:randInt(25,70)*1000);return{amount,description:'The admission is exciting. The fees are '+money(amount)+' short, and the family is looking at you.',foot:'Helping family and protecting yourself can both matter. There is no morally right answer here.'};},
+  create:(s,opts)=>{const amount=priced(opts&&opts.first?randInt(15,25)*1000:randInt(25,70)*1000);return{amount,description:'They are '+money(amount)+' short. The family is looking at you.',foot:'Helping family and protecting yourself can both matter. There is no morally right answer here.'};},
   choices:(e,s)=>[{id:'full',emoji:'🫶',title:'Cover all of it',detail:spendDetail(e.amount)},{id:'part',emoji:'🤲',title:'Help with part',detail:spendDetail(Math.round(e.amount*0.35))},{id:'none',emoji:'🧾',title:'Help them find a scholarship instead',detail:'No cost. Lots of forms.'}],
   resolve:(e,c)=>{const s=state;if(c==='none')return{text:'You helped with scholarship forms instead of cash.',feedback:fb('solid','Protecting your own cushion is a valid choice. Time and help count too.')};
    const amt=c==='full'?e.amount:Math.round(e.amount*0.35);const r=fundExpense(amt,'savings');
@@ -1220,11 +1209,11 @@ const EVENTS={
  bonus:{kicker:'KA-CHING',art:'💰',snapshot:true,
   eligible:s=>s.employment==='employed',
   create:(s,opts)=>{const first=opts&&opts.first;const pay=monthlyIncome(s),amount=first?Math.max(10000,Math.round(pay*(0.3+rand()*0.5)*(1+s.career*0.08))):Math.round(pay*(0.3+rand()*0.95)*(1+s.career*0.12));
-   return{amount,title:first?pick(['Your first year-end bonus!','First bonus! Your bank app just pinged.']):pick(['Your work paid off: bonus!','Surprise bonus! Act cool.']),description:(first?'Your year-end bonus is ':'A one-off bonus of ')+money(amount)+' landed. Bonuses are never guaranteed; this one is linked to your pay and Career XP, after tax.',foot:'A one-time inflow: it is credited once, wherever you put it.'};},
+   return{amount,title:first?pick(['Your first year-end bonus!','First bonus! Your bank app just pinged.']):pick(['Your work paid off: bonus!','Surprise bonus! Act cool.']),description:(first?'Your year-end bonus is ':'A one-off bonus of ')+money(amount)+' landed, after tax.',foot:'A one-time inflow: it is credited once, wherever you put it.'};},
   choices:(e,s)=>bonusChoices(e,s),resolve:(e,c)=>bonusResolve(e,c,'Bonus')},
  taxrefund:{kicker:'GOOD NEWS',art:'🧾',titles:['Your tax refund arrived!','The tax department remembered you. Nicely.'],snapshot:true,
   eligible:s=>s.employment==='employed',
-  create:()=>{const amount=priced(randInt(5,22)*1000);return{amount,description:'A refund of '+money(amount)+' just landed. Free money? No, your own money, back home.',foot:'A one-time inflow: it is credited once, wherever you put it.'};},
+  create:()=>{const amount=priced(randInt(5,22)*1000);return{amount,description:''+money(amount)+' of your own money, back home.',foot:'A one-time inflow: it is credited once, wherever you put it.'};},
   choices:(e,s)=>bonusChoices(e,s),resolve:(e,c)=>bonusResolve(e,c,'Tax refund')},
  sidegig:{kicker:'SIDE QUEST',art:'🧑‍💻',titles:['A weekend freelance gig appeared.','Someone wants to pay you for a weekend project.'],
   eligible:s=>s.employment==='employed'&&preciseAge(s)<55,
@@ -1233,8 +1222,8 @@ const EVENTS={
   resolve:(e,c)=>{const s=state;if(c==='rest')return{text:'You kept your weekends.',feedback:fb('solid','Rest is not laziness. Burnout is expensive too.')};s.cash+=e.amount;workPace(s,'hustle',6,'weekend gigs');return{text:'Gig done: '+money(e.amount)+' added to savings.',feedback:fb('great','Extra income straight into savings speeds everything up.')};}},
  promotion:{kicker:'BOSS LEVEL',art:'🧗',titles:['A stretch project is on offer.','Your manager wants you on the “impossible” project.'],
   eligible:s=>s.employment==='employed'&&s.career<A.maxXp,
-  create:()=>({description:'It is demanding and visible. It could build skills that raise your chances of a promotion later, but it costs evenings and energy.',foot:'Growth has a cost too. Neither answer is wrong.'}),
-  choices:()=>[{id:'yes',emoji:'🚀',title:'Take the challenge',detail:'Career XP +1. Raises the chance of promotions at future appraisals (not guaranteed).'},{id:'no',emoji:'⚖️',title:'Keep your balance',detail:'No change to pay or XP. Protects your time.'}],
+  create:()=>({description:'Visible and demanding. Costs evenings and energy.',foot:'Growth has a cost too. Neither answer is wrong.'}),
+  choices:()=>[{id:'yes',emoji:'🚀',title:'Take the challenge',detail:'Career XP +1: better promotion odds later.'},{id:'no',emoji:'⚖️',title:'Keep your balance',detail:'Protects your time.'}],
   resolve:(e,c)=>{const s=state;if(c==='yes'){s.career=Math.min(A.maxXp,s.career+1);workPace(s,'hustle',24,'a stretch project');return{text:'Career XP is now '+s.career+' of '+A.maxXp+'.',feedback:fb('great','Career XP raises your odds of promotions. Early in a career, promotions are big; that compounds for decades.')};}return{text:'You protected your time. Career growth can happen at a different pace.',feedback:fb('solid','Time and energy matter. You can still grow your career through training later.')};}},
  startup:{kicker:'RECRUITER DM',art:'🦄',titles:['A startup offers you +35% pay and ESOPs.','“We are disrupting chai. Join us?”'],
   eligible:s=>s.employment==='employed'&&preciseAge(s)>=25&&preciseAge(s)<45&&!(s.seen.startup>0),
@@ -1251,8 +1240,8 @@ const EVENTS={
   resolve:(e,c)=>{const s=state;if(c==='skip')return{text:'You skipped the course.',feedback:fb('solid','Fair. Not every course pays back.')};const r=fundExpense(e.amount,c,true);s.career=Math.min(A.maxXp,s.career+2);workPace(s,'hustle',12,'weekend classes');record('Took an executive course at '+ageLabel()+' (Career XP +2).',{kind:'career'});return{text:'Enrolled! Career XP is now '+s.career+'. '+r.text,feedback:r.borrowed>0?fb('risky','A smart investment in yourself, partly on debt at 1% a month.'):fb(preciseAge(s)<35?'great':'solid','Skills early in a career have more years to pay back.')};}},
  crypto:{kicker:'HOT TIP',art:'🪙',titles:['Your gym buddy has a “sure-shot” coin tip.','“Bro, this coin will 100× by Friday.”'],snapshot:true,
   eligible:s=>s.cash>=priced(20000,s)&&(s.seen.crypto||0)<2,
-  create:()=>({big:priced(20000),small:priced(5000),description:'It has a dog logo, a rocket emoji and zero revenue. Your buddy is very confident.',foot:'If something promises fast, huge returns, the risk is usually huge too.'}),
-  choices:e=>[{id:'big',emoji:'🚀',title:'Put in '+money(e.big),detail:'Could triple. Could vanish.',tag:{kind:'flag',text:'🚩 Red flag: a “sure-shot” tip'}},{id:'small',emoji:'🎲',title:'Put in '+money(e.small)+' for fun',detail:'Small bet you can afford to lose.'},{id:'pass',emoji:'🙃',title:'Pass. Index funds are boring and fine.',detail:'Costs nothing.',tag:REC}],
+  create:()=>({big:priced(20000),small:priced(5000),description:'Dog logo, zero revenue. Your buddy is very confident.',foot:'If something promises fast, huge returns, the risk is usually huge too.'}),
+  choices:e=>[{id:'big',emoji:'🚀',title:'Put in '+money(e.big),detail:'Could triple. Could vanish.'},{id:'small',emoji:'🎲',title:'Put in '+money(e.small)+' for fun',detail:'Small bet you can afford to lose.'},{id:'pass',emoji:'🙃',title:'Pass. Index funds are boring and fine.',detail:'Costs nothing.'}],
   resolve:(e,c)=>{const s=state;if(c==='pass')return{text:'You passed. The coin is now worth 0.0003 of a samosa.',feedback:fb('great','Skipping hype is a real skill. Boring, diversified investing usually wins over decades.')};
    const amt=c==='big'?e.big:e.small;s.cash-=amt;const win=rand()<0.25;const back=win?amt*3:Math.round(amt*0.2);s.cash+=back;s.stats.fun+=Math.max(0,amt-back);
    return{text:win?'To the moon! '+money(amt)+' became '+money(back)+'.':'It crashed. '+money(amt)+' became '+money(back)+'.',feedback:win?fb('risky','You won this time. Most hype coins do not do this; luck is not a strategy.'):c==='small'?fb('solid','You only bet what you could lose. Lesson learnt cheaply.'):lessonFb(s,'Hype is not a plan. Your buddy’s “sure-shot” tip crashed.',LISTEN,true)};}},
@@ -1272,8 +1261,8 @@ const EVENTS={
  /* ---- home & wheels ---- */
  landlord:{kicker:'KNOCK KNOCK',art:'🏠',titles:['Your landlord has discovered inflation.','“Market rate has gone up,” says your landlord.'],
   eligible:s=>!s.ownsHome&&s.month>12,
-  create:s=>{const hike=Math.round(priced(s.costs.housing,s)*0.12);return{hike,description:'Rent is going up by '+money(hike)+' a month. Moving costs money too.',foot:'Rent hikes are a recurring cost. Small monthly changes add up over years.'};},
-  choices:(e,s)=>[{id:'accept',emoji:'😮‍💨',title:'Accept the hike',detail:'Rent +'+money(e.hike)+' every month.'},{id:'negotiate',emoji:'🫖',title:'Negotiate over chai',detail:'50% chance he settles for half the hike.'},{id:'move',emoji:'📦',title:'Move to a similar place',detail:'Movers and deposit: '+money(priced(15000))+' once. Rent stays the same.'}],
+  create:s=>{const hike=Math.round(priced(s.costs.housing,s)*0.12);return{hike,description:'Rent +'+money(hike)+' a month.',foot:'Rent hikes are a recurring cost. Small monthly changes add up over years.'};},
+  choices:(e,s)=>[{id:'accept',emoji:'😮‍💨',title:'Accept the hike',detail:'Rent +'+money(e.hike)+' every month.'},{id:'negotiate',emoji:'🫖',title:'Negotiate over chai',detail:'50% chance he settles for half the hike.'},{id:'move',emoji:'📦',title:'Move to a similar place',detail:money(priced(15000))+' once to move. Rent stays.'}],
   resolve:(e,c)=>{const s=state,f=inflationFactor(s);
    if(c==='move'){const r=fundExpense(priced(15000),'savings');return{text:'You moved. '+r.text,feedback:r.borrowed?fb('risky','Moving avoided a permanent rent hike, but part of the move became debt.'):fb('great','A one-time cost instead of a forever increase. Smart over the years.')};}
    const hike=c==='negotiate'&&rand()<0.5?Math.round(e.hike/2):e.hike;s.costs.housing+=hike/f;
@@ -1432,7 +1421,7 @@ const EVENTS={
 EVENTS.insureoffer={kicker:'RING RING',art:'🛡️',titles:['An insurance agent calls. Again.','HR asks: “Want health cover too?”','Your aunt sells insurance now.'],weight:0.6,
  eligible:s=>!s.insured&&s.employment==='employed',
  create:s=>{const premium=priced(healthPremiumBase(s),s);return{premium,description:'Health cover for '+money(premium)+' a month pays 65% of hospital bills. One hospital stay can cost lakhs.',foot:'Insurance is boring until the day it is not.'};},
- choices:e=>[{id:'yes',emoji:'🛡️',title:'Cover me',detail:money(e.premium)+'/month. Hospital bills shrink by 65%.',tag:REC,think:'🤔 Think: one hospital stay can cost more than years of premiums.'},{id:'no',emoji:'🎲',title:'Skip it',detail:'₹0 now. Every medical bill is all yours.'}],
+ choices:e=>[{id:'yes',emoji:'🛡️',title:'Cover me',detail:money(e.premium)+'/month. Hospital bills shrink by 65%.'},{id:'no',emoji:'🎲',title:'Skip it',detail:'₹0 now. Every medical bill is all yours.'}],
  resolve:(e,c)=>{const s=state;if(c==='no')return{text:'No cover for now. Fingers crossed.',feedback:fb('risky','You saved a small premium but carry the full risk of a big hospital bill.')};
   s.insured=true;record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month.',feedback:fb('great','A small fixed cost that turns a ruinous hospital bill into a manageable one.')};}};
 /* ---------- Pit stop: every 5 years (see A.pit) ---------- */
@@ -1452,12 +1441,12 @@ function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));r
 Object.assign(EVENTS,{
  adSip:{kicker:AD_KICKER,art:'🌱',ad:true,weight:s=>idleCash(s)>priced(50000,s)||!s.sip?3:1.2,
   eligible:s=>pitSipBoost(s)>0||idleCash(s)>=priced(20000,s),
-  create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:adPick(s,['“SIP karo, chill karo.” A mutual fund ad pops up.','“₹5,000 a month for 35 years can grow to about ₹85 lakh.” says the ad.','“Paisa savings mein so raha hai? Usse kaam pe lagao!”']),
-   description:idle>=priced(20000,s)?compact(idle)+' is sitting in savings beyond a 6-month cushion, earning nothing while prices rise 6% a year.':'A small amount every month, invested automatically, grows quietly for decades.',
+  create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:idle>=priced(20000,s)?'“'+compact(idle)+' sleeping in savings? Put it to work!”':adPick(s,['“SIP karo, chill karo.”','“₹5,000 a month can grow to about ₹85 lakh in 35 years.”']),
+   description:'A mutual fund ad. Invested money grows about 7% a year, with ups and downs.',
    foot:'Keep about 6 months of expenses in savings. The rest works harder invested.'};},
   choices:(e,s)=>{const c=[];
-   if(e.idle>=priced(20000,s))c.push({id:'lump',emoji:'💰',title:'Invest the idle '+compact(e.idle),detail:'Savings '+compact(s.cash)+' → '+compact(s.cash-e.idle)+' (6 months of expenses stay). The value can rise or fall.',tag:REC,think:lumpThink(s,e.idle)});
-   if(e.boost>0)c.push({id:'sip',emoji:'🌱',title:(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.boost)+'/month',detail:'Invested automatically after bills, from next month.',tag:c.length?{kind:'ok',text:'✅ You can afford this'}:REC,think:sipThink(s,e.boost-s.sip)});
+   if(e.idle>=priced(20000,s))c.push({id:'lump',emoji:'💰',title:'Invest the idle '+compact(e.idle),detail:'6 months of expenses stay in savings.'});
+   if(e.boost>0)c.push({id:'sip',emoji:'🌱',title:(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.boost)+'/month',detail:'From next month, automatically.'});
    c.push({id:'skip',emoji:'📴',title:'Skip the ad',detail:'Nothing changes.'});return c;},
   resolve:(e,c)=>{const s=state;
    if(c==='lump'){const amt=Math.min(e.idle,idleCash(s));s.cash-=amt;s.invested+=amt;record('Invested '+money(amt)+' of idle savings at '+ageLabel()+'.',{kind:'sip'});return{text:money(amt)+' moved from savings into investments.',feedback:fb('great','Your cushion stays, and the rest now grows instead of shrinking to inflation.')};}
@@ -1465,18 +1454,18 @@ Object.assign(EVENTS,{
    const idle=idleCash(s);return{text:'Ad skipped.',feedback:idle>=priced(50000,s)?fb('missed',compact(idle)+' idle in savings loses about '+compact(Math.round(idle*A.annualInflation))+' a year to inflation.'):fb('solid','Fair enough. Your money plan stays as it is.')};}},
  adScheme:{kicker:AD_KICKER,art:'🤑',ad:true,weight:1.3,
   eligible:s=>s.cash>=priced(30000,s),
-  create:s=>{const amount=Math.min(Math.round(s.cash*0.6),priced(adInt(s,4,10)*10000,s));return{amount,title:adPick(s,['“Double your money in 12 months. 100% guaranteed!”','“Earn 8% a MONTH with our gold scheme. Only 50 slots left!”','A finfluencer posing with a Lambo: “This app pays 3% daily.”']),
-   description:'Glossy ad, happy customers, a countdown timer. Minimum investment: '+money(amount)+'.',foot:'Real investments never promise guaranteed high returns.'};},
-  choices:e=>[{id:'in',emoji:'💸',title:'Invest '+money(e.amount),detail:'“Guaranteed” returns, says the ad.',tag:{kind:'flag',text:'🚩 Red flag: guaranteed returns'}},{id:'check',emoji:'🔍',title:'Check if it is SEBI-registered',detail:'Takes 5 minutes. Costs nothing.',tag:REC,think:'🤔 Think: nobody can guarantee high returns. Real investments go up and down.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
+  create:s=>{const amount=Math.min(Math.round(s.cash*0.6),priced(adInt(s,4,10)*10000,s));return{amount,title:adPick(s,['“Your '+compact(s.cash)+' earns 3% in the bank. We pay 8% a MONTH!”','“Double your money in 12 months. 100% guaranteed!”','A finfluencer posing with a Lambo: “This app pays 3% daily.”']),
+   description:'Happy customers, a countdown timer, only 50 slots left. Minimum '+money(amount)+'.',foot:'Real investments never promise guaranteed high returns.'};},
+  choices:e=>[{id:'in',emoji:'💸',title:'Invest '+money(e.amount),detail:'“Guaranteed” returns, says the ad.'},{id:'check',emoji:'🔍',title:'Check if it is SEBI-registered',detail:'Takes 5 minutes.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
   resolve:(e,c)=>{const s=state;
    if(c==='in'){const amt=Math.min(e.amount,Math.max(0,s.cash)),back=Math.round(amt*adRand(s)*0.2),lost=amt-back;s.cash-=lost;s.stats.shocks+=lost;s.whatIf.adLoss+=lost/inflationFactor(s);record('Lost '+money(lost)+' to a “guaranteed returns” scheme at '+ageLabel()+'.',{major:true,kind:'scam'});
     return{text:'Two months of “returns”, then the app vanished. '+money(lost)+' gone'+(back?', '+money(back)+' recovered.':'.'),feedback:lessonFb(s,'Guaranteed high returns are the classic sign of a Ponzi scheme. If it sounds too good to be true, it is.',LISTEN,true)};}
    return{text:c==='check'?'Not registered anywhere. You reported the ad.':'Scrolled past.',feedback:fb('great',c==='check'?'A 5-minute check just saved you '+money(e.amount)+'. Always check SEBI or RBI registration before investing.':'Ignoring “guaranteed returns” is the best return of the day.')};}},
  adCar:{kicker:AD_KICKER,art:'🚙',ad:true,weight:1,
   eligible:s=>s.employment==='employed'&&s.vehicle!=='car'&&!s.vehicleLoan&&preciseAge(s)>=25,
-  create:s=>{const v=rideVariants('car',s).find(x=>x.id==='suv');return{emi:v.emi,title:adPick(s,['“Zero down payment! Drive home a big SUV for just '+money(v.emi)+'/month.”','“Your neighbour got one. Why not you?” A shiny SUV ad.']),
-   description:'The ad shows the SUV on an empty mountain road. It does not show the fuel bill or the parking fight.',foot:'Ads make big EMIs look small. Ask what it costs every month, all-in.'};},
-  choices:(e,s)=>{const v=rideVariants('car',s).find(x=>x.id==='suv');return[{id:'book',emoji:'🚙',title:'Book the SUV',tag:affordTag(s,{emi:v.emi,monthly:OPTIONAL.buyCar.monthly(s,'suv')}),detail:v.block?'The bank will probably say no: '+v.block.replace(/^The bank says no: /,''):OPTIONAL.buyCar.describe(s,'suv')},{id:'test',emoji:'🔑',title:'Just a test drive',detail:'Free. The salesperson calls you nine times.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
+  create:s=>{const v=rideVariants('car',s).find(x=>x.id==='suv'),cls=wealthClass(s).label.toLowerCase();return{emi:v.emi,title:s.cash>=priced(200000,s)?'“'+compact(s.cash)+' in savings and still no car? Drive home an SUV today!”':adPick(s,['“Every '+cls+' family drives an SUV. Why not you?”','“Zero down payment! Just '+money(v.emi)+'/month. You deserve it.”']),
+   description:'Zero down. Easy EMIs. Feel the open road.',foot:'Ads make big EMIs look small. Ask what it costs every month, all-in.'};},
+  choices:(e,s)=>{const v=rideVariants('car',s).find(x=>x.id==='suv');return[{id:'book',emoji:'🚙',title:'Book the SUV',detail:v.block?'The bank will probably say no.':'EMI '+money(v.emi)+'/month + '+money(OPTIONAL.buyCar.monthly(s,'suv'))+' fuel and upkeep.'},{id:'test',emoji:'🔑',title:'Just a test drive',detail:'Free. The salesperson calls nine times.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
   resolve:(e,c)=>{const s=state;
    if(c==='book'){const v=rideVariants('car',s).find(x=>x.id==='suv');if(v.block)return{text:'Loan declined. '+v.block,feedback:fb('solid','The bank’s 50% rule just saved you from an EMI you could not afford.')};
     OPTIONAL.buyCar.apply(s,'suv');s.whatIf.adBuys.push('Big SUV');const b=monthlyBudget(s);
@@ -1484,22 +1473,32 @@ Object.assign(EVENTS,{
    return{text:c==='test'?'Great test drive. You walked away. 😎':'Scrolled past.',feedback:fb('great','Buying a car because an ad said so is how EMIs pile up. Buy one when your plan says so.')};}},
  adHome:{kicker:AD_KICKER,art:'🏰',ad:true,weight:0.9,
   eligible:s=>s.employment==='employed'&&!s.ownsHome&&preciseAge(s)>=28,
-  create:s=>({title:adPick(s,['“Pre-launch offer! Luxury villas, only 3 left!”','“Why pay rent? Own a villa with a private pool.” says the hoarding.']),
-   description:'Independent villa for '+compact(housePrice(s,'villa'))+'. Booking needs '+compact(houseUpfront(s,'villa'))+' upfront, then a 20-year loan.',foot:'“Only 3 left” is a sales trick. Buy a home when the EMI fits, not when the hoarding says so.'}),
-  choices:(e,s)=>{const block=bankCheck(s,houseLoanEmi(s,'villa'))||(houseUpfront(s,'villa')>s.cash?'Needs '+money(houseUpfront(s,'villa'))+' in savings for the down payment.':null);
-   return[{id:'book',emoji:'🏰',title:'Book the villa',tag:affordTag(s,{upfront:houseUpfront(s,'villa'),emi:houseLoanEmi(s,'villa'),monthly:OPTIONAL.buyHouse.monthly(s,'villa')}),detail:block?'You cannot afford it: '+block.replace(/^The bank says no: /,''):'EMI '+money(houseLoanEmi(s,'villa'))+'/month for 20 years. Rent stops.'},{id:'visit',emoji:'🥟',title:'Visit the site for free samosas',detail:'Free. Very good samosas.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
+  create:s=>({title:s.cash>=houseUpfront(s,'villa')*0.5?'“Rent is dead money! With '+compact(s.cash)+' saved, you’re villa-ready.”':adPick(s,['“Pre-launch offer! Luxury villas, only 3 left!”','“You’re '+wealthClass(s).label.toLowerCase()+' now. Live like it: a villa with a pool.”']),
+   description:'Private pool. Clubhouse. “Prices go up next week.”',foot:'“Only 3 left” is a sales trick. Buy a home when the EMI fits, not when the hoarding says so.'}),
+  choices:(e,s)=>{const block=bankCheck(s,houseLoanEmi(s,'villa'))||(houseUpfront(s,'villa')>s.cash?'Needs '+money(houseUpfront(s,'villa'))+' down.':null);
+   return[{id:'book',emoji:'🏰',title:'Book the villa',detail:block?'You cannot afford it: '+block.replace(/^The bank says no: /,''):money(houseUpfront(s,'villa'))+' now, then EMI '+money(houseLoanEmi(s,'villa'))+'/month for 20 years.'},{id:'visit',emoji:'🥟',title:'Visit the site for free samosas',detail:'Free. Very good samosas.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
   resolve:(e,c)=>{const s=state;
    if(c==='book'){const block=bankCheck(s,houseLoanEmi(s,'villa'))||(houseUpfront(s,'villa')>s.cash?'Not enough savings for the down payment.':null);if(block)return{text:'Booking failed. '+block,feedback:fb('solid','You could not afford it this time. That is what the down payment and the bank’s 50% rule are for.')};
     s.cash-=houseUpfront(s,'villa');const r=OPTIONAL.buyHouse.apply(s,'villa');s.whatIf.adBuys.push('Villa');return{text:r.text,feedback:r.feedback.label==='risky'?lessonFb(s,'The ad worked. '+r.feedback.why,LISTEN,true):r.feedback};}
    return{text:c==='visit'?'Samosas: excellent. Villa: politely declined.':'Scrolled past.',feedback:fb('great','A home is the biggest buy of your life. It deserves a plan, not a pre-launch countdown.')};}},
  adPhone:{kicker:AD_KICKER,art:'📱',ad:true,weight:1,
   eligible:s=>s.employment==='employed'&&s.cash>=priced(20000,s),
-  create:s=>{const price=priced(adInt(s,7,12)*10000,s);return{price,title:adPick(s,['“New flagship! No-cost EMI. Your old phone is SO last year.”','“3 cameras. 1 TB. Your phone is embarrassing you.”']),
-   description:'Your current phone works fine. The new one costs '+money(price)+'.',foot:'A phone loses half its value in a year.'};},
-  choices:(e,s)=>[{id:'buy',emoji:'📱',title:'Upgrade now',detail:spendDetail(e.price)+adNoteFV(s,e.price),tag:affordTag(s,{upfront:e.price})},{id:'skip',emoji:'👍',title:'My phone works fine',detail:'Nothing changes.',tag:REC}],
+  create:s=>{const price=priced(adInt(s,7,12)*10000,s);return{price,title:adPick(s,['“'+wealthClass(s).label+' and still on an old phone? Upgrade today!”','“New flagship! No-cost EMI. Your phone is SO last year.”']),
+   description:'3 cameras. 1 TB. Everyone in your office has one.',foot:'A phone loses half its value in a year.'};},
+  choices:(e,s)=>[{id:'buy',emoji:'📱',title:'Upgrade now',detail:spendDetail(e.price)},{id:'skip',emoji:'👍',title:'My phone works fine',detail:'Nothing changes.'}],
   resolve:(e,c)=>{const s=state;
    if(c==='buy'){const r=fundExpense(e.price,'savings',true);s.whatIf.adLoss+=e.price/inflationFactor(s);s.whatIf.adBuys.push('Flagship phone');return{text:'New phone! '+r.text,feedback:r.borrowed||monthsOfCushion(s)<A.cushionMonths?lessonFb(s,'Shiny for a month, half its value in a year.'+adNoteFV(s,e.price),LISTEN,true):fb('missed','Shiny for a month, half its value in a year.'+adNoteFV(s,e.price))};}
-   return{text:'Kept your phone.',feedback:fb('great','The best phone is the one that already works.'+adNoteFV(s,e.price))};}}
+   return{text:'Kept your phone.',feedback:fb('great','The best phone is the one that already works.'+adNoteFV(s,e.price))};}},
+ // "Must-haves" for your wealth class: the ad grows with you.
+ adStatus:{kicker:AD_KICKER,art:'🛍️',ad:true,weight:1.2,
+  eligible:s=>s.employment==='employed'&&s.cash>=statusBuy(s).price*0.4,
+  create:s=>{const b=statusBuy(s),cls=wealthClass(s).label;return{price:b.price,item:b.item,art:b.emoji,title:adPick(s,['“Every '+cls.toLowerCase()+' home has '+b.item+'.”','“You’ve made it. Now show it: '+b.item+'.”','“'+compact(s.cash)+' in savings? Treat yourself to '+b.item+'!”']),
+   description:'A must-have for the '+cls.toLowerCase()+'. No-cost EMI, today only.',foot:'“Must-have” is what ads call things you did not need yesterday.'};},
+  choices:(e,s)=>[{id:'buy',emoji:e.art,title:'Buy '+e.item,detail:spendDetail(e.price)},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
+  resolve:(e,c)=>{const s=state;
+   if(c==='buy'){const r=fundExpense(e.price,'savings',true);s.whatIf.adLoss+=e.price/inflationFactor(s);s.whatIf.adBuys.push(e.item.replace(/^an? /,''));const why='“Must-have” is what ads call things you did not need yesterday.'+adNoteFV(s,e.price);
+    return{text:'You bought '+e.item+'. '+r.text,feedback:r.borrowed||monthsOfCushion(s)<A.cushionMonths?lessonFb(s,why,LISTEN,true):fb('missed',why)};}
+   return{text:'Scrolled past.',feedback:fb('great','Your class is your net worth, not your stuff.'+adNoteFV(s,e.price))};}}
 });
 // Small surprises become cards on the track. The value is the default applied
 // when you don't choose in time: usually the cautious or do-nothing option.
@@ -1508,13 +1507,10 @@ const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'saving
  kidparty:'cake',school:'savings',bonus:'save',taxrefund:'save',sidegig:'rest',promotion:'no',course:'skip',
  crypto:'pass',boom:'stay',market:'stay',landlord:'accept',leak:'savings',vehiclebill:'savings',challan:'pay',
  pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories',insureoffer:'yes',
- adSip:'skip',adScheme:'skip',adCar:'skip',adHome:'skip',adPhone:'skip'};
-function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
+ adSip:'skip',adScheme:'skip',adCar:'skip',adHome:'skip',adPhone:'skip',adStatus:'skip'};
+function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
- c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Spend it all on something nice. Gone by next week.'});
- const best=s.unsecuredDebt>0?'debt':monthsOfCushion(s)>=3?'invest':'save',bc=c.find(x=>x.id===best);bc.tag=REC;
- if(best==='invest')bc.think=lumpThink(s,e.amount);else if(best==='debt')bc.think='🤔 Think: clearing 12%-a-year debt is a guaranteed return.';
- return c;}
+ c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Gone by next week.'});return c;}
 function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
  if(c==='save'){s.cash+=e.amount;return{text:label+' '+money(e.amount)+' added to savings.',feedback:s.unsecuredDebt>0?fb('missed','Savings are safer, but your debt costs 1% a month. Paying it down was a guaranteed saving.'):months<3?fb('great','You built your cash cushion toward about three months of expenses, which buys flexibility when life surprises you.'):fb('solid','Safe and flexible. With a healthy cushion already, investing could have given it more years to grow, with ups and downs.')};}
  if(c==='invest'){s.invested+=e.amount;return{text:label+' '+money(e.amount)+' invested.',feedback:s.unsecuredDebt>0?fb('risky','Investing while carrying debt at 1% a month means betting returns beat the interest. Not guaranteed.'):months<1?fb('risky','Long-term growth is valuable, but you have less than a month of expenses in cash. The next surprise may become debt.'):months<3?fb('solid','Good for the long term. Your cash cushion is still under three months, so keep building it too.'):fb('great','You already have a cash cushion, so this money has years to compound. Returns are uncertain, but time helps.')};}
@@ -2036,7 +2032,7 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
  RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
- happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,affordTag,sipThink,lumpThink,growBy60};
+ happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
 })();
 </script>
 <script>
@@ -2345,7 +2341,7 @@ function renderSound(){$('soundGlyph').innerHTML=iconSVG(prefs.soundOn?'sound':'
 /* ---------- Clock: one interval per run; never advances past a decision ---------- */
 function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
 // While a card waits on the track the race slows down, so there is time to read and tap.
-const CARD_MONTH_MS=700;
+const CARD_MONTH_MS=1100;
 function cardWaiting(){const e=S().event;return !!(e&&e.tier==='card');}
 function monthMs(){const ms=A.monthMs/prefs.speed;return cardWaiting()?Math.max(ms,CARD_MONTH_MS):ms;}
 function startClock(){
@@ -2361,7 +2357,7 @@ function startClock(){
  },100);
 }
 // A track card's countdown runs only while the race runs; at zero the default is applied.
-const CARD_MS=6000,CARD_FIRST_MS=9000;
+const CARD_MS=10000,CARD_FIRST_MS=15000;
 function tickCard(dt){
  const e=S().event;if(!e||e.tier!=='card'||!ui.card||ui.card.id!==e.id)return false;
  ui.card.elapsed+=dt;const bar=$('cardTimer');if(bar)bar.style.width=Math.max(0,100-ui.card.elapsed/ui.card.ms*100)+'%';
@@ -2450,8 +2446,6 @@ const IDLE_LINES={
 };
 /* ---------- Happiness ---------- */
 // A choice's effect on happiness, shown as hearts (bigger effect, more signs) instead of numbers.
-// Tag (Recommended, affordability, red flag) and a one-line "Think" hint on a choice.
-function choiceExtras(c){return (c.tag?'<span class="ctag '+c.tag.kind+'">'+esc(c.tag.text)+'</span>':'')+(c.think?'<span class="think">'+esc(c.think)+'</span>':'');}
 // The first time a SIP is offered, a one-time explainer (remembered on this device).
 function maybeSipInfo(force){if(prefs.sipInfo||(TEST_MODE&&!force))return;prefs.sipInfo=true;M.savePrefs();openModal('sipinfo','sipInfoOverlay');}
 function heartChip(fx,suffix){
@@ -2591,7 +2585,7 @@ function renderEvent(){
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
  if(def.pit){ui.pitPick={life:0,sip:'keep'};ui.pit={id:e.id};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent='';if(e.sipBoost&&s.employment==='employed')setTimeout(()=>maybeSipInfo(),400);}
- else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong>'+(c.tag?choiceExtras({tag:c.tag}):'')+'<small>'+esc(c.detail)+'</small>'+(c.think?choiceExtras({think:c.think}):'')+(()=>{const ch=heartChip(M.ringEffect(e.type,c.id));return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
+ else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=heartChip(M.ringEffect(e.type,c.id));return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
  if(!def.pit)$('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
  playRace.bump();sfx(def.pit?'powerup':'bump');if(def.pit)playRace.confetti();
@@ -2604,7 +2598,7 @@ function pitBody(){
  const s=S(),e=s.event,pk=ui.pitPick,arrow=(d,f)=>d>0?'<small class="up">▲ '+f(d)+'</small>':d<0?'<small class="down">▼ '+f(-d)+'</small>':'<small>steady</small>';
  let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div></div>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
- if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong>'+choiceExtras({tag:{kind:'rec',text:'👍 Recommended'}})+'<small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small>'+choiceExtras({think:M.sipThink(s,e.sipBoost-s.sip)})+'</span></button>';}
+ if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong><small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small></span></button>';}
  return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Continue</button>';
 }
 /* ---------- Track cards: small surprises that don't stop the race ---------- */
@@ -2616,8 +2610,9 @@ function renderTrackCard(){
  ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};el.classList.toggle('ad',!!def.ad);
  el.innerHTML='<div class="tc-head">'+em(e.art||'❓','tc-art')+'<div><small>'+esc(e.kicker)+' · AGE '+esc(M.ageLabel())+'</small><b>'+esc(e.title)+'</b></div></div>'
   +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
-  +(first?'<p class="tc-note">The race slows down while you choose. Tap a choice, or “'+esc(dflt?dflt.title:'')+'” happens when the bar runs out.</p>':'')
-  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice'+(c.id===e.defaultChoice?' default':'')+'" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+(c.id===e.defaultChoice?' <em>default</em>':'')+'</strong>'+(c.tag?choiceExtras({tag:c.tag}):'')+'<small>'+esc(c.detail)+'</small>'+(c.think?choiceExtras({think:c.think}):'')+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
+  +(def.ad?'<p class="tc-class">🎯 Ads see you as '+esc(M.wealthClass().emoji+' '+M.wealthClass().label)+'</p>':'')
+  +(first?'<p class="tc-note">The race slows down. No tap? “'+esc(dflt?dflt.title:'')+'” happens.</p>':'')
+  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
   +'<div class="tc-timer" aria-hidden="true"><i id="cardTimer"></i></div>';
  el.classList.remove('hidden');el.classList.remove('tc-in');void el.offsetWidth;el.classList.add('tc-in');
  playRace.bump();sfx('bump');
@@ -2739,11 +2734,12 @@ function renderAbout(){
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
-  ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 6 seconds to tap (9 for your first two). If you don’t, the cautious default marked on the card happens'],
+  ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 10 seconds to tap (15 for your first two). If you don’t, the cautious choice happens (for ads: scroll past)'],
   ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race waits until you tap Continue'],
   ['Idle cash','Savings earn nothing while prices rise 6% a year. About 6 months of expenses is a healthy cushion; anything above it shows as 💤 idle on the Savings tile.'],
-  ['Ad breaks','About once every 5–7 years an ad slides onto the track. Some are good advice (invest idle cash, start a SIP), some are traps (guaranteed returns) and some sell big buys on easy EMIs. The default is always to scroll past.'],
-  ['Tags on choices','👍 Recommended marks the clearly smart move (a SIP, investing idle cash, health cover, checking a scheme), with a 🤔 Think line. Big buys show ✅ You can afford this (6 months of savings left and EMIs under 30% of pay), ⚠️ Stretch or ❌ Can’t afford. 🚩 marks scam signs. A mistake shows as 📘 Lesson learnt. The first time a SIP is offered, a short “What’s a SIP?” tip explains it once.'],
+  ['Ad breaks','About once every 5–7 years an ad slides onto the track. Ads know your savings and your wealth class, and use both to tempt you: an SUV, a villa, a new phone, a “must-have” for your class, a “guaranteed” scheme. A few are good advice (invest idle cash, start a SIP). Not tapping scrolls past.'],
+  ['Wealth class','What advertisers think you are, from your net worth in today’s money: 🌱 Just starting, 🏠 Middle class (₹5L), 🚗 Upper middle class (₹25L), 💼 Affluent (₹1Cr), 💎 Rich (₹5Cr). It shows on every ad.'],
+  ['Lessons','A mistake shows as 📘 Lesson learnt, with one line to remember. The first time a SIP is offered, a short “What’s a SIP?” tip explains it once.'],
   ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
