@@ -2680,7 +2680,7 @@ function renderWizard(animate){
  $('wizSticker').textContent=retire?'YOUR RETIREMENT PLAN':'YOUR LIFE, YOUR WAY';
  $('wizBody').innerHTML='<div class="wiz-dots" aria-label="Step '+(i+1)+' of '+steps.length+'">'+steps.map((w,j)=>'<i class="'+(j<i?'done':j===i?'on':'')+'"></i>').join('')+'</div>'
   +'<div class="wiz-step'+(animate?' slide':'')+'"><div class="wiz-emoji emoji" aria-hidden="true">'+st.emoji+'</div><h2 id="wizTitle">'+esc(st.title)+'</h2><p class="lead">'+(retire&&i===0?'No salary now: your savings and investments pay for how you live. ':'')+esc(st.why)+'</p>'
-  +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(M.priced(o.cost))+'/month':'Free')+'</small></span>'+heartChip(st.rings(o.id))+'</button>').join('')+'</div></div>'+strip;
+  +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(M.priced(o.cost))+'/month':'Free')+'</small></span>'+'</button>').join('')+'</div></div>'+strip;
  $('wizBack').disabled=i===0;$('wizNext').textContent=i===steps.length-1?(retire?'Start retirement 🌅':'Start the race 🏁'):'Next →';$('wizSkip').textContent=retire?'Keep my current spending':'Skip: keep this setup';
 }
 function openWizard(){if(S().status!=='setup')return;ui.wiz={step:0,mode:'setup'};renderWizard(true);showOverlay('profileOverlay');}
@@ -2709,10 +2709,10 @@ const IDLE_LINES={
 // A choice's effect on happiness, shown as hearts (bigger effect, more signs) instead of numbers.
 // The first time a SIP is offered, a one-time explainer (remembered on this device).
 function maybeSipInfo(force){if(prefs.sipInfo||(TEST_MODE&&!force))return;prefs.sipInfo=true;M.savePrefs();openModal('sipinfo','sipInfoOverlay');}
-function heartChip(fx,suffix){
+function heartChip(fx){
  if(!fx)return '';const v=Array.isArray(fx)?fx[0]+fx[1]+fx[2]:(fx.me||0)+(fx.fam||0)+(fx.com||0);if(!v)return '';
  const n=Math.abs(v)<=4?1:Math.abs(v)<=12?2:3;
- return '<span class="rchip '+(v>0?'up':'down')+'" aria-label="Happiness '+(v>0?'up':'down')+(n===3?' a lot':n===2?'':' a little')+(suffix?', lasting':'')+'">'+(v>0?'❤️'+'+'.repeat(n):'💔'+'−'.repeat(n))+(suffix||'')+'</span>';
+ return '<span class="rchip '+(v>0?'up':'down')+'" aria-label="Happiness '+(v>0?'up':'down')+(n===3?' a lot':n===2?'':' a little')+'">'+(v>0?'❤️'+'+'.repeat(n):'💔'+'−'.repeat(n))+'</span>';
 }
 function bragChip(n){return n?'<span class="rchip brag" aria-label="Show-off value '+n+' of 3">'+'✨'.repeat(n)+' brag</span>':'';}
 const PACE_BADGE={hustle:'🚀 Hustle mode',chill:'🌿 Taking it easy'};
@@ -2831,7 +2831,7 @@ function renderOptional(){
   const m=o.monthly(s),after=s.cash-o.cost(s),left=M.monthlyBudget().leftover;
   const effect=o.cost(s)?'Savings after: '+compact(Math.max(0,after)):'Left over: '+compact(left)+' → '+compact(left-m);
   const desc=o.variants?o.variants(s).map(v=>v.emoji+' '+v.label).join(' · '):o.describe(s);
-  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(o.rings?'<span class="rchips">'+heartChip(o.rings)+'</span>':'')+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
+  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
  }).join('');
 }
 // Insurance at a glance (More → Monthly power-ups).
@@ -2857,7 +2857,7 @@ function renderEvent(){
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
  if(def.pit){ui.pitPick={life:0,sip:'keep'};ui.pit={id:e.id};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent='';if(e.sipBoost&&s.employment==='employed')setTimeout(()=>maybeSipInfo(),400);}
- else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=heartChip(M.ringEffect(e.type,c.id));return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
+ else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+'</span></button>').join('');
  if(!def.pit)$('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
  playRace.bump();sfx(def.pit?'powerup':'bump');if(def.pit)playRace.confetti();
@@ -2888,7 +2888,7 @@ function renderTrackCard(){
   +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
   +(def.ad?'<p class="tc-class">🎯 Ads see you as '+esc(M.wealthClass().emoji+' '+M.wealthClass().label)+'</p>':'')
   +(first?'<p class="tc-note">✋ The race stops and waits for you. Take your time, then tap a choice.</p>':'')
-  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>';
+  +'<div class="tc-choices">'+choices.map(c=>{return '<button type="button" class="tc-choice" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+'</span></button>';}).join('')+'</div>';
  el.classList.remove('hidden');el.classList.remove('tc-in');void el.offsetWidth;el.classList.add('tc-in');
  playRace.bump();sfx('bump');
  if(choices.some(c=>c.id==='sip'||c.id==='lump'))maybeSipInfo();
@@ -2979,7 +2979,7 @@ function openSip(){const s=S();if(M.blockingEvent()||s.status!=='playing')return
 /* ---------- Big-buy versions (home, car) ---------- */
 function variantBody(id){
  const s=S(),o=M.OPTIONAL[id],vs=o.variants(s),pick=vs.find(v=>v.id===ui.variantPick),before=M.monthlyBudget();
- let h='<p class="lead">'+esc(o.lead||'Each version trades comfort, people and show-off value differently. Show-off value doesn’t make you happier.')+'</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong>'+(v.blurb?'<small>'+esc(v.blurb)+'</small>':'')+'<small>'+(v.note?esc(v.note):(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo')+'</small><span class="rchips">'+heartChip(v.rings,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
+ let h='<p class="lead">'+esc(o.lead||'Each version trades comfort, people and show-off value differently. Show-off value doesn’t make you happier.')+'</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong>'+(v.blurb?'<small>'+esc(v.blurb)+'</small>':'')+'<small>'+(v.note?esc(v.note):(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo')+'</small>'+(v.brag?'<span class="rchips">'+bragChip(v.brag)+'</span>':'')+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
  if(pick){const cost=o.cost(s,pick.id),m=o.monthly(s,pick.id),rows=[['Cost now',cost?money(cost):'None'],['Savings',money(s.cash)+' → '+money(s.cash-cost)],['Monthly expenses',money(before.total)+' → '+money(before.total+m)],[before.leftover-m<0?'Monthly shortfall':'Left over',money(before.leftover)+' → '+money(before.leftover-m)]];
   h+='<p class="res-note">'+esc(o.describe(s,pick.id))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div>';}
  return h+'<p class="res-note">This uses your one power-up for this month.</p>';
@@ -2991,7 +2991,7 @@ function openVariants(id){const o=M.OPTIONAL[id],first=o.variants(S()).find(v=>!
 /* ---------- About ---------- */
 function renderAbout(){
  const rows=[['Goal','Reach 80 rich and happy. ❤️ Happiness (0 to 100) is the score; money is the fuel'],
-  ['Happiness','Built from three parts of life: 🧍 time for yourself, 👨‍👩‍👧 family and friends, and 🏘️ community. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. The mix is 60% the weakest part plus 40% the average, stretched onto 0 to 100: a typical start shows about 50, a well-balanced life 75 or more. Tap ❤️ to see each part and what moves the weakest one. Choices add bumps that fade over time: ❤️+ to ❤️+++ up, 💔− to 💔−−− down'],
+  ['Happiness','Built from three parts of life: 🧍 time for yourself, 👨‍👩‍👧 family and friends, and 🏘️ community. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. The mix is 60% the weakest part plus 40% the average, stretched onto 0 to 100: a typical start shows about 50, a well-balanced life 75 or more. Tap ❤️ to see each part and what moves the weakest one. Choices add bumps that fade over time. Choices don’t show their effect up front; after you pick, you see it (❤️+ to ❤️+++ up, 💔− to 💔−−− down)'],
   ['Money check','If expenses are above take-home pay for 2 months in a row, the race stops: trim, cut to basics, choose in More → Monthly plan, or keep going (at most once a year)'],
   ['Job loss','Severance, then a job search of 6 to 18 months (a little longer after 45), or a lower-paid role at once (−25%). With no salary you choose how to live: cut to basics, trim, or keep going. Back at work, you choose whether to return to your old lifestyle. A 2-starter flat is too small once you have two kids'],
   ['Big shocks','Every life gets at least two big money shocks before 60, years apart: a long layoff, an accident, a serious illness, a flood or a parent’s hospital stay. They test your cushion, health cover and term cover'],

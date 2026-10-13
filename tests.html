@@ -270,12 +270,12 @@ await test('Endings: lifetime happiness and real wealth pick the title; insolven
 await test('Ring power-ups: once a year, with lasting choices in the Big buys picker',async()=>{const {L}=await game(206);const s=L.state;s.nextEventMonth=9999;s.event=null;s.cash=1e6;
  const c=s.rings.com;assert(L.chooseOptional('volunteer'),'volunteered');eq(s.rings.com,Math.min(100,c+8),'Community +8');s.month+=1;assert(/again in 11 months/i.test(L.optionalBlocker('volunteer')||''),'cooldown');
  s.month+=11;eq(L.optionalBlocker('volunteer'),null,'available again after a year');const cash=s.cash;assert(L.chooseOptional('donate'),'donated');eq(s.cash,cash-L.priced(10000),'donation paid once');});
-await test('Happiness UI: one ❤️ number, hearts on choices, home picker, no pace dial, end screen',async()=>{const {L,win}=await loadGame(207);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.event=null;L.render();
+await test('Happiness UI: one ❤️ number, no hearts on choices, home picker, no pace dial, end screen',async()=>{const {L,win}=await loadGame(207);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.event=null;L.render();
  eq(d.getElementById('happyValue').textContent,String(L.happiness()),'HUD shows happiness');eq(d.querySelectorAll('#hudRings,#ringRows,#paceBtn').length,0,'no rings or pace dial on screen');
- s.event=null;L.startEvent('festivalTime');L.render();const chips=[...d.querySelectorAll('#trackCard .rchip')];assert(chips.some(c=>c.textContent==='❤️+++'),'hosting: ❤️+++');assert(chips.some(c=>/💔/.test(c.textContent)),'staying quiet: 💔');
+ s.event=null;L.startEvent('festivalTime');L.render();eq(d.querySelectorAll('#trackCard .rchip').length,0,'choices show no hearts up front');
  L.resolveEvent(s.event.id,'host');L.render();assert(/❤️\+\+\+/.test(d.getElementById('feedbackCard').textContent),'feedback shows hearts');
  s.month=100;s.cash=8e6;s.salary=500000;s.event=null;L.ui.optionalTab='big';L.render();d.getElementById('moreBtn').click();d.querySelector('[data-move="buyHouse"]').click();
- eq(d.querySelectorAll('#confirmBody [data-variant]').length,3,'three home types offered');assert(/brag/.test(d.getElementById('confirmBody').textContent),'show-off value shown');
+ eq(d.querySelectorAll('#confirmBody [data-variant]').length,3,'three home types offered');assert(/brag/.test(d.getElementById('confirmBody').textContent),'show-off value shown');eq(d.querySelectorAll('#confirmBody .rchip.up,#confirmBody .rchip.down,#moveDeck .rchip').length,0,'no hearts on big buys or power-ups');
  d.querySelector('#confirmBody [data-variant="near"]').click();eq(d.querySelector('#confirmBody [data-variant="near"]').getAttribute('aria-pressed'),'true','picked');d.getElementById('confirmOk').click();eq(s.homeType,'near','bought the flat near family');
  d.getElementById('moreClose').click();
  L.workPace(s,'hustle',24,'test');L.render();assert(!d.getElementById('hudPace').classList.contains('hidden'),'hustle badge shows');assert(/Hustle/.test(d.getElementById('hudPace').textContent),'badge text');
