@@ -274,6 +274,23 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .cb-note{font-size:11px;color:var(--muted);margin:2px 0 8px}
 .cb-take{margin:4px 0 0;padding-left:20px;font-size:14px}.cb-take li{margin:3px 0}
 .tc-class{margin:5px 0 0;font-size:11.5px;font-weight:800;color:#7A5A12}
+button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
+.hud-happy small{font:800 11px var(--sans);color:var(--danger-ink);white-space:nowrap}.hud-happy small:empty{display:none}
+.pit-cover{border:2px solid var(--gold);background:#FFF8E2;border-radius:14px;padding:8px 10px;margin:0 0 8px}.pit-cover>b{display:flex;gap:6px;align-items:center;font-size:14px}.pit-cover>small{display:block;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.pit-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px}.pit-opt{border:2px solid var(--line);border-radius:12px;background:var(--paper);padding:6px;text-align:center;min-height:44px}.pit-opt strong{display:block;font-size:13px}.pit-opt small{font-size:11px;color:var(--muted)}.pit-opt[aria-pressed="true"]{border-color:var(--forest);background:var(--sage)}
+.pit-wait{text-align:center;font-size:12px;color:var(--muted);margin:4px 0 0}
+.cover-sum{list-style:none;margin:8px 0 0;padding:8px 10px;background:#EEF4EC;border-radius:12px;font-size:12.5px}.cover-sum li{display:flex;gap:6px;align-items:center;padding:2px 0}.cover-sum li span{flex:1}.cover-sum li b{white-space:nowrap}
+.wizard{max-width:420px}.wiz-dots{display:flex;gap:6px;justify-content:center;margin:6px 0 4px}.wiz-dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.wiz-dots i.on{background:var(--forest);width:22px;border-radius:99px}.wiz-dots i.done{background:var(--sage-strong)}
+.wiz-step{text-align:center}.wiz-step.slide{animation:wizIn .35s ease-out}.wiz-emoji{font-size:44px;line-height:1;margin:4px 0;animation:wizBob 1.6s ease-in-out infinite}
+.wiz-step h2{margin:2px 0 4px}.wiz-opts{display:grid;gap:7px;text-align:left;margin:8px 0}
+.wiz-opt{display:flex;gap:9px;align-items:center;width:100%;min-height:48px;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:6px 10px;color:var(--ink)}.wiz-opt>span:not(.emoji):not(.rchip){flex:1;min-width:0;text-align:left}.wiz-opt .rchip{flex:0 0 auto}.wiz-opt strong{display:block;font-size:14px}.wiz-opt small{font-size:12px;color:var(--muted)}.wiz-opt[aria-pressed="true"]{border-color:var(--forest);background:var(--sage);transform:scale(1.02);transition:transform .15s}
+.wiz-budget{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#FFF8E2;border-radius:12px;padding:7px;font-size:11px;font-weight:700;color:var(--muted);text-align:center}.wiz-budget b{display:block;font-size:13.5px;color:var(--ink)}.wiz-budget .neg b{color:var(--danger-ink)}
+.link-btn{display:block;margin:8px auto 0;background:none;border:0;color:var(--muted);font-weight:700;text-decoration:underline;min-height:36px}
+@keyframes wizIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes wizBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media (prefers-reduced-motion:reduce){.wiz-step.slide,.wiz-emoji{animation:none}}
+.hp-rings{display:grid;gap:6px;margin:6px 0 10px}.hp-ring{display:grid;grid-template-columns:minmax(0,1.4fr) 2fr auto;gap:2px 8px;align-items:center;font-size:13px}.hp-ring>span{display:flex;gap:5px;align-items:center;font-weight:700}
+.hp-ring i{height:10px;border-radius:99px;background:#ECE6D8;overflow:hidden}.hp-ring i b{display:block;height:100%;background:var(--sage-strong)}.hp-ring.weak i b{background:var(--danger-ink)}.hp-ring small{grid-column:2/4;font-size:11px;color:var(--muted)}
+.hp-moves{list-style:none;padding:0;margin:4px 0 8px;font-size:13px}.hp-moves li{display:flex;justify-content:space-between;padding:3px 0;border-top:1px dashed #E2D6B5}.hp-moves b.up{color:#2F6B4A}.hp-moves b.down{color:var(--danger-ink)}
 .feedback p.lesson{background:#EEF0FA;border-radius:9px;padding:5px 8px;font-weight:700;color:#3B3F6B}
 .fail-lesson{background:#EEF0FA;border:2px solid #B9BEE3;border-radius:16px;padding:10px 12px;margin:12px 0}.fail-lesson h3{margin:0 0 4px}.fail-lesson p{margin:0;font-size:14px}
 .sip-steps{margin:8px 0;padding-left:20px;font-size:14px}.sip-steps li{margin:4px 0}
@@ -527,7 +544,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
   <canvas id="race" class="race-canvas" aria-hidden="true"></canvas>
   <div class="hud">
    <div class="hud-age"><small>AGE</small><b id="ageValue">23.0</b><span id="yearLap">YEAR 1 / 57</span></div>
-   <div class="hud-happy" id="hudHappy" role="img" aria-label="Happiness"><span class="emoji" aria-hidden="true">❤️</span><b id="happyValue">60</b></div>
+   <button type="button" class="hud-happy" id="hudHappy" aria-label="Happiness"><span class="emoji" aria-hidden="true">❤️</span><b id="happyValue">60</b><small id="happyLow"></small></button>
    <div class="hud-pace hidden" id="hudPace"></div>
    <div class="paused-tag hidden" id="pausedTag" aria-hidden="true">⏸ Paused<small>tap to resume</small></div>
    <div class="hud-banner hidden" id="banner" role="status"></div>
@@ -591,6 +608,11 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 <div class="overlay hidden" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
  <div class="dialog"><span class="sticker" id="confirmKicker">CONFIRM</span><h2 id="confirmTitle"></h2><div id="confirmBody"></div><div class="dialog-actions"><button type="button" class="secondary" id="confirmCancel">Cancel</button><button type="button" class="primary" id="confirmOk">Confirm</button></div></div>
 </div>
+<div class="overlay hidden" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
+ <div class="dialog wizard"><span class="sticker">YOUR LIFE, YOUR WAY</span><div id="wizBody"></div>
+  <div class="dialog-actions"><button type="button" class="secondary" id="wizBack">← Back</button><button type="button" class="primary" id="wizNext">Next →</button></div>
+  <button type="button" class="link-btn" id="wizSkip">Skip: keep this setup</button></div>
+</div>
 <div class="overlay hidden" id="sipInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="sipInfoTitle">
  <div class="dialog"><div class="end-art emoji" aria-hidden="true">🌱</div><span class="sticker">QUICK TIP</span><h2 id="sipInfoTitle">What’s a SIP?</h2>
   <p>A <b>Systematic Investment Plan</b>: a fixed amount moves from your savings into investments every month, automatically.</p>
@@ -649,14 +671,22 @@ const A=Object.freeze({
  maxEmiShare:0.5,              // a bank approves a new loan only if all EMIs stay within 50% of take-home pay
  sipOptions:[0,2000,5000,10000,25000,50000],sipMin:500,sipMax:1000000,
  failureMonths:6,              // six consecutive strained months end the run (see settleMonth)
- // Layoff: one month's notice pay plus 15 days' pay per completed year in the job (capped), then 3 months without salary.
- layoffMonths:3,noticeMonths:1,severancePerYear:0.5,severanceCapMonths:12,layoffCutPct:0.2,
+ // Layoff: one month's notice pay plus 15 days' pay per completed year in the job (capped), then a
+ // job search of 6–18 months (random, a little longer after 45). Or a lower-paid role at once.
+ layoffSearch:[6,18],noticeMonths:1,severancePerYear:0.5,severanceCapMonths:12,layoffCutPct:0.25,
+ // Expenses above take-home pay for 2 months in a row → a nudge to cut back (at most once a year).
+ overspend:{months:2,cooldown:12},
+ // Every life gets at least two big money shocks before 60: the first between 29 and 40, the next 8+ years later.
+ bigShocks:{first:[29,40],gap:8,last:57},
+ // Lifestyle creep: when take-home pay is 1.8× what it was when you last set your lifestyle, peers expect more.
+ creep:{ratio:1.8,cooldown:36},
  retireMinAge:40,retirePromptAge:60,
  homeUpgrade:{minAge:26,minXp:2,upfront:18000,monthly:8000},
- // Health cover pays 65% of eligible bills for everyone on the policy. It starts as
- // individual cover and becomes a family floater (spouse, children); parents are an
- // optional, expensive add-on. The premium also rises a little with age.
- healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:3000,ageLoading:0.015},
+ // Health cover pays 65% of eligible bills for everyone on the policy. You renew it
+ // yourself at a pit stop every 5 years or so (or it lapses). It covers only you until you
+ // renew it as family cover (spouse, children); parents are an optional, expensive add-on.
+ // The premium is set at each renewal from your age and who is on the policy.
+ healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:3000,ageLoading:0.015,renewMonths:36},  // renewal: at the first pit stop at least 3 years after buying
  // Term cover with a disability rider: level premium (locked at purchase, so buying young
  // is cheap), ₹1 crore cover in today's money, until 65. Pays out if an accident or
  // illness stops you working. The player never dies in this game.
@@ -761,6 +791,8 @@ function createState(){
   homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{},
   nextPitMonth:0,pitCount:0,lastPit:null,paceUntil:0,openers:{shock:0,bonus:0,social:0},
   // Ads (own seeded generator, so they never shift the main random stream) and the end-screen what-ifs.
+  overspendMonths:0,lastOverspendMonth:-999,lifestyleSaved:null,pendingTighten:false,pendingRestore:false,
+  bigShock:{due:[],count:0},coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
   adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
 }
@@ -792,18 +824,26 @@ function activeChildren(s=state){return s.children.filter(c=>s.month<c.birthMont
 function childAge(c,s=state){return (s.month-c.birthMonth)/12;}
 function inSchool(c,s=state){const a=childAge(c,s);return !!c.school&&a>=A.schoolYears[0]&&a<A.schoolYears[1];}
 // Health premium (base-year rupees): grows with the people on the policy and a little with age.
-function healthPremiumBase(s=state){
- const H=A.healthCover,kids=activeChildren(s).length;
- return Math.round((H.premium+(s.married?H.spouse:0)+kids*H.child+(s.parentsCovered?H.parents:0))*(1+H.ageLoading*Math.max(0,preciseAge(s)-A.startAge)));
+// A quote for a new or renewed policy; family = spouse and children on it too.
+function healthQuoteBase(s=state,family=s.coverFamily||!s.insured,parents=s.parentsCovered){
+ const H=A.healthCover,kids=family?activeChildren(s).length:0;
+ return Math.round((H.premium+(family&&s.married?H.spouse:0)+kids*H.child+(parents?H.parents:0))*(1+H.ageLoading*Math.max(0,preciseAge(s)-A.startAge)));
 }
+function healthPremiumBase(s=state){return s.insured&&s.coverBase?s.coverBase:healthQuoteBase(s);}
 function healthPremium(s=state){return s.insured?priced(healthPremiumBase(s),s):0;}
+// Buy (or renew) health cover: the premium is fixed until the next renewal, 3 years later.
+function pitMonthAfter(m){const first=monthAtAge(A.pit.firstAge);return m<=first?first:first+Math.ceil((m-first)/A.pit.everyMonths)*A.pit.everyMonths;}
+function startCover(s,family){s.insured=true;s.coverFamily=!!family;s.coverBase=healthQuoteBase(s,s.coverFamily,s.parentsCovered);s.coverRenewMonth=pitMonthAfter(Math.max(1,s.month)+A.healthCover.renewMonths);}
+function coverRenewalDue(s=state){return s.insured&&s.coverRenewMonth>0&&s.month>=s.coverRenewMonth;}
+function endCover(s){s.insured=false;s.parentsCovered=false;s.coverFamily=false;s.coverBase=0;s.coverRenewMonth=0;}
+function familyOnCover(s=state){return s.insured&&(s.coverFamily||(!s.married&&!activeChildren(s).length));}
 // Term premium is quoted at today's prices for your current age and then stays fixed for life.
 function termQuote(s=state){return {premium:Math.round(priced(A.term.premiumAt23,s)*Math.pow(1+A.term.ageLoading,Math.max(0,preciseAge(s)-A.term.minAge))),cover:priced(A.term.cover,s)};}
 function termPremium(s=state){const t=s.termCover;return t&&s.month<t.untilMonth?t.premium:0;}
 function emiDue(loan){if(!loan)return 0;const interest=Math.round(loan.balance*(loan.rate||A.vehicleLoanMonthlyRate));return loan.monthsLeft<=1?loan.balance+interest:Math.min(loan.emi,loan.balance+interest);}
 function debtMinimum(s=state){const b=s.unsecuredDebt;if(b<=0)return 0;const interest=Math.round(b*A.unsecuredMonthlyRate);return Math.min(b+interest,Math.max(priced(A.debtMinFloor,s),Math.round(b*A.debtMinRate)));}
 function totalDebt(s=state){return s.unsecuredDebt+sum(LOANS.map(([k])=>s[k]?s[k].balance:0));}
-function netWorth(s=state){return s.cash+s.invested+(s.ownsHome?s.homeValue:0)-totalDebt(s);}
+function netWorth(s=state){return s.cash+s.invested+(s.ownsHome?s.homeValue:0)+(s.policy?s.policy.value:0)-totalDebt(s);}
 function activeSip(s=state){return s.employment==='employed'?s.sip:0;}
 function severanceMonths(s=state){const yrs=Math.max(0,Math.floor((s.month-s.jobStartMonth)/12));return {years:yrs,months:Math.min(A.severanceCapMonths,A.noticeMonths+A.severancePerYear*yrs)};}
 function houseSpec(type){return BASE_PRICES.house[type]||BASE_PRICES.house.society;}
@@ -828,7 +868,8 @@ function monthlyBudget(s=state){
  add('fuel','Fuel',priced(s.costs.fuel,s),'living');
  add('other','Other recurring',priced(s.costs.other,s),'living');
  add('homeUpgrade','Home upgrade',priced(s.costs.homeUpgrade,s),'fixed');
- add('insurance',(s.married||activeChildren(s).length?'Family health cover':'Health cover')+(s.parentsCovered?' + parents':''),healthPremium(s),'fixed');
+ add('insurance',(s.coverFamily&&(s.married||activeChildren(s).length)?'Family health cover':'Health cover')+(s.parentsCovered?' + parents':''),healthPremium(s),'fixed');
+ add('policy','3-in-1 insurance plan',s.policy&&s.month<s.policy.paidUntil?s.policy.premium:0,'fixed');
  add('term','Term cover premium',termPremium(s),'fixed');
  add('pet','Pet care',priced(s.costs.pet,s),'fixed');
  add('household','Spouse’s living costs',priced(s.costs.household,s),'fixed');
@@ -943,10 +984,16 @@ function tickRings(s=state){
  s.lowMeMonths=s.rings.me<A.burnout.lowMe?s.lowMeMonths+1:0;
 }
 // ❤️ Happiness, the one number players see: 60% the weakest ring, 40% the average.
-function happiness(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return Math.round(0.6*Math.min(...v)+0.4*sum(v)/3);}
+// The raw mix (60% weakest ring + 40% average) lives between about 15 and 65, so it is
+// stretched onto 0–100: a typical start shows about 50, a well-balanced life 75–90.
+function happyRaw(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return 0.6*Math.min(...v)+0.4*sum(v)/3;}
+function happyScale(raw){return clamp((raw-15)*2,0,100);}
+function happiness(s=state){return Math.round(happyScale(happyRaw(s)));}
+// The ring holding happiness down most (for the HUD hint and the ❤️ panel).
+function weakestRing(s=state){const k=RING_KEYS.reduce((a,k)=>s.rings[k]<s.rings[a]?k:a,'me'),r=RINGS.find(x=>x[0]===k);return{key:k,label:r[1],emoji:r[2],value:Math.round(s.rings[k]),low:s.rings[k]<A.rings.low};}
 // Lifetime happiness: the average over every month of a full life (months you never reach count as 0).
 function lifeHappiness(s=state){return Math.round(s.score*10/(A.endMonth-1));}
-function monthPoints(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return (0.6*Math.min(...v)+0.4*sum(v)/3)/10;}
+function monthPoints(s=state){return happyScale(happyRaw(s))/10;}
 function ringAverages(s=state){const n=Math.max(1,s.ringMonths),o={};RING_KEYS.forEach(k=>{o[k]=s.ringMonths?s.ringSum[k]/n:s.rings[k];});return o;}
 // One-off ring bumps per event choice: [Me, Family & Friends, Community]. '*' applies to any choice.
 const RING_FX={
@@ -981,7 +1028,10 @@ const RING_FX={
  layoff:{search:[-6,0,0],cut:[-8,0,0]},
  retire:{retire:[6,6,4]},
  burnout:{break:[25,4,0],slow:[10,4,2],push:[-5,-2,0]},
- squeeze:{slow:[2,15,0],push:[0,-5,0]}
+ squeeze:{slow:[2,15,0],push:[0,-5,0]},
+ overspend:{basics:[-6,-2,-1],trim:[-2,0,0]},tighten:{basics:[-6,-2,-1],trim:[-2,0,0]},restore:{back:[4,2,0]},
+ creep:{up:[5,3,0],same:[0,-3,0]},illness:{'*':[-8,3,0]},flood:{'*':[-5,0,4]},
+ clash:{gig:[-2,-10,0],family:[3,8,0]},windfall:{treat:[5,0,0]},award:{'*':[4,0,0]}
 };
 function ringEffect(type,choiceId){
  const t=RING_FX[type]||{},v=t[choiceId]||t['*']||(choiceId==='borrow'?[-3,0,0]:null);
@@ -995,10 +1045,10 @@ function lifeEnding(s=state){
  const a=ringAverages(s),H=lifeHappiness(s),w=realNetWorth(s),rich=w>=1e7,comfy=w>=4e6,weak=RING_KEYS.slice().sort((x,y)=>a[x]-a[y])[0];
  const e=(key,emoji,title,line)=>({key,emoji,title,line,avg:a,happy:H,weakest:weak,weakArea:WEAK_AREA[weak]});
  if(s.finalReason==='insolvent')return e('broke','💸','Lived Fast, Ran Out of Fuel','The money ran dry before the finish line.');
- if(H>=55&&rich)return e('legend','🏆','Rich and Happy','Plenty of money and a life you enjoyed. That is the win.');
- if(H>=55)return e('heart','😊','Happy Heart','Rich in the ways that count, even if the bank balance stayed modest.');
- if(H<40&&rich)return e('restless','💼','Rich but Restless','The money piled up, but the joy did not. Most of what was missing: '+WEAK_AREA[weak]+'.');
- if(H<40)return e('tough','🌧️','A Tough Road','Money was tight and happiness was hard to find. Next life, try a little more '+WEAK_AREA[weak]+'.');
+ if(H>=65&&rich)return e('legend','🏆','Rich and Happy','Plenty of money and a life you enjoyed. That is the win.');
+ if(H>=65)return e('heart','😊','Happy Heart','Rich in the ways that count, even if the bank balance stayed modest.');
+ if(H<45&&rich)return e('restless','💼','Rich but Restless','The money piled up, but the joy did not. Most of what was missing: '+WEAK_AREA[weak]+'.');
+ if(H<45)return e('tough','🌧️','A Tough Road','Money was tight and happiness was hard to find. Next life, try a little more '+WEAK_AREA[weak]+'.');
  if(rich||comfy)return e('comfy','💰','Comfortably Off','Money worked out. Happiness was fine, held back mostly by too little '+WEAK_AREA[weak]+'.');
  return e('steady','🚗','Steady Cruiser','A steady life. More '+WEAK_AREA[weak]+' would have made it a happier one.');
 }
@@ -1059,6 +1109,9 @@ function settleMonth(s=state){
  if(sip>0){if(unpaid===0&&missed===0&&s.cash>=sip){s.cash-=sip;s.invested+=sip;out.sip=sip;s.stats.sipInvested+=sip;}else{out.sipSkipped=true;s.stats.sipSkipped+=1;}}
  if(unpaid>0||missed>0){s.distressMonths+=1;s.stats.strainedMonths+=1;s.stats.maxDistress=Math.max(s.stats.maxDistress,s.distressMonths);}
  else{if(s.distressMonths>0)s.stats.recoveries+=1;s.distressMonths=0;}
+ if(s.policy){const p=s.policy;p.value=Math.round(p.value*(1+p.rate/12)+(s.month<p.paidUntil&&unpaid===0?p.premium:0));
+  if(s.month>=p.matureMonth){s.cash+=p.value;out.policyPaid=p.value;record('The 3-in-1 insurance plan matured at '+ageLabel(s)+': '+money(p.value)+' paid out after '+money(p.paid)+' in premiums.',{kind:'cover'});s.policy=null;}
+  else if(s.month<p.paidUntil)p.paid+=p.premium;}
  s.stats.peakNetWorth=Math.max(s.stats.peakNetWorth,netWorth(s));
  whatIfAdd(s,out,budget.total);
  s.lastSettlement=out;
@@ -1294,9 +1347,9 @@ const EVENTS={
  /* ---- health & family ---- */
  medical:{kicker:'HEALTH SCARE',art:'🤒',snapshot:true,severe:true,
   create:s=>{const kids=activeChildren(s).length,r=rand(),who=s.married&&r<0.35?'spouse':kids&&r>=0.35&&r<0.6?'child':'you';
-   const total=priced(randInt(18,60)*1000),amount=s.insured?Math.round(total*(1-A.healthCover.coveredShare)):total;
+   const total=priced(randInt(18,60)*1000),cov=s.insured&&(who==='you'||s.coverFamily),amount=cov?Math.round(total*(1-A.healthCover.coveredShare)):total;
    const title={you:pick(['An unexpected medical bill.','Dengue season got you.','Your back gave up mid-sneeze.']),spouse:pick(['Your spouse needs surgery.','Your spouse is in hospital.']),child:pick(['Your kid broke an arm at the playground.','Your child has a high fever: hospital time.'])}[who];
-   return{who,title,art:{you:'🤒',spouse:'🏥',child:'🩹'}[who],amount,total,description:'A hospital bill of '+money(total)+' arrived.'+(s.insured?' Your '+(s.married||kids?'family ':'')+'health cover pays 65%, so your share is '+money(amount)+'.':' Without health cover, you pay all of it.'),foot:'Health cover lowers eligible bills; it never removes every cost.'};},
+   return{who,title,art:{you:'🤒',spouse:'🏥',child:'🩹'}[who],amount,total,description:'A hospital bill of '+money(total)+' arrived.'+(cov?' Your health cover pays 65%, so your share is '+money(amount)+'.':s.insured?' Your cover is for you only (never renewed as family cover), so you pay all of it.':' Without health cover, you pay all of it.'),foot:'Health cover lowers eligible bills; it never removes every cost.'};},
   choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
  parentmedical:{kicker:'FAMILY HEALTH',art:'🏥',titles:['Your parent needs medical care.','A call from home: your parent is in hospital.'],snapshot:true,severe:true,
   eligible:s=>preciseAge(s)>=30&&preciseAge(s)<65,
@@ -1326,7 +1379,7 @@ const EVENTS={
    record('Married at '+ageLabel()+' ('+(c==='big'?'big fat wedding':'intimate wedding')+').',{major:true,kind:'family'});
    celebrate('wedding','💞','Just married!','Family costs start next month');
    const left=monthlyBudget(s).leftover;
-   return{text:'You got married! The wedding cost '+money(cost)+(r.borrowed?', '+money(r.borrowed)+' of it as debt':'')+'; your spouse’s living costs add '+money(e.monthly)+' a month.'+(s.insured?' Health cover is now a family policy.':''),
+   return{text:'You got married! The wedding cost '+money(cost)+(r.borrowed?', '+money(r.borrowed)+' of it as debt':'')+'; your spouse’s living costs add '+money(e.monthly)+' a month.'+(s.insured?' Your health cover still covers only you: renew it as family cover.':''),
     feedback:r.borrowed>0?fb('risky','Part of the wedding became debt at 1% a month, which follows you into married life.'):left<monthlyIncome(s)*0.1?fb('risky','Your new monthly costs leave very little left over, so surprises will be harder to absorb.'):c==='big'?fb('solid','A memorable start you could afford. It used savings that could otherwise have kept growing.'):fb('great','An intimate celebration kept more of your savings for the life you are building together.')};}},
  kidsQ:{kicker:'BABY TALK',art:'🍼',life:true,titles:['Kids: how many?','Your parents keep dropping “grandchild” hints.','Your friends’ babies are all over your feed.'],snapshot:true,
   create:()=>({monthly:priced(9000),description:'Each child costs about '+money(priced(9000))+' a month (rising with inflation) until 21, plus a hospital bill at birth and school fees from age 4.',foot:'A personal choice. Costs are illustrative.'}),
@@ -1335,8 +1388,8 @@ const EVENTS={
    record(n?'Planned '+(n===1?'one child':'two children')+' at '+ageLabel()+'.':'Decided on no kids at '+ageLabel()+'.',{kind:'family'});
    return{text:n?'Baby plans: '+n+'. The countdown begins.':'No kids. More naps.',feedback:fb('solid',n?'Kids are a long, joyful commitment. Building a cushion before they arrive helps a lot.':'A personal choice. Fewer recurring costs leave more room to save and to live.')};}},
  birth:{kicker:'IT’S TIME!',art:'👶',life:true,titles:['The baby is coming! Hospital, now!','Bag packed? Almost. The baby is on the way!'],snapshot:true,
-  create:s=>{const n=s.children.length,cov=s.insured?1-A.healthCover.coveredShare:1,bigTotal=priced(90000),smallTotal=priced(15000);
-   return{n,big:Math.round(bigTotal*cov),small:Math.round(smallTotal*cov),description:(n?'Baby number two is on the way!':'Your first baby is on the way!')+(s.insured?' Your health cover pays 65% of the hospital bill.':' Without health cover, the hospital bill is all yours.')+' Then about '+money(priced(n?7000:9000))+' a month until they turn 21.',foot:'A new life, a new budget line.'};},
+  create:s=>{const n=s.children.length,cov=s.insured&&s.coverFamily?1-A.healthCover.coveredShare:1,bigTotal=priced(90000),smallTotal=priced(15000);
+   return{n,big:Math.round(bigTotal*cov),small:Math.round(smallTotal*cov),description:(n?'Baby number two is on the way!':'Your first baby is on the way!')+(s.insured&&s.coverFamily?' Your family health cover pays 65% of the hospital bill.':' Without health cover, the hospital bill is all yours.')+' Then about '+money(priced(n?7000:9000))+' a month until they turn 21.',foot:'A new life, a new budget line.'};},
   choices:e=>[{id:'bigHospital',emoji:'🏥',title:'Private hospital, private room',detail:'Your share: '+spendDetail(e.big)},{id:'govHospital',emoji:'🩺',title:'Government hospital',detail:'Your share: '+spendDetail(e.small)}],
   resolve:(e,c)=>{const s=state,amt=c==='bigHospital'?e.big:e.small,r=fundExpense(amt,'savings');
    s.children.push({birthMonth:s.month,base:s.children.length?7000:9000,school:null});s.life.nextBirthMonth=0;
@@ -1377,7 +1430,7 @@ const EVENTS={
   choices:e=>fundingChoices(e.amount),
   resolve:(e,c)=>{const s=state;
    if(e.payout){s.cash+=e.payout;s.stats.claims+=e.payout;record('Term cover paid '+money(e.payout)+' after an accident at '+ageLabel()+'.',{major:true,kind:'cover'});}
-   const r=fundExpense(e.amount,c);s.employment='laidoff';s.breakReason='recovery';s.laidOffMonthsLeft=A.recoveryMonths;
+   const r=fundExpense(e.amount,c);s.employment='laidoff';s.breakReason='recovery';s.laidOffMonthsLeft=A.recoveryMonths;s.pendingTighten=true;
    record('Serious accident at '+ageLabel()+': '+A.recoveryMonths+' months off work.',{major:true,kind:'health'});
    const cover=s.cash/Math.max(1,monthlyBudget(s).total);
    return{text:(e.payout?'Term cover paid '+money(e.payout)+'. ':'')+r.text+' Salary pauses for '+A.recoveryMonths+' months.',
@@ -1389,11 +1442,11 @@ const EVENTS={
  layoff:{kicker:'CAREER SHOCK',art:'📦',titles:['Your role has been eliminated.','“Can we talk? Bring your laptop.”'],snapshot:true,severe:true,
   eligible:s=>{const a=preciseAge(s);return s.employment==='employed'&&a>=24&&a<58&&s.month-s.lastLayoffMonth>=60;},
   weight:s=>s.month<s.startupUntil?3:1,
-  create:s=>{const sv=severanceMonths(s),amount=Math.round(s.salary*sv.months);return{severance:amount,severanceMonths:sv.months,description:'A restructure has left you without a role. Severance: 1 month’s notice pay + 15 days’ pay for each of your '+sv.years+' full year'+(sv.years===1?'':'s')+' here = '+sv.months+' month'+(sv.months===1?'':'s')+' of your '+money(s.salary)+' salary = '+money(amount)+'.',foot:'Expenses and debt payments continue either way. Reserves buy time.'};},
-  choices:(e,s)=>[{id:'search',emoji:'🔎',title:'Take severance and search',detail:'Receive '+money(e.severance)+' once. No salary for 3 months; then you return at your current pay of '+money(s.salary)+'.'},{id:'cut',emoji:'🧑‍🔧',title:'Take a lower-paid role now',detail:'Severance is paid either way: '+money(e.severance)+'. No gap in income, but pay drops 20% to '+money(Math.round(s.salary*(1-A.layoffCutPct)))+' a month.'}],
+  create:s=>{const sv=severanceMonths(s),amount=Math.round(s.salary*sv.months),search=Math.min(A.layoffSearch[1],xInt(s,A.layoffSearch[0],A.layoffSearch[1])+(preciseAge(s)>=45?xInt(s,0,4):0));return{severance:amount,severanceMonths:sv.months,search,description:'Severance: '+sv.months+' month'+(sv.months===1?'':'s')+' of pay ('+money(amount)+'). Finding a similar job could take 6 to 18 months.',foot:'Expenses and debt payments continue either way. Reserves buy time.'};},
+  choices:(e,s)=>[{id:'search',emoji:'🔎',title:'Take severance and search',detail:'Get '+money(e.severance)+'. No salary until a new job: 6 to 18 months.'},{id:'cut',emoji:'🧑‍🔧',title:'Take a lower-paid role now',detail:'Get '+money(e.severance)+'. No gap, but pay drops 25% to '+money(Math.round(s.salary*(1-A.layoffCutPct)))+'.'}],
   resolve:(e,c)=>{const s=state;s.lastLayoffMonth=s.month;s.cash+=e.severance;s.startupUntil=0;
-   if(c==='search'){const cover=s.cash/Math.max(1,monthlyBudget(s).total);s.employment='laidoff';s.laidOffMonthsLeft=A.layoffMonths;record('Laid off at '+ageLabel()+'; took '+money(e.severance)+' severance and searched for 3 months.',{major:true,kind:'career'});
-    return{text:'Severance of '+money(e.severance)+' added to savings. Salary pauses for 3 months; expenses do not.',feedback:cover>=3?fb('solid','Your savings plus severance cover about '+cover.toFixed(1)+' months of expenses, enough to search without new debt.'):fb('risky','Savings plus severance cover only about '+cover.toFixed(1)+' months of expenses. A three-month gap may turn into debt.')};}
+   if(c==='search'){const cover=s.cash/Math.max(1,monthlyBudget(s).total);s.employment='laidoff';s.laidOffMonthsLeft=e.search;s.pendingTighten=true;record('Laid off at '+ageLabel()+'; took '+money(e.severance)+' severance and started a job search.',{major:true,kind:'career'});
+    return{text:'Severance of '+money(e.severance)+' added to savings. Salary stops until you find a job; expenses do not.',feedback:cover>=12?fb('great','Your savings plus severance cover about '+cover.toFixed(0)+' months of expenses. A long search will not break you.'):cover>=6?fb('solid','Savings plus severance cover about '+cover.toFixed(0)+' months of expenses. A long search could still eat into investments.'):fb('risky','Savings plus severance cover only about '+cover.toFixed(1)+' months of expenses. A search of 6 to 18 months will need investments or debt.')};}
    const before=s.salary;s.salary=Math.round(s.salary*(1-A.layoffCutPct));s.jobStartMonth=s.month;record('Laid off at '+ageLabel()+'; took '+money(e.severance)+' severance and a 20% pay cut to keep working.',{major:true,kind:'career'});
    return{text:'Severance of '+money(e.severance)+' added to savings. Pay is now '+money(s.salary)+' (was '+money(before)+').',feedback:fb('solid','Steady income lowers risk now. The lower pay compounds too: future raises start from a smaller base.')};}},
  retire:{kicker:'A NEW CHAPTER',art:'🌅',title:'Retire now?',snapshot:true,
@@ -1420,10 +1473,25 @@ const EVENTS={
 /* ---------- Health cover offer: a card in month 2 (and now and then later) while you have none ---------- */
 EVENTS.insureoffer={kicker:'RING RING',art:'🛡️',titles:['An insurance agent calls. Again.','HR asks: “Want health cover too?”','Your aunt sells insurance now.'],weight:0.6,
  eligible:s=>!s.insured&&s.employment==='employed',
- create:s=>{const premium=priced(healthPremiumBase(s),s);return{premium,description:'Health cover for '+money(premium)+' a month pays 65% of hospital bills. One hospital stay can cost lakhs.',foot:'Insurance is boring until the day it is not.'};},
+ create:s=>{const premium=priced(healthQuoteBase(s,true,false),s);return{premium,description:'Health cover for '+money(premium)+' a month pays 65% of hospital bills. One hospital stay can cost lakhs.',foot:'Insurance is boring until the day it is not.'};},
  choices:e=>[{id:'yes',emoji:'🛡️',title:'Cover me',detail:money(e.premium)+'/month. Hospital bills shrink by 65%.'},{id:'no',emoji:'🎲',title:'Skip it',detail:'₹0 now. Every medical bill is all yours.'}],
  resolve:(e,c)=>{const s=state;if(c==='no')return{text:'No cover for now. Fingers crossed.',feedback:fb('risky','You saved a small premium but carry the full risk of a big hospital bill.')};
-  s.insured=true;record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month.',feedback:fb('great','A small fixed cost that turns a ruinous hospital bill into a manageable one.')};}};
+  startCover(s,true);record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month for 3 years.',feedback:fb('great','A small fixed cost that turns a ruinous hospital bill into a manageable one.')};}};
+/* ---------- Health cover renewal: every 3 years, never automatic ---------- */
+EVENTS.renewCover={kicker:'POLICY RENEWAL',art:'🛡️',
+ create:s=>{const old=healthPremium(s),canFam=!s.coverFamily&&(s.married||activeChildren(s).length>0);
+  return{old,same:priced(healthQuoteBase(s,s.coverFamily,s.parentsCovered),s),fam:priced(healthQuoteBase(s,true,s.parentsCovered),s),canFam,
+   title:'Your family is not on your health cover.',
+   description:'Your policy covers only you. Renew it now as family cover, or keep it as it is. You pay '+money(old)+' a month now.',
+   foot:'Lapsed cover means every hospital bill is yours.'};},
+ choices:e=>{const c=[];if(e.canFam)c.push({id:'family',emoji:'👨‍👩‍👧',title:'Renew as family cover',detail:money(e.fam)+'/month. Spouse and kids covered too.'});
+  c.push({id:'keep',emoji:'🧍',title:'Keep it for me only',detail:'Spouse and kids stay uncovered.'});return c;},
+ resolve:(e,c)=>{const s=state;
+  if(c==='keep')return{text:'Your cover stays for you only.',feedback:fb('risky','Your spouse and kids are not covered. Their hospital bills are yours.')};
+  startCover(s,true);record((c==='family'?'Renewed health cover as family cover':'Renewed health cover')+' at '+ageLabel()+': '+money(healthPremium(s))+'/month.',{kind:'cover'});
+  return{text:'Family cover: '+money(healthPremium(s))+' a month.',feedback:fb('great','Now a hospital bill for your spouse or kids is covered too.')};}};
+// The pit stop's renewal row: {old, same, fam, canFam} or null when nothing is due.
+function renewalQuote(s=state){if(!coverRenewalDue(s))return null;const canFam=!s.coverFamily&&(s.married||activeChildren(s).length>0);return{old:healthPremium(s),same:priced(healthQuoteBase(s,s.coverFamily,s.parentsCovered),s),fam:priced(healthQuoteBase(s,true,s.parentsCovered),s),canFam};}
 /* ---------- Pit stop: every 5 years (see A.pit) ---------- */
 // One stop for reflection: a lap report (rings, points, one line about the last
 // five years, one tip) and one screen to change pace, lifestyle and SIP together.
@@ -1500,6 +1568,101 @@ Object.assign(EVENTS,{
     return{text:'You bought '+e.item+'. '+r.text,feedback:r.borrowed||monthsOfCushion(s)<A.cushionMonths?lessonFb(s,why,LISTEN,true):fb('missed',why)};}
    return{text:'Scrolled past.',feedback:fb('great','Your class is your net worth, not your stuff.'+adNoteFV(s,e.price))};}}
 });
+/* ---------- Insurance ads: a genuine one (what you are missing) and a misleading 3-in-1 plan ---------- */
+function coverAdKind(s){const a=preciseAge(s);if(!s.insured)return 'insure';if(!s.termCover&&(s.married||activeChildren(s).length)&&a<=A.term.maxAge)return 'term';if(!s.parentsCovered&&a>=30&&a<60)return 'parentsCover';return null;}
+Object.assign(EVENTS,{
+ adCover:{kicker:AD_KICKER,art:'🛡️',ad:true,weight:1.3,
+  eligible:s=>s.employment==='employed'&&!!coverAdKind(s),
+  create:s=>{const k=coverAdKind(s),m=OPTIONAL[k].monthly(s),q=termQuote(s);return{kind:k,monthly:m,art:OPTIONAL[k].emoji,
+   title:{insure:'“One hospital bill can wipe out '+compact(Math.max(s.cash,priced(100000,s)))+'. Get covered from '+money(m)+'/month.”',term:'“Who pays the EMIs if you can’t? '+compact(q.cover)+' cover for '+money(m)+'/month.”',parentsCover:'“Your parents are getting older. Cover them before premiums jump!”'}[k],
+   description:{insure:'Pays 65% of hospital bills.',term:'Pays out if an accident stops you working.',parentsCover:'Pays 65% of your parents’ hospital bills.'}[k],foot:'Insurance protects what you have built.'};},
+  choices:e=>[{id:'buy',emoji:e.art,title:'Buy it: '+money(e.monthly)+'/month',detail:'Starts next month.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
+  resolve:(e,c)=>{const s=state;if(c==='buy'&&!OPTIONAL[e.kind].available(s))return OPTIONAL[e.kind].apply(s);
+   return{text:'Scrolled past.',feedback:fb(e.kind==='parentsCover'?'solid':'risky',{insure:'No health cover: one hospital stay could take years of savings.',term:'Your family relies on your pay. Term cover is cheapest the younger you buy it.',parentsCover:'Senior cover is expensive. Without it, a parent’s hospital bill is yours to handle.'}[e.kind])};}},
+ adPolicy:{kicker:AD_KICKER,art:'🎁',ad:true,weight:1.1,
+  eligible:s=>s.employment==='employed'&&!s.policy&&preciseAge(s)<50&&monthlyBudget(s).leftover>priced(6000,s),
+  create:s=>{const b=monthlyBudget(s),premium=Math.max(priced(2000,s),Math.round(Math.min(b.leftover*0.35,priced(10000,s))/500)*500);return{premium,
+   title:adPick(s,['“Insurance + guaranteed returns + tax saving! Just '+money(premium)+'/month.”','“Your '+compact(s.cash)+' earns nothing. Our plan guarantees returns AND covers your life!”']),
+   description:'A “3-in-1” plan from your bank’s relationship manager. Pay for 10 years, get paid at 15.',foot:'Insurance and investing work better apart.'};},
+  choices:e=>[{id:'sign',emoji:'✍️',title:'Sign up: '+money(e.premium)+'/month',detail:'10 years of premiums. Quitting early returns 30%.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
+  resolve:(e,c)=>{const s=state;
+   if(c==='sign'){s.policy={premium:e.premium,paidUntil:s.month+120,matureMonth:s.month+180,rate:0.045,value:0,paid:0};s.whatIf.adBuys.push('3-in-1 insurance plan');record('Signed up for a '+money(e.premium)+'/month 3-in-1 insurance plan at '+ageLabel()+'.',{major:true,kind:'cover'});
+    return{text:'Signed up: '+money(e.premium)+' a month for 10 years. Payout at '+Math.floor(preciseAge(s)+15)+'.',feedback:lessonFb(s,'A 3-in-1 plan does both jobs badly: about 4–5% a year, locked for 15 years, with little real cover. Term cover plus a SIP does both better.',LISTEN,true)};}
+   return{text:'Scrolled past.',feedback:fb('great','Keeping insurance and investing separate is the cheaper, better deal.')};}}
+});
+/* ---------- Lifestyle decisions: cut back when money is short, go back when it returns ---------- */
+const STEP_DOWN={food:{foodie:'balanced',balanced:'home',home:'home'},social:{big:'regular',regular:'quiet',quiet:'quiet'},home:{premium:'comfort',comfort:'starter',starter:'starter'}};
+// level 'basics': the cheapest life that fits your family; 'trim': one step down on food and weekends, no extras.
+function cutPlan(s,level){
+ const p=s.profile,kids=activeChildren(s).length,want={other:'none'};
+ if(level==='basics'){want.food='home';want.social='quiet';if(!s.ownsHome)want.home=kids>=2?(p.home==='premium'?'comfort':p.home):'starter';}
+ else{want.food=STEP_DOWN.food[p.food];want.social=STEP_DOWN.social[p.social];}
+ const changes=['home','food','social','other'].filter(k=>want[k]&&want[k]!==(p[k]||'none')).map(k=>[k,want[k]]);
+ const copy=JSON.parse(JSON.stringify(s));changes.forEach(([k,v])=>applyExpenseTo(copy,k,v));
+ const P=BASE_PRICES,names={home:v=>P.home[v].label,food:v=>P.food[v].label.toLowerCase(),social:v=>P.social[v].label.toLowerCase(),other:()=>'no extras'};
+ return{changes,saving:monthlyBudget(s).total-monthlyBudget(copy).total,label:changes.map(([k,v])=>names[k](v)).join(', ')};
+}
+function applyCut(s,plan){if(!s.lifestyleSaved)s.lifestyleSaved={home:s.profile.home,food:s.profile.food,social:s.profile.social,other:s.profile.other||'none'};plan.changes.forEach(([k,v])=>applyExpenseTo(s,k,v));record('Cut back at '+ageLabel()+': '+plan.label+' (saves '+money(plan.saving)+'/month).',{major:true,kind:'budget'});}
+function cutChoices(e,keepDetail){const c=[];
+ if(e.trim.changes.length)c.push({id:'trim',emoji:'✂️',title:'Trim: '+e.trim.label,detail:'Saves '+money(e.trim.saving)+' a month.'});
+ if(e.basics.changes.length&&e.basics.saving>e.trim.saving)c.push({id:'basics',emoji:'🧺',title:'Cut to basics: '+e.basics.label,detail:'Saves '+money(e.basics.saving)+' a month.'});
+ return c.concat(keepDetail);}
+Object.assign(EVENTS,{
+ overspend:{kicker:'MONEY CHECK',art:'📉',title:'You spent more than you earned, two months running.',
+  create:s=>{const b=monthlyBudget(s);s.lastOverspendMonth=s.month;s.overspendMonths=0;return{basics:cutPlan(s,'basics'),trim:cutPlan(s,'trim'),description:'Expenses '+money(b.total)+', take-home '+money(b.income)+': '+money(b.total-b.income)+' short every month. Savings are filling the gap.',foot:'You can change rent, food, weekends, extras and commute any time in More → Monthly plan.'};},
+  choices:e=>cutChoices(e,[{id:'more',emoji:'🧾',title:'Let me choose in More',detail:'Opens your monthly plan.'},{id:'keep',emoji:'🫠',title:'Keep living as I do',detail:'The gap keeps coming out of savings.'}]),
+  resolve:(e,c)=>{const s=state;
+   if(c==='trim'||c==='basics'){applyCut(s,e[c]);const b=monthlyBudget(s);return{text:'New monthly expenses: '+money(b.total)+'.',feedback:b.leftover>=0?fb('great','Back within your pay. Spending less than you earn is the whole game.'):fb('solid','Better, but still short each month. Look at EMIs and fixed costs in More too.')};}
+   if(c==='more'){return{openPlan:true,text:'Your monthly plan is open: pick what to change.',feedback:fb('solid','Rent, food, weekends, extras and commute are all yours to change.')};}
+   return{text:'Nothing changed. The gap comes out of savings again next month.',feedback:fb('risky','Spending more than you earn drains savings, then investments, then becomes debt.')};}},
+ tighten:{kicker:'NO SALARY',art:'🧮',
+  create:s=>{s.pendingTighten=false;const b=monthlyBudget(s),assets=Math.max(0,s.cash+s.invested),run=m=>Math.floor(assets/Math.max(1,m));const basics=cutPlan(s,'basics'),trim=cutPlan(s,'trim');
+   return{basics,trim,runNow:run(b.total),runTrim:run(b.total-trim.saving),runBasics:run(b.total-basics.saving),title:s.breakReason==='recovery'?'No salary while you recover. Change how you live?':'No salary until a new job. Change how you live?',
+    description:'Expenses '+money(b.total)+' a month. Savings and investments last about '+run(b.total)+' months.',foot:'You can go back to your old lifestyle once the salary returns.'};},
+  choices:e=>{const c=cutChoices(e,[{id:'keep',emoji:'🫡',title:'Keep living as I do',detail:'Lasts about '+e.runNow+' months.'}]);c.forEach(x=>{if(x.id==='trim')x.detail+=' Lasts about '+e.runTrim+' months.';if(x.id==='basics')x.detail+=' Lasts about '+e.runBasics+' months.';});return c;},
+  resolve:(e,c)=>{const s=state;
+   if(c==='trim'||c==='basics'){applyCut(s,e[c]);return{text:'New monthly expenses: '+money(monthlyBudget(s).total)+'.',feedback:fb('great','Cutting back early makes your savings last much longer while there is no salary.')};}
+   return{text:'Same lifestyle, no salary.',feedback:e.runNow>=18?fb('solid','Your reserves can carry this for a while. Watch them.'):fb('risky','Your reserves last about '+e.runNow+' months. A long search could turn into debt.')};}},
+ restore:{kicker:'BACK AT WORK',art:'💼',title:'Salary is back. Go back to your old lifestyle?',
+  create:s=>{s.pendingRestore=false;const saved=s.lifestyleSaved||{},copy=JSON.parse(JSON.stringify(s));Object.entries(saved).forEach(([k,v])=>{if(!(k==='home'&&s.ownsHome))applyExpenseTo(copy,k,v);});return{extra:monthlyBudget(copy).total-monthlyBudget(s).total,description:'The way you lived before costs more each month.'};},
+  choices:e=>[{id:'back',emoji:'🛋️',title:'Back to the old life',detail:'+'+money(e.extra)+' a month.'},{id:'lean',emoji:'🌱',title:'Stay lean',detail:'Rebuild savings first.'}],
+  resolve:(e,c)=>{const s=state,saved=s.lifestyleSaved||{};s.lifestyleSaved=null;
+   if(c==='back'){Object.entries(saved).forEach(([k,v])=>{if(!(k==='home'&&s.ownsHome))applyExpenseTo(s,k,v);});return{text:'Old lifestyle back: expenses '+money(monthlyBudget(s).total)+' a month.',feedback:fb('solid','Enjoy it. Rebuilding the cushion first would have been safer.')};}
+   return{text:'Staying lean for now.',feedback:fb('great','The extra each month rebuilds the cushion that carried you.')};}},
+ creep:{kicker:'PEER PRESSURE',art:'🥂',titles:['Your friends upgraded. They expect you to as well.','“You earn so much now. Why live like a student?”','Everyone at work orders in. Every day.'],
+  create:s=>{const up=lifestyleShift(s,1),pct=Math.round((monthlyIncome(s)/Math.max(1,s.creepIncome)-1)*100);s.lastCreepMonth=s.month;s.creepIncome=monthlyIncome(s);return{up,description:'Your pay is up '+pct+'% since you last changed how you live.'};},
+  choices:e=>(e.up?[{id:'up',emoji:'🍾',title:'Live like your pay: '+e.up.label.toLowerCase(),detail:'+'+money(e.up.monthly)+' a month.'}]:[]).concat([{id:'same',emoji:'🧘',title:'Keep living as I do',detail:'The raise keeps working for you.'}]),
+  resolve:(e,c)=>{const s=state;if(c==='up'&&e.up){applyExpenseTo(s,'food',e.up.food);applyExpenseTo(s,'social',e.up.social);return{text:'Upgraded: '+e.up.label.toLowerCase()+'.',feedback:fb('solid','Enjoying a raise is fine. Make sure your SIP grew too.')};}
+   return{text:'Same life, bigger surplus.',feedback:fb('great','Keeping costs flat while pay rises is how savings take off.')};}},
+ /* ---- big shocks: only through the two-per-life schedule (A.bigShocks) ---- */
+ illness:{kicker:'BIG SHOCK',art:'🏥',titles:['A serious illness. Surgery and weeks in hospital.','The doctor’s report is not good news. Treatment starts now.'],snapshot:true,severe:true,forced:true,
+  eligible:s=>preciseAge(s)<60,
+  create:s=>{const total=priced(randInt(3,8)*100000),amount=s.insured?Math.round(total*(1-A.healthCover.coveredShare)):total,off=s.employment==='employed'?3:0;
+   return{total,amount,off,description:'Treatment costs '+money(total)+(s.insured?'. Health cover pays 65%: your share is '+money(amount)+'.':'. With no health cover, all of it is yours.')+(off?' No salary for 3 months.':''),foot:'Rare, huge and unplanned: what health cover and a cushion are for.'};},
+  choices:e=>fundingChoices(e.amount),
+  resolve:(e,c)=>{const s=state;if(s.insured)s.stats.claims+=e.total-e.amount;const r=fundExpense(e.amount,c);
+   if(e.off){s.employment='laidoff';s.breakReason='recovery';s.laidOffMonthsLeft=e.off;}
+   record('Serious illness at '+ageLabel()+': '+money(e.total)+' treatment'+(s.insured?', 65% paid by health cover':'')+'.',{major:true,kind:'health'});
+   return{text:r.text+(e.off?' Salary pauses for 3 months.':''),feedback:s.insured?(r.borrowed>0?fb('solid','Health cover paid most of it, but your cushion could not cover the rest.'):fb('great','Health cover paid '+money(e.total-e.amount)+'. That is what the premiums were for.')):r.borrowed>0?fb('risky','No health cover and a thin cushion: '+money(r.borrowed)+' became debt.'):fb('risky','No health cover: your savings paid '+money(e.amount)+' that cover would mostly have paid.')};}},
+ flood:{kicker:'BIG SHOCK',art:'🌊',titles:['Monsoon floods reached your home.','A pipe burst upstairs while you were away. Everything is soaked.'],snapshot:true,severe:true,forced:true,
+  create:s=>{const total=priced(randInt(2,5)*100000);return{amount:total,description:'Furniture, appliances and repairs: '+money(total)+'. Health cover does not pay for this. Only savings do.',foot:'A cushion of 6 months of expenses is for days like this.'};},
+  choices:e=>fundingChoices(e.amount),resolve:(e,c)=>{const r=fundExpense(e.amount,c);record('Flood damage at '+ageLabel()+': '+money(e.amount)+'.',{major:true,kind:'shock'});return r;}},
+ /* ---- good surprises and trade-offs ---- */
+ clash:{kicker:'TOUGH CALL',art:'⚖️',
+  eligible:s=>s.employment==='employed'&&preciseAge(s)<58,
+  create:s=>{const kid=s.children.some(c=>inSchool(c,s)),what=kid?pick(['your child’s annual day','your child’s school admission interview','your child’s sports day']):s.married?'your anniversary trip':'your best friend’s wedding',amount=Math.round(monthlyIncome(s)*(0.4+rand()*0.6));
+   return{what,amount,title:'A big gig landed. Same weekend as '+what+'.',description:'A client offers '+money(amount)+' for one weekend of work.'};},
+  choices:e=>[{id:'gig',emoji:'💼',title:'Take the gig',detail:'+'+money(e.amount)+'. You miss '+e.what+'.'},{id:'family',emoji:'🤗',title:'Be there',detail:'The gig goes to someone else.'}],
+  resolve:(e,c)=>{const s=state;if(c==='gig'){s.cash+=e.amount;return{text:'+'+money(e.amount)+' in savings. You watched '+e.what+' on video.',feedback:fb('solid','Money now, a missed memory. Some weekends do not come back.')};}
+   return{text:'You were there for '+e.what+'.',feedback:fb('great','Money can be earned again. That weekend could not.')};}},
+ windfall:{kicker:'GOOD NEWS',art:'🎁',weight:0.8,
+  create:s=>{const amount=priced(randInt(20,120)*1000);return{amount,title:pick(['An old fixed deposit you forgot about just matured!','Your grandmother left you something in her will.','A referral bonus at work!','You won the office quiz: cash prize!']),description:money(amount)+' just landed.'};},
+  choices:(e,s)=>bonusChoices(e,s),resolve:(e,c)=>bonusResolve(e,c,'Windfall:')},
+ award:{kicker:'GOOD NEWS',art:'🏅',weight:0.7,title:'Employee of the year!',
+  eligible:s=>s.employment==='employed'&&preciseAge(s)<55,
+  create:s=>{const amount=Math.round(s.salary*0.5);return{amount,description:'A '+money(amount)+' award'+(s.career<A.maxXp?' and Career XP +1.':'.')};},
+  choices:(e,s)=>bonusChoices(e,s),resolve:(e,c)=>{const s=state;if(s.career<A.maxXp)s.career+=1;return bonusResolve(e,c,'Award:');}}
+});
 // Small surprises become cards on the track. The value is the default applied
 // when you don't choose in time: usually the cautious or do-nothing option.
 const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'savings',scam:'report',
@@ -1507,7 +1670,8 @@ const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'saving
  kidparty:'cake',school:'savings',bonus:'save',taxrefund:'save',sidegig:'rest',promotion:'no',course:'skip',
  crypto:'pass',boom:'stay',market:'stay',landlord:'accept',leak:'savings',vehiclebill:'savings',challan:'pay',
  pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories',insureoffer:'yes',
- adSip:'skip',adScheme:'skip',adCar:'skip',adHome:'skip',adPhone:'skip',adStatus:'skip'};
+ adSip:'skip',adScheme:'skip',adCar:'skip',adHome:'skip',adPhone:'skip',adStatus:'skip',adCover:'skip',adPolicy:'skip',
+ clash:'family',windfall:'save',award:'save',restore:'lean',creep:'same'};
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
  c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Gone by next week.'});return c;}
@@ -1525,8 +1689,10 @@ function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
 // have already seen. Contextual events (retirement at 60, burnout, missing your
 // family while work is in Hustle mode) happen when the situation calls for them. Never two severe shocks in a row, never
 // the same type twice in a row.
-const CONTEXT_EVENTS=['retire','burnout','squeeze'];
-const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life&&!EVENTS[t].ad);
+const CONTEXT_EVENTS=['retire','burnout','squeeze','overspend','tighten','restore','renewCover','creep'];
+// Big money shocks: at least two per life before 60 (see A.bigShocks). illness and flood only come this way.
+const BIG_SHOCKS=['layoff','accident','divorce','illness','flood','parentmedical'],BIG_POOL=['layoff','accident','illness','flood','parentmedical'];
+const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life&&!EVENTS[t].ad&&!EVENTS[t].forced);
 const OPENERS={shock:RANDOM_POOL.filter(t=>EVENTS[t].group==='shock'),social:RANDOM_POOL.filter(t=>EVENTS[t].group==='social')};
 function eligibleEvent(t,s){const d=EVENTS[t];return !d.eligible||d.eligible(s);}
 function eventWeight(t,s){const d=EVENTS[t];const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*(s.seen[t]||0));}
@@ -1542,6 +1708,9 @@ function ageAtMonth(m){return A.startAge+(m-1)/12;}
 // Ads use their own generator stored in the state, so adding them never changes the rest of a seeded life.
 function adRand(s=state){let a=(s.adRng+0x6D2B79F5)|0;s.adRng=a;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
 function adInt(s,lo,hi){return lo+Math.floor(adRand(s)*(hi-lo+1));}
+// A third generator for job-search length and the big-shock schedule, so these never shift the main stream either.
+function xRand(s=state){let a=(s.xRng+0x6D2B79F5)|0;s.xRng=a;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+function xInt(s,lo,hi){return lo+Math.floor(xRand(s)*(hi-lo+1));}
 function adPick(s,arr){return arr[Math.floor(adRand(s)*arr.length)];}
 const AD_POOL=()=>Object.keys(EVENTS).filter(t=>EVENTS[t].ad);
 function pickAd(s){
@@ -1566,10 +1735,19 @@ function lifeEventDue(s){
 // Burnout: Me ring under 35 for 9 months straight while working. Squeeze: Hustle pace
 // with the Family & Friends ring under 35. Burnout returns at most every 3 years, the squeeze every 5.
 function contextEventDue(s){
+ if(s.pendingTighten&&s.employment==='laidoff')return 'tighten';
+ if(s.pendingRestore&&s.employment==='employed')return 'restore';
  if(s.employment!=='employed')return null;
+ if(s.overspendMonths>=A.overspend.months&&s.month-s.lastOverspendMonth>=A.overspend.cooldown)return 'overspend';
  if(s.lowMeMonths>=A.burnout.months&&s.month-s.lastBurnoutMonth>=A.burnout.cooldown)return 'burnout';
  if(s.pace==='hustle'&&s.rings.fam<A.squeeze.lowFam&&s.month-s.lastSqueezeMonth>=A.squeeze.cooldown)return 'squeeze';
+ if(s.creepIncome&&monthlyIncome(s)>=s.creepIncome*A.creep.ratio&&s.month-s.lastCreepMonth>=A.creep.cooldown&&lifestyleShift(s,1))return 'creep';
  return null;
+}
+// Health cover is never renewed automatically: the pit stop asks when it is due, and a stop asks once after you marry or have a child while it covers only you.
+function coverDue(s){
+ if(!s.insured||s.coverFamily||s.coverFamilyAsked||!(s.married||activeChildren(s).length)||coverRenewalDue(s))return false;
+ s.coverFamilyAsked=true;return true;
 }
 function startEvent(type,opts){
  const s=state,def=EVENTS[type];if(s.event||s.status!=='playing')return false;   // never overwrite a pending decision
@@ -1579,7 +1757,7 @@ function startEvent(type,opts){
  const dflt=CARD_DEFAULTS[type];
  if(dflt){const ids=def.choices(s.event,s).map(c=>c.id);s.event.tier='card';s.event.defaultChoice=ids.includes(dflt)?dflt:ids[0];}
  else s.event.tier='stop';
- s.seen[type]=(s.seen[type]||0)+1;
+ s.seen[type]=(s.seen[type]||0)+1;if(BIG_SHOCKS.includes(type))s.bigShock.count+=1;
  if(!CONTEXT_EVENTS.includes(type)&&!def.life&&!def.ad){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
  return true;
 }
@@ -1598,7 +1776,9 @@ function maybeStartEvent(){
  if(!op.social&&m>=24){op.social=1;if(m<36){const t=pickRandomEvent(s,OPENERS.social);if(t){startEvent(t,{first:true});return;}}}
 if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
+ if(coverDue(s)){startEvent('renewCover');return;}
  const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
+ if(s.bigShock.count<s.bigShock.due.filter(d=>d<=m).length&&preciseAge(s)<60){const t=pickRandomEvent(s,BIG_POOL);if(t&&startEvent(t)){s.event.scheduled=true;return;}}
  if(s.adNext&&m>=s.adNext){s.adNext=m+adInt(s,A.ads.gap[0],A.ads.gap[1]);const t=pickAd(s);if(t){s.lastAdType=t;startEvent(t);return;}}
  if(m>=s.nextEventMonth&&m>24){s.nextEventMonth=m+randInt(A.eventGap[0],A.eventGap[1]);const t=pickRandomEvent(s);if(t)startEvent(t);}
 }
@@ -1609,7 +1789,7 @@ if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePrompt
 function newRun(seed){
  state=createState();
  state.seed=(seed>>>0)||((Math.random()*2**32)>>>0);
- rng=mulberry32(state.seed);state.adRng=(state.seed^0x5EED0AD)|0;
+ rng=mulberry32(state.seed);state.adRng=(state.seed^0x5EED0AD)|0;state.xRng=(state.seed^0x0B16B00B)|0;
  return state;
 }
 function beginLife(profile){
@@ -1621,12 +1801,15 @@ function beginLife(profile){
  s.vehicle=p.commute;s.transit=s.seed%2?'metro':'bus';
  if(ride.loan)s.vehicleLoan=makeLoan(p.commute,ride.loan);
  if(edu)s.eduLoan=makeLoan('edu',A.eduLoan.principal);
- s.insured=p.health!=='no';
+ if(p.health!=='no')startCover(s,false);
  const L=A.life;s.life.askMonth=randInt(L.marriageAsk[0],L.marriageAsk[1]);
  s.life.parentsMonth=monthAtAge(L.parentsAge[0])+randInt(0,(L.parentsAge[1]-L.parentsAge[0])*12);
  s.nextEventMonth=24+randInt(A.eventGap[0],A.eventGap[1]);
  s.nextPitMonth=monthAtAge(A.pit.firstAge);s.lastPit=lapSnapshot(s);
  s.adNext=adInt(s,A.ads.first[0],A.ads.first[1]);
+ const B=A.bigShocks,a1=xInt(s,B.first[0],B.first[1]),a2=Math.min(B.last,Math.max(a1+B.gap,xInt(s,a1+B.gap,B.last)));
+ s.bigShock={due:[monthAtAge(a1)+xInt(s,0,11),monthAtAge(a2)+xInt(s,0,11)],count:0};
+ s.creepIncome=monthlyIncome(s);
  record('Started at 23 on '+money(s.salary)+'/month'+(edu?' (a better college, thanks to an education loan)':'')+': '+BASE_PRICES.home[p.home].label+', '+ride.label.toLowerCase()+(ride.loan?' with a '+money(ride.loan)+' loan':'')+(s.insured?', with health cover':'')+'.',{major:true,kind:'start'});
  const o=settleMonth(s);
  s.message='First payday. '+settlementMessage(o);s.story=edu?'Fancy degree, fancy first paycheck. The education loan EMI starts now.':'A new job in a new city. Your first paycheck is in!';
@@ -1679,11 +1862,12 @@ function advanceMonth(){
  const due=s.receivables.filter(r=>r.month<=s.month);
  if(due.length){const amt=sum(due.map(r=>r.amount));s.receivables=s.receivables.filter(r=>r.month>s.month);s.cash+=amt;s.story='Plot twist: your friend paid back '+money(amt)+'!';record('A friend repaid '+money(amt)+' at '+ageLabel()+'.');celebrate('repaid','🤝','Paid back!','+'+compact(amt)+' from your friend');}
  const o=settleMonth(s);
+ s.overspendMonths=s.employment==='employed'&&o.income<o.expenses?s.overspendMonths+1:0;
  settlePace(s);
  tickRings(s);
  s.message=settlementMessage(o);
  if(o.loanPaidOff)celebrate('loan','🎉',o.loanPaidOff+' loan cleared!','No more '+o.loanPaidOff.toLowerCase()+' EMI');
- if(s.employment==='laidoff'){s.laidOffMonthsLeft-=1;if(s.laidOffMonthsLeft<=0){const reason=s.breakReason,healed=reason==='recovery';s.employment='employed';s.laidOffMonthsLeft=0;s.breakReason='';if(!healed&&reason!=='break')s.jobStartMonth=s.month+1;
+ if(s.employment==='laidoff'){s.laidOffMonthsLeft-=1;if(s.laidOffMonthsLeft<=0){const reason=s.breakReason,healed=reason==='recovery';s.employment='employed';s.laidOffMonthsLeft=0;s.breakReason='';if(!healed&&reason!=='break')s.jobStartMonth=s.month+1;s.pendingTighten=false;if(s.lifestyleSaved)s.pendingRestore=true;
   if(reason==='break'){s.story='Recharged and back at work. Salary of '+money(s.salary)+' resumes next month.';celebrate('job','🔋','Recharged!','Salary resumes next month');}
   else{s.story=healed?'Fully recovered and back at work! Salary of '+money(s.salary)+' resumes next month.':'You found a new role! Salary of '+money(s.salary)+' resumes next month.';record('Back at work at '+ageLabel()+'.',{kind:'career'});celebrate('job','🙌',healed?'Back on your feet!':'New job!','Salary resumes next month');}}}
  if(s.distressMonths>0)s.message+=' Strained months in a row: '+s.distressMonths+' of '+A.failureMonths+'.';
@@ -1751,25 +1935,29 @@ const OPTIONAL={
   cost:()=>5000,monthly:()=>0,available:()=>null,
   describe:()=>'Move ₹5,000 from savings into investments. Their value can rise or fall.',
   apply:s=>investFeedback(s,5000)},
- invest50k:{tab:'one-time',name:'Invest ₹50K',emoji:'🌳',color:'c-blue',
-  cost:()=>50000,monthly:()=>0,available:()=>null,
-  describe:()=>'Move ₹50,000 from savings into investments. Their value can rise or fall.',
-  apply:s=>investFeedback(s,50000)},
+ investLump:{tab:'one-time',name:'Invest a lump sum',emoji:'💰',color:'c-blue',kicker:'INVEST',okLabel:'Invest it',
+  lead:'Move money from savings into investments. The value can rise or fall. Keeping about 6 months of expenses in savings protects you from surprises.',
+  variants:s=>[['idle','💤','Idle cash above 6 months',idleCash(s),'A 6-month cushion stays in savings.'],['quarter','🪴','A quarter of savings',Math.round(s.cash*0.25),''],['half','🌳','Half of savings',Math.round(s.cash*0.5),''],['all','🚀','All of savings',Math.max(0,Math.round(s.cash)),'Nothing left for surprises.']]
+   .map(([id,emoji,label,price,blurb])=>({id,emoji,label,price,blurb,note:money(price),block:price<1000?'Not enough in savings.':null})),
+  cost:(s,v)=>{const x=v&&OPTIONAL.investLump.variants(s).find(y=>y.id===v);return x?x.price:0;},monthly:()=>0,
+  available:s=>s.cash<1000?'Not enough in savings.':null,
+  describe:(s,v)=>'Invest '+money(OPTIONAL.investLump.cost(s,v))+' from savings.',
+  apply:(s,v,amount)=>investFeedback(s,amount)},
  upgrade:{tab:'recurring',name:'Upgrade your home',emoji:'🛋️',color:'c-clay',
   cost:()=>priced(A.homeUpgrade.upfront),monthly:()=>priced(A.homeUpgrade.monthly),
   available:s=>s.ownsHome?'You own your home now.':s.homeUpgraded?'Already upgraded. The extra monthly cost is in your expenses.':(preciseAge(s)<A.homeUpgrade.minAge||s.career<A.homeUpgrade.minXp)?'Locked: unlocks at age 26 with at least 2 Career XP (you have '+s.career+').':null,
   describe:()=>'More space and comfort: pay '+money(priced(A.homeUpgrade.upfront))+' once, then '+money(priced(A.homeUpgrade.monthly))+' more every month.',
   apply:s=>{s.homeUpgraded=true;s.costs.homeUpgrade=A.homeUpgrade.monthly;record('Upgraded home at '+ageLabel()+'.',{major:true,kind:'home'});const b=monthlyBudget(s);return{text:'Home upgraded. Monthly expenses are now '+money(b.total)+'.',feedback:b.leftover<b.income*0.15?fb('risky','A comfortable home, but your monthly surplus is now thin. Fixed costs are hard to undo.'):fb('solid','A comfort upgrade you can afford. It is a fixed cost every month, and it rises with inflation.')};}},
  insure:{tab:'recurring',name:'Get health cover',emoji:'🛡️',color:'c-mint',
-  cost:()=>0,monthly:s=>priced(healthPremiumBase(s),s),
+  cost:()=>0,monthly:s=>priced(healthQuoteBase(s,true,false),s),
   available:s=>s.insured?'Health cover is already active.':null,
-  describe:s=>'Pay '+money(priced(healthPremiumBase(s),s))+' a month'+(s.married||activeChildren(s).length?' for a family policy':'')+'. Covers 65% of eligible medical bills for you'+(s.married||activeChildren(s).length?' and your family':'')+'. The premium grows with your family and a little with age.',
-  apply:s=>{s.insured=true;record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month.',feedback:fb('solid','A small fixed cost that reduces large medical shocks. It may or may not pay back in money terms; it lowers risk.')};}},
+  describe:s=>'Pay '+money(priced(healthQuoteBase(s,true,false),s))+' a month'+(s.married||activeChildren(s).length?' for a family policy':'')+'. Covers 65% of eligible medical bills for you'+(s.married||activeChildren(s).length?' and your family':'')+'. A 3-year policy: you renew it yourself, at a new premium for your age and family.',
+  apply:s=>{startCover(s,true);record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month for 3 years.',feedback:fb('solid','A small fixed cost that reduces large medical shocks. It may or may not pay back in money terms; it lowers risk.')};}},
  parentsCover:{tab:'recurring',name:'Add parents to health cover',emoji:'👵',color:'c-sand',
   cost:()=>0,monthly:s=>Math.round(priced(A.healthCover.parents,s)*(1+A.healthCover.ageLoading*Math.max(0,preciseAge(s)-A.startAge))),
   available:s=>!s.insured?'Get health cover for yourself first.':s.parentsCovered?'Your parents are already covered.':preciseAge(s)<30?'Unlocks at 30, when parents’ health starts to matter more.':null,
   describe:s=>'Senior cover is expensive: about '+money(OPTIONAL.parentsCover.monthly(s))+' a month extra. Pays 65% of your parents’ hospital bills, which can run into lakhs.',
-  apply:s=>{s.parentsCovered=true;record('Added parents to health cover at '+ageLabel()+'.',{major:true,kind:'cover'});const b=monthlyBudget(s);return{text:'Parents added. Health cover is now '+money(healthPremium(s))+' a month.',feedback:b.leftover<b.income*0.1?fb('risky','Peace of mind for your parents, but it leaves a thin monthly surplus.'):fb('solid','A big premium, but one parent’s hospital stay can cost more than years of it.')};}},
+  apply:s=>{s.parentsCovered=true;s.coverBase=healthQuoteBase(s,s.coverFamily,true);record('Added parents to health cover at '+ageLabel()+'.',{major:true,kind:'cover'});const b=monthlyBudget(s);return{text:'Parents added. Health cover is now '+money(healthPremium(s))+' a month.',feedback:b.leftover<b.income*0.1?fb('risky','Peace of mind for your parents, but it leaves a thin monthly surplus.'):fb('solid','A big premium, but one parent’s hospital stay can cost more than years of it.')};}},
  term:{tab:'recurring',name:'Get term cover',emoji:'☂️',color:'c-lav',
   cost:()=>0,monthly:s=>termQuote(s).premium,
   available:s=>s.termCover?'Term cover is already active.':s.employment!=='employed'?'Term cover needs a salary.':preciseAge(s)>A.term.maxAge?'Too late: insurers stop offering new term cover after 55.':null,
@@ -1823,8 +2011,8 @@ function optionalBlocker(id,variant){
 }
 function chooseOptional(id,variant){
  const s=state,o=OPTIONAL[id];if(!o||(o.variants&&variant===undefined)||optionalBlocker(id,variant))return null;
- s.cash-=o.cost(s,variant);s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
- const r=o.apply(s,variant);s.feedback=Object.assign({source:o.name,art:o.emoji,rings:r.rings||null},r.feedback);s.message=r.text;return r;
+ const cost=o.cost(s,variant);s.cash-=cost;s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
+ const r=o.apply(s,variant,cost);s.feedback=Object.assign({source:o.name,art:o.emoji,rings:r.rings||null},r.feedback);s.message=r.text;return r;
 }
 /* Pace: how hard you work. Set only by your choices, for a while (see A.pace). */
 const PACES={hustle:{emoji:'🚀',label:'Hustle',blurb:'Higher promotion odds and raises (+1%/yr). Less time for people and yourself.'},balanced:{emoji:'⚖️',label:'Balanced',blurb:'Work hard, go home.'},chill:{emoji:'🌿',label:'Chill',blurb:'Lower promotion odds and raises (−1%/yr). More time for everyone, you included.'}};
@@ -1890,22 +2078,24 @@ function pitReport(s){
  const lap=s.lastPit||lapSnapshot(s),age=Math.round(preciseAge(s)),delta={};
  RING_KEYS.forEach(k=>{delta[k]=Math.round(s.rings[k])-Math.round(lap.rings[k]);});
  return {title:'Lap done: age '+age,age,fromAge:lap.age,lapPoints:Math.round(s.score-lap.score),delta,
-  happy:happiness(s),happyDelta:happiness(s)-(lap.happy===undefined?happiness(s):lap.happy),netWorth:netWorth(s),worthDelta:netWorth(s)-lap.netWorth,
+  happy:happiness(s),happyDelta:happiness(s)-(lap.happy===undefined?happiness(s):lap.happy),netWorth:netWorth(s),worthDelta:netWorth(s)-lap.netWorth,renewal:renewalQuote(s),
   description:pitInsight(s,lap),tip:pitTip(s),down:lifestyleShift(s,-1),up:lifestyleShift(s,1),sipBoost:pitSipBoost(s),
   foot:'Changes apply from next month. '+(age+5<A.endAge?'Next pit stop at '+(age+5)+'.':'Next stop: the finish line.')};
 }
-// c = {life: -1|0|1, sip: 'keep'|'boost'|'stop'}; works on any state copy (used for the preview too).
+// c = {life: -1|0|1, sip: 'keep'|'boost'|'stop', cover: 'renew'|'family'|'lapse'}; works on any state copy (used for the preview too).
+// A renewal that is due and not chosen lapses: cover never renews by itself.
 function applyPitChoices(s,c){
  const out=[],boost=pitSipBoost(s);   // the top-up offered is based on the budget before any changes
  const shift=c.life===-1||c.life===1?lifestyleShift(s,c.life):null;
  if(shift){applyExpenseTo(s,'food',shift.food);applyExpenseTo(s,'social',shift.social);out.push((c.life<0?'simpler':'fancier')+' lifestyle ('+shift.label.toLowerCase()+')');}
  if(c.sip==='boost'&&boost&&boost!==s.sip){out.push((s.sip?'SIP raised to ':'SIP started at ')+money(boost)+'/month');s.sip=boost;}
  else if(c.sip==='stop'&&s.sip>0){s.sip=0;out.push('SIP paused');}
+ if(coverRenewalDue(s)){if(c.cover==='renew'||c.cover==='family'){startCover(s,c.cover==='family'||s.coverFamily);out.push((c.cover==='family'?'health cover renewed as family cover':'health cover renewed')+' ('+money(healthPremium(s))+'/month)');}else{endCover(s);out.push('health cover lapsed');}}
  return out;
 }
 function pitPreview(c){const copy=JSON.parse(JSON.stringify(state));applyPitChoices(copy,c||{});return{before:monthlyBudget(state),after:monthlyBudget(copy),sip:copy.sip,targets:ringTargets(copy),now:ringTargets(state)};}
 function finishPit(e,c){
- const s=state,changes=applyPitChoices(s,c);
+ const s=state,lapsed=coverRenewalDue(s)&&c.cover!=='renew'&&c.cover!=='family',changes=applyPitChoices(s,c);if(lapsed)record('Let health cover lapse at '+ageLabel()+'.',{major:true,kind:'cover'});
  s.pitCount+=1;s.lastPit=lapSnapshot(s);s.nextPitMonth+=A.pit.everyMonths;
  record('🏁 Pit stop at '+e.age+': '+(changes.length?changes.join(', '):'no changes')+'.',{kind:'pit'});
  const low=Math.min(...RING_KEYS.map(k=>s.rings[k])),label=low<A.rings.low?'risky':low>=A.rings.healthy?'great':'solid';
@@ -1947,6 +2137,8 @@ function expenseChangeBlocker(key,value){
  if(key==='insurance'&&!s.insured)return 'No health cover to cancel.';
  if(key==='parentsCover'&&!s.parentsCovered)return 'Your parents are not on your cover.';
  if(key==='term'&&!s.termCover)return 'No term cover to cancel.';
+ if(key==='policy'&&!s.policy)return 'No plan to surrender.';
+ if(key==='home'&&value==='starter'&&!s.ownsHome&&activeChildren(s).length>=2)return 'A starter flat is too small for a family of four.';
  return null;
 }
 // Applies a change to a scratch copy to preview its effect (no mutation of the real state).
@@ -1961,18 +2153,20 @@ function applyExpenseTo(s,key,value,model){
  else if(key==='other'){s.profile.other=value;s.costs.other=BASE_PRICES.other[value].cost;}
  else if(key==='commute'){const ride=rideSpec(value,model);if(s.vehicleLoan){s.unsecuredDebt+=Math.round(s.vehicleLoan.balance*(1-A.vehicleResaleShare));s.vehicleLoan=null;}s.vehicle=value;s.carModel=value==='car'?(model||'hatch'):'hatch';s.profile.commute=value;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;if(ride.loan)s.vehicleLoan=makeLoan(value,priced(ride.loan,s));}
  else if(key==='homeUpgrade'){s.homeUpgraded=false;s.costs.homeUpgrade=0;}
- else if(key==='insurance'){s.insured=false;s.parentsCovered=false;}
- else if(key==='parentsCover'){s.parentsCovered=false;}
+ else if(key==='insurance')endCover(s);
+ else if(key==='parentsCover'){s.parentsCovered=false;if(s.insured)s.coverBase=healthQuoteBase(s,s.coverFamily,false);}
+ else if(key==='policy'&&s.policy){s.cash+=Math.round(s.policy.value*0.3);s.policy=null;}
  else if(key==='term'){s.termCover=null;}
 }
 function applyExpenseChange(key,value){
  const s=state;if(expenseChangeBlocker(key,value))return null;
- const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldLabel=vehicleLabel(s);applyExpenseTo(s,key,value);const after=monthlyBudget(s);
- const labels={home:'Rent',food:'Food',social:'Social life',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover'};
+ const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldLabel=vehicleLabel(s),surrender=key==='policy'?Math.round(s.policy.value*0.3):0;applyExpenseTo(s,key,value);const after=monthlyBudget(s);
+ const labels={home:'Rent',food:'Food',social:'Social life',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover',policy:'3-in-1 plan'};
  let text=labels[key]+' updated. Monthly expenses '+money(before.total)+' → '+money(after.total)+'.';
  if(key==='commute'&&hadLoan&&!s.vehicleLoan){const left=Math.round(hadLoan*(1-A.vehicleResaleShare));text+=' Sold the '+oldLabel.toLowerCase()+': resale repaid '+money(hadLoan-left)+' of the loan; the remaining '+money(left)+' became unsecured debt.';record('Sold the '+oldLabel.toLowerCase()+' at '+ageLabel()+'; '+money(left)+' of the loan became debt.',{major:true,kind:'vehicle'});}
  if(key==='homeUpgrade')record('Moved out of the upgraded home at '+ageLabel()+'.',{kind:'home'});
  if(key==='insurance'||key==='parentsCover'||key==='term')record('Cancelled '+labels[key].toLowerCase()+' at '+ageLabel()+'.',{kind:'cover'});
+ if(key==='policy'){text+=' Surrendered early: only '+money(surrender)+' paid back.';record('Surrendered the 3-in-1 plan at '+ageLabel()+' for '+money(surrender)+'.',{kind:'cover'});}
  let feedback;
  if(after.total<before.total)feedback=key==='insurance'||key==='parentsCover'?fb('risky','Lower costs today, but a medical bill would now be paid in full by you.'):key==='term'?fb('risky','Lower costs today, but nothing would replace your income if an accident stopped you working. A new policy later will cost more.'):fb('solid','Lower fixed costs leave more each month for savings and make surprises easier to absorb.');
  else if(after.leftover<0)feedback=fb('risky','Your monthly expenses are now above your income. The gap will come out of savings, then become debt.');
@@ -2031,8 +2225,8 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
- RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
- happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
+ RINGS,RING_FX,PACES,LIFESTYLE_RINGS,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
+ happiness,happyRaw,weakestRing,renewalQuote,coverRenewalDue,cutPlan,startCover,endCover,healthQuoteBase,coverDue,BIG_SHOCKS,coverAdKind,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
 })();
 </script>
 <script>
@@ -2331,7 +2525,7 @@ function hydrateIcons(){document.querySelectorAll('[data-icon]').forEach(el=>{el
 /* ---------- UI-only state (never financial) ---------- */
 const ui={modal:null,paused:false,hidden:document.hidden,elapsed:0,timer:null,lastTick:0,countdown:false,
  optionalTab:'one-time',financeDetail:{},lastBalances:null,renderedEventId:null,shownEventId:null,renderedEnd:false,
- pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pitPick:null,card:null,cardsSeen:0,pit:null,lastHappy:null};
+ pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pitPick:null,wiz:{step:0},card:null,cardsSeen:0,pit:null,lastHappy:null};
 
 /* ---------- Sound wiring ---------- */
 function sfx(kind){if(prefs.soundOn&&ui.audioUnlocked&&!document.hidden)Sound.sfx(kind);}
@@ -2399,7 +2593,7 @@ function demoScene(){const t=(performance.now()-demoStart)/1000,mf=1+t*2.2,age=A
 const playRace=Race.create($('race'),sceneState),introRace=Race.create($('introRace'),demoScene);
 
 /* ---------- Overlays ---------- */
-const OVERLAYS=['moreOverlay','eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay'];
+const OVERLAYS=['moreOverlay','eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay'];
 function anyOverlayOpen(){return OVERLAYS.some(id=>!$(id).classList.contains('hidden'));}
 function showOverlay(id){const el=$(id);if(el.classList.contains('hidden')){if(!anyOverlayOpen())ui.lastFocus=document.activeElement;el.classList.remove('hidden');}$('app').inert=true;const f=el.querySelector('button:not([disabled])');if(f)f.focus({preventScroll:true});if(ui.audioUnlocked)Sound.duck(true);}
 function hideOverlay(id){const el=$(id);if(el.classList.contains('hidden'))return;el.classList.add('hidden');if(!anyOverlayOpen()){$('app').inert=false;if(ui.audioUnlocked)Sound.duck(false);if(ui.lastFocus&&document.contains(ui.lastFocus)&&!ui.lastFocus.disabled)ui.lastFocus.focus({preventScroll:true});}}
@@ -2431,8 +2625,37 @@ function renderStory(){
  $('storyFacts').innerHTML=fact('💼','First job as a '+esc(p.job),'in '+esc(p.city)+' '+(p.cityArt||''))
   +fact('💰',compact(salary)+'/month salary',tax?money(salary-tax)+' after '+money(tax)+' tax':'No income tax yet')
   +(edu?fact('🎓',compact(A.eduLoan.principal)+' education loan',money(eduEmi())+'/month EMI for 8 years. It got you the better pay.'):fact('📘','No education loan','Nothing to repay'))
-  +fact(home.emoji,'Renting: '+home.label,money(home.cost)+'/month')
+  +fact(home.emoji,'Renting: '+home.label,money(home.cost)+'/month · '+P.food[p.food].label.toLowerCase()+' · '+P.social[p.social].label.toLowerCase()+(p.health==='yes'?' · 🛡️ health cover':''))
   +fact('🚇','Bus and Metro to work','No vehicle yet');
+}
+/* ---------- Profile setup: a short animated walk-through before the race ---------- */
+// Five quick questions; each shows its monthly cost, how it moves happiness, and what is left of the salary.
+const WIZ=[
+ {key:'home',emoji:'🏠',title:'Where do you live?',why:'Rent is your biggest monthly cost. A nicer place makes everyday life comfier (🧍 Me).',opts:()=>Object.entries(P.home).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.home[id]},
+ {key:'food',emoji:'🍲',title:'How do you eat?',why:'Eating out is fun, and it costs more every single month.',opts:()=>Object.entries(P.food).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.food[id]},
+ {key:'social',emoji:'🎳',title:'Your weekends?',why:'Going out with people fills 👨‍👩‍👧 Family & Friends and 🏘️ Community, the parts of happiness that drop first.',opts:()=>Object.entries(P.social).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.social[id]},
+ {key:'other',emoji:'🎧',title:'Anything extra?',why:'A gym, a hobby, subscriptions: small treats for 🧍 Me that add up.',opts:()=>Object.entries(P.other).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.other[id]},
+ {key:'health',emoji:'🛡️',title:'Health cover?',why:'Pays 65% of hospital bills. You renew it yourself at pit stops; it never renews on its own.',opts:()=>[{id:'yes',emoji:'🛡️',label:'Yes, cover me',cost:A.healthCover.premium},{id:'no',emoji:'🎲',label:'Not now',cost:0}],rings:id=>id==='yes'?[2,0,0]:null}
+];
+function wizBudget(p){const edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),take=salary-Math.round(M.annualTax(salary*12)/12);
+ const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
+function renderWizard(animate){
+ const p=S().profile,i=ui.wiz.step,st=WIZ[i],b=wizBudget(p),cur=st.key==='health'?(p.health==='yes'?'yes':'no'):(p[st.key]||'none');
+ $('wizBody').innerHTML='<div class="wiz-dots" aria-label="Step '+(i+1)+' of '+WIZ.length+'">'+WIZ.map((w,j)=>'<i class="'+(j<i?'done':j===i?'on':'')+'"></i>').join('')+'</div>'
+  +'<div class="wiz-step'+(animate?' slide':'')+'"><div class="wiz-emoji emoji" aria-hidden="true">'+st.emoji+'</div><h2 id="wizTitle">'+esc(st.title)+'</h2><p class="lead">'+esc(st.why)+'</p>'
+  +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(o.cost)+'/month':'Free')+'</small></span>'+heartChip(st.rings(o.id))+'</button>').join('')+'</div></div>'
+  +'<div class="wiz-budget"><span>Take-home<b>'+money(b.take)+'</b></span><span>Monthly costs<b>'+money(b.cost)+'</b></span><span class="'+(b.left<0?'neg':'')+'">Left over<b>'+money(b.left)+'</b></span></div>';
+ $('wizBack').disabled=i===0;$('wizNext').textContent=i===WIZ.length-1?'Start the race 🏁':'Next →';
+}
+function openWizard(){if(S().status!=='setup')return;ui.wiz={step:0};renderWizard(true);showOverlay('profileOverlay');}
+/* ---------- ❤️ panel: what happiness is made of and what moves it ---------- */
+function openHappy(){
+ const s=S();if(s.status!=='playing'||M.blockingEvent())return;
+ const t=M.ringTargets(),d=M.ringDrivers(),w=M.weakestRing(),idx=M.RINGS.findIndex(r=>r[0]===w.key);
+ const rows=M.RINGS.map(([k,label,e])=>{const v=Math.round(s.rings[k]),tg=Math.round(t[k]);return '<div class="hp-ring'+(k===w.key?' weak':'')+'"><span>'+em(e)+esc(label)+'</span><i><b style="width:'+v+'%"></b></i><strong>'+v+'</strong><small>'+(tg>v+1?'▲ heading to '+tg:tg<v-1?'▼ heading to '+tg:'steady')+'</small></div>';}).join('');
+ const moves=d.filter(x=>x.v[idx]).sort((a,b)=>Math.abs(b.v[idx])-Math.abs(a.v[idx])).slice(0,5).map(x=>'<li><span>'+esc(x.label)+'</span><b class="'+(x.v[idx]>0?'up':'down')+'">'+(x.v[idx]>0?'+':'−')+Math.abs(x.v[idx])+'</b></li>').join('');
+ const tips={me:'A savings cushion, no card debt, a bit more comfort, a calmer work pace.',fam:'A livelier social life, a day with your people (More), marriage and kids, being there over gigs.',com:'Festivals, volunteering or donating (More), a society flat, a livelier social life.'}[w.key];
+ openConfirm({kicker:'HAPPINESS',title:'❤️ '+M.happiness()+' / 100',body:'<p class="lead">Happiness mostly follows your <b>weakest</b> part of life, so balance beats maxing one.</p><div class="hp-rings">'+rows+'</div><h3>'+w.emoji+' '+esc(w.label)+': what moves it</h3>'+(moves?'<ul class="hp-moves">'+moves+'</ul>':'')+'<p class="res-note">💡 '+esc(tips)+'</p>',okLabel:'Got it',onOk:()=>{}});
 }
 function eduEmi(){return M.emiFor(A.eduLoan.principal,A.eduLoan.annualRate/12,A.eduLoan.termMonths);}
 function stageName(age){return age<28?'Early career':age<36?'Building your life':age<46?'Mid-career':age<60?'Later career':age<70?'Freedom years':'Golden years';}
@@ -2457,7 +2680,7 @@ function bragChip(n){return n?'<span class="rchip brag" aria-label="Show-off val
 const PACE_BADGE={hustle:'🚀 Hustle mode',chill:'🌿 Taking it easy'};
 function renderHappy(){
  const s=S(),h=M.happiness(),el=$('hudHappy');
- $('happyValue').textContent=h;el.setAttribute('aria-label','Happiness '+h+' out of 100');el.classList.toggle('low',h<A.rings.low);
+ const w=M.weakestRing();$('happyValue').textContent=h;$('happyLow').textContent=w.low?w.emoji+' low':'';el.setAttribute('aria-label','Happiness '+h+' out of 100'+(w.low?', '+w.label+' is low':'')+'. Tap to see what moves it.');el.classList.toggle('low',h<45);
  const prev=ui.lastHappy;ui.lastHappy={v:h,runId:s.runId};
  if(prev&&prev.runId===s.runId&&prev.v!==h&&Math.abs(h-prev.v)>=2){el.querySelectorAll('.hdelta').forEach(n=>n.remove());const d=document.createElement('span');d.className='hdelta '+(h>prev.v?'up':'down');d.textContent=(h>prev.v?'+':'−')+Math.abs(h-prev.v);d.setAttribute('aria-hidden','true');el.appendChild(d);el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
  const pace=$('hudPace'),busy=s.employment==='employed'&&PACE_BADGE[s.pace];pace.classList.toggle('hidden',!busy);if(busy)pace.textContent=busy;
@@ -2479,7 +2702,7 @@ function renderPlay(){
  const face=s.distressMonths>0?'😰':s.rings.me<A.burnout.lowMe?'🫠':res.level<=2||low<A.rings.low-10?'😟':s.employment==='retired'?'😌':low>=A.rings.healthy&&res.level>=3?'😄':'🙂';
  $('bubbleFace').textContent=face;
  $('sceneMessage').textContent=s.story||lines[Math.floor(s.month/7)%lines.length];
- $('sceneSub').textContent=(s.employment==='retired'?'Retired · living off your savings':s.employment==='laidoff'?(s.breakReason==='recovery'?'Recovering · ':s.breakReason==='break'?'Recharging · ':'Between jobs · ')+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left':stage)+' · '+compact(s.salary)+'/month salary';
+ $('sceneSub').textContent=(s.employment==='retired'?'Retired · living off your savings':s.employment==='laidoff'?(s.breakReason==='recovery'?'Recovering · '+s.laidOffMonthsLeft+' mo left':s.breakReason==='break'?'Recharging · '+s.laidOffMonthsLeft+' mo left':'Between jobs · searching'):stage)+' · '+compact(s.salary)+'/month salary';
  // Decision feedback: reaction face + label + text (never colour alone).
  const f=s.feedback,fc=$('feedbackCard');
  if(f){const chips=heartChip(f.rings),key=f.title+f.why+chips+(f.lesson||'');if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+(f.auto?' · picked for you':'')+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(f.lesson?'<p class="lesson">'+esc(f.lesson)+'</p>':'')+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
@@ -2519,7 +2742,7 @@ function renderMore(){
  $('sipBtn').disabled=sipLocked||(s.employment==='retired'&&!s.sip);
  // Monthly plan: a money bar instead of a wall of numbers
  renderMoneyBar(b);
- const notes=[];if(s.employment==='laidoff')notes.push('Salary paused: '+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' of '+(s.breakReason==='recovery'?'recovery':'job search')+' left; it resumes at '+money(s.salary)+'.');
+ const notes=[];if(s.employment==='laidoff')notes.push(s.breakReason?'Salary paused: '+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left; it resumes at '+money(s.salary)+'.':'Salary paused while you search for a job (6 to 18 months).');
  if(s.employment==='employed')notes.push(b.tax>0?'Salary '+money(b.gross)+' minus '+money(b.tax)+' income tax.':'No income tax at this salary yet.');if(s.employment==='retired')notes.push('Retired: no salary. When savings run short, investments are sold to pay costs.');
  const debtPart=b.lines.filter(l=>l.kind==='debt');if(debtPart.length)notes.push('Includes '+debtPart.map(l=>l.label.toLowerCase()+' '+money(l.amount)).join(', ')+'.');
  notes.push('Prices rise about 6% every new year.');
@@ -2552,12 +2775,12 @@ function animateBalances(){
  Object.keys(vals).forEach(k=>{const card=document.querySelector('[data-finance-detail="'+k+'"]');card.querySelectorAll('.money-delta').forEach(n=>n.remove());const d=Math.round(vals[k]-prev[k]);if(!d)return;const tag=document.createElement('span');tag.className='money-delta '+((k==='debt'||k==='loans'?d<0:d>0)?'up':'down');tag.textContent=(d>0?'+':'−')+compact(Math.abs(d));tag.setAttribute('aria-hidden','true');card.appendChild(tag);});
 }
 function signed(v){return (v<0?'−':'+')+compact(Math.abs(v));}
-function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
+function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(o.lead)return 'Pick an amount';if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
 const TAB_HINTS={'one-time':'Spend once. One power-up per month.','recurring':'Adds to every month’s costs. One power-up per month.','big':'Bought on a loan. Banks approve if all EMIs stay under 50% of your pay. One power-up per month.'};
 function renderOptional(){
  const s=S(),tab=ui.optionalTab;
  [['tabOneTime','one-time'],['tabRecurring','recurring'],['tabBig','big']].forEach(([id,t])=>$(id).setAttribute('aria-selected',String(tab===t)));
- $('moveHint').textContent=TAB_HINTS[tab];
+ $('moveHint').innerHTML=esc(TAB_HINTS[tab])+(tab==='recurring'?coverSummary():'');
  const deck=$('moveDeck');
  if(s.optionalUsedMonth===s.month&&s.status==='playing'){deck.innerHTML='<div class="move-used">'+em('✅')+' Power-up used this month: <strong>'+esc(s.optionalUsedName)+'</strong>. More next month.</div>';return;}
  deck.innerHTML=Object.entries(M.OPTIONAL).filter(([id,o])=>o.tab===tab&&!(id==='sellHouse'&&!s.ownsHome)&&!(id==='buyHouse'&&s.ownsHome)).map(([id,o])=>{
@@ -2568,6 +2791,12 @@ function renderOptional(){
   return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(o.rings?'<span class="rchips">'+heartChip(o.rings)+'</span>':'')+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
  }).join('');
 }
+// Insurance at a glance (More → Monthly power-ups).
+function coverSummary(){const s=S(),kids=M.activeChildren().length,fam=s.married||kids,at=m=>(A.startAge+(m-1)/12).toFixed(0);
+ const row=(e,t,v)=>'<li>'+em(e)+'<span>'+t+'</span><b>'+v+'</b></li>';
+ return '<ul class="cover-sum" aria-label="Your insurance">'+row('🛡️','Health',s.insured?(s.coverFamily&&fam?'Family':'You only')+' · '+compact(M.healthPremium())+'/mo · renew at '+at(s.coverRenewMonth):'None')
+  +row('👵','Parents',s.parentsCovered?'Covered':'Not covered')+row('☂️','Term',s.termCover?compact(s.termCover.cover)+' till 65':'None')
+  +(s.policy?row('🎁','3-in-1 plan',compact(s.policy.premium)+'/mo · worth '+compact(s.policy.value)):'')+'</ul>';}
 function snapshotHTML(){const s=S(),b=M.monthlyBudget();return '<div><span>🐷 SAVINGS</span><strong>'+money(s.cash)+'</strong></div><div><span>🌱 INVESTED</span><strong>'+money(s.invested)+'</strong></div><div><span>🏦 LOANS + 💳 DEBT</span><strong>'+money(M.totalDebt())+'</strong></div><div><span>'+(b.leftover<0?'📉 SHORT / MONTH':'🪙 LEFT / MONTH')+'</span><strong>'+money(b.leftover)+'</strong></div>';}
 function renderEvent(){
  const s=S(),e=s.event;
@@ -2598,8 +2827,10 @@ function pitBody(){
  const s=S(),e=s.event,pk=ui.pitPick,arrow=(d,f)=>d>0?'<small class="up">▲ '+f(d)+'</small>':d<0?'<small class="down">▼ '+f(-d)+'</small>':'<small>steady</small>';
  let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div></div>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
+ const rn=e.renewal;if(rn){const opt=(v,t,d)=>'<button type="button" class="pit-opt" data-pit-key="cover" data-pit-value="'+v+'" aria-pressed="'+(pk.cover===v)+'"><strong>'+t+'</strong><small>'+d+'</small></button>';
+  h+='<div class="pit-cover"><b>'+em('🛡️')+' Health cover renewal due</b><small>It does not renew by itself. You pay '+money(rn.old)+'/month now.</small><div class="pit-opts">'+opt('renew','Renew',money(rn.same)+'/mo')+(rn.canFam?opt('family','Renew as family',money(rn.fam)+'/mo'):'')+opt('lapse','Let it lapse','₹0, no cover')+'</div></div>';}
  if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong><small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small></span></button>';}
- return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Continue</button>';
+ const wait=e.renewal&&!pk.cover;return h+'<button type="button" class="primary pit-go" data-choice="go"'+(wait?' disabled':'')+'>🏎️ Continue</button>'+(wait?'<p class="pit-wait">Choose what to do with your health cover first.</p>':'');
 }
 /* ---------- Track cards: small surprises that don't stop the race ---------- */
 function renderTrackCard(){
@@ -2669,11 +2900,12 @@ function renderExpenses(){
  h+=group('other','🎧 Other recurring',s.profile.other||'none',simple(P.other),'A subscription, hobby, gym or another regular cost.');
  const loanNote=s.vehicleLoan?'Vehicle loan: '+money(s.vehicleLoan.balance)+' left, '+s.vehicleLoan.monthsLeft+' EMIs of '+money(s.vehicleLoan.emi)+'. Switching to transit or cabs sells the vehicle: resale repays 80% of the loan and the rest becomes debt.':'Two-wheelers and cars are bought on a loan in Power-ups → Big buys.';
  h+=group('commute','🚦 Commute',s.vehicle,Object.entries(P.commute).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:money(Math.round((o.running+o.fuel)*f))+'/mo'+(o.loan?' · Big buys':''),disabled:!!o.loan&&id!==s.vehicle})),loanNote);
- if(s.homeUpgraded||s.insured||s.termCover){h+='<section class="edit-group"><h3>Recurring commitments</h3><div class="edit-options">';
+ if(s.homeUpgraded||s.insured||s.termCover||s.policy){h+='<section class="edit-group"><h3>Recurring commitments</h3><div class="edit-options">';
   if(s.homeUpgraded)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='homeUpgrade'?' pending':'')+'" data-expense-key="homeUpgrade" data-expense-value="remove"><strong>Remove home upgrade</strong><span>−'+money(M.priced(s.costs.homeUpgrade))+'/mo · no refund</span></button>';
   if(s.insured)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='insurance'?' pending':'')+'" data-expense-key="insurance" data-expense-value="cancel"><strong>Cancel health cover</strong><span>−'+money(M.healthPremium())+'/mo</span></button>';
   if(s.parentsCovered)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='parentsCover'?' pending':'')+'" data-expense-key="parentsCover" data-expense-value="cancel"><strong>Remove parents from cover</strong><span>lowers the premium</span></button>';
   if(s.termCover)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='term'?' pending':'')+'" data-expense-key="term" data-expense-value="cancel"><strong>Cancel term cover</strong><span>−'+money(M.termPremium())+'/mo · a new one costs more later</span></button>';
+  if(s.policy)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='policy'?' pending':'')+'" data-expense-key="policy" data-expense-value="surrender"><strong>Surrender the 3-in-1 plan</strong><span>get back '+money(Math.round(s.policy.value*0.3))+' of '+money(s.policy.value)+'</span></button>';
   h+='</div></section>';}
  if(M.activeChildren().length||s.married||s.pet)h+='<p class="plan-note">Family costs (your spouse, children, school fees, parents, pet) come from life events and are not changed here. School fees stop at 18, other child costs at 21.</p>';
  $('expenseBody').innerHTML=h;
@@ -2703,19 +2935,24 @@ function openSip(){const s=S();if(M.blockingEvent()||s.status!=='playing')return
 /* ---------- Big-buy versions (home, car) ---------- */
 function variantBody(id){
  const s=S(),o=M.OPTIONAL[id],vs=o.variants(s),pick=vs.find(v=>v.id===ui.variantPick),before=M.monthlyBudget();
- let h='<p class="lead">Each version trades comfort, people and show-off value differently. Show-off value doesn’t make you happier.</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong><small>'+esc(v.blurb)+'</small><small>'+(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo</small><span class="rchips">'+heartChip(v.rings,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
+ let h='<p class="lead">'+esc(o.lead||'Each version trades comfort, people and show-off value differently. Show-off value doesn’t make you happier.')+'</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong>'+(v.blurb?'<small>'+esc(v.blurb)+'</small>':'')+'<small>'+(v.note?esc(v.note):(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo')+'</small><span class="rchips">'+heartChip(v.rings,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
  if(pick){const cost=o.cost(s,pick.id),m=o.monthly(s,pick.id),rows=[['Cost now',cost?money(cost):'None'],['Savings',money(s.cash)+' → '+money(s.cash-cost)],['Monthly expenses',money(before.total)+' → '+money(before.total+m)],[before.leftover-m<0?'Monthly shortfall':'Left over',money(before.leftover)+' → '+money(before.leftover-m)]];
   h+='<p class="res-note">'+esc(o.describe(s,pick.id))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div>';}
  return h+'<p class="res-note">This uses your one power-up for this month.</p>';
 }
 function syncVariant(id){$('confirmBody').innerHTML=variantBody(id);$('confirmOk').disabled=!ui.variantPick||!!M.optionalBlocker(id,ui.variantPick);}
 function openVariants(id){const o=M.OPTIONAL[id],first=o.variants(S()).find(v=>!v.block);ui.variantPick=first?first.id:null;
- openConfirm({kicker:'BIG BUY',title:o.emoji+' '+o.name,body:variantBody(id),okLabel:'Buy it',okDisabled:!first,onOk:()=>{const r=M.chooseOptional(id,ui.variantPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});
+ openConfirm({kicker:o.kicker||'BIG BUY',title:o.emoji+' '+o.name,body:variantBody(id),okLabel:o.okLabel||'Buy it',okDisabled:!first,onOk:()=>{const r=M.chooseOptional(id,ui.variantPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});
  $('confirmBody').dataset.variantFor=id;}
 /* ---------- About ---------- */
 function renderAbout(){
  const rows=[['Goal','Reach 80 rich and happy. ❤️ Happiness (0 to 100) is the score; money is the fuel'],
-  ['Happiness','Built from three parts of life: time for yourself, time with family and friends, and community life. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. Happiness is 60% the weakest part plus 40% the average, so balance matters. Choices add bumps that fade over time: ❤️+ to ❤️+++ up, 💔− to 💔−−− down'],
+  ['Happiness','Built from three parts of life: 🧍 time for yourself, 👨‍👩‍👧 family and friends, and 🏘️ community. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. The mix is 60% the weakest part plus 40% the average, stretched onto 0 to 100: a typical start shows about 50, a well-balanced life 75 or more. Tap ❤️ to see each part and what moves the weakest one. Choices add bumps that fade over time: ❤️+ to ❤️+++ up, 💔− to 💔−−− down'],
+  ['Money check','If expenses are above take-home pay for 2 months in a row, the race stops: trim, cut to basics, choose in More → Monthly plan, or keep going (at most once a year)'],
+  ['Job loss','Severance, then a job search of 6 to 18 months (a little longer after 45), or a lower-paid role at once (−25%). With no salary you choose how to live: cut to basics, trim, or keep going. Back at work, you choose whether to return to your old lifestyle. A 2-starter flat is too small once you have two kids'],
+  ['Big shocks','Every life gets at least two big money shocks before 60, years apart: a long layoff, an accident, a serious illness, a flood or a parent’s hospital stay. They test your cushion, health cover and term cover'],
+  ['Lifestyle creep','When your take-home pay is 1.8 times what it was when you last set your lifestyle, friends expect you to upgrade (at most every 3 years)'],
+  ['Good surprises','Windfalls, awards, and tough calls: a big weekend gig on the same day as your child’s annual day or a friend’s wedding'],
   ['Lifetime happiness','Your happiness averaged over every month from 23 to 80. Months you never reach count as zero. Your ending combines it with your net worth in today’s money (₹1 crore or more counts as rich). Your best lifetime happiness is saved in this browser'],
   ['Work pace','Set by your choices, never by a dial. A stretch project (2 years), weekend gigs (6 months), a startup (2 years) or weekend classes (1 year) put you in 🚀 Hustle mode: +1% on yearly raises and 1.5× promotion odds, but less happiness. Slowing down after burnout means 2 years of 🌿 Taking it easy: −1% raises, 0.6× promotion odds, more happiness. Then work settles back to normal. Slowing down for family when asked lowers promotion odds to 0.6× for 2 years'],
   ['Burnout','If your time for yourself stays very low (under 35) for 9 months while working, burnout hits: take a 2-month unpaid break, slow down for 2 years, or push through with a doctor’s bill'],
@@ -2743,7 +2980,9 @@ function renderAbout(){
   ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
-  ['Health cover','Offered as a card in your second month (and now and then later while you have none), or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
+  ['Health cover','Chosen at the start, offered as a card in month 2, in ads, or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone on the policy. It never renews by itself: at a pit stop about every 5 years you renew it or let it lapse. After you marry or have a child, you are asked once to renew it as family cover; until then your spouse and kids are not covered. More → Monthly power-ups shows what you have'],
+  ['Insurance ads','Some insurance ads offer what you are missing (health, term or parents’ cover). Others sell a “3-in-1” plan: about 4.5% a year, 10 years of premiums, paid out after 15; surrendering early returns 30%'],
+  ['Lump sum','More → One-time: invest your idle cash (above 6 months), a quarter, half or all of your savings at once'],
   ['Term cover','₹1 crore cover (today’s money) until 65 with a disability benefit of 20% if an accident stops you working. ₹800/month at 23, about 4.5% more for every year older you buy it; the premium is locked when bought. You never die in this game'],['Home upgrade','Unlocks at age 26 with 2 Career XP: ₹18,000 once + ₹8,000/month'],
   ['Music','An original chiptune written for this game, played with the Web Audio API']];
  $('aboutBody').innerHTML='<p class="lead">A playful race through life about how everyday money decisions add up.</p><ul><li>Costs, salaries, returns and events are illustrative, and outcomes vary from run to run.</li><li>This is educational entertainment, not personal financial, tax, insurance or investment advice.</li><li>Investment outcomes are uncertain. Past or simulated returns do not predict real ones.</li><li>Taxes, insurance, benefits and legal rules are simplified or left out.</li><li>No account or personal data. Only your best lifetime happiness and your sound and speed settings are saved, in this browser.</li></ul><h3>Assumptions</h3><table class="about-table">'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>';
@@ -2767,7 +3006,12 @@ $('startBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup()
 // Male or female: switches the character on the card and is remembered for New life.
 document.querySelector('.gender-pick').addEventListener('click',e=>{const b=e.target.closest('[data-gender]');if(!b)return;prefs.gender=b.dataset.gender;M.savePrefs();if(M.setGender(prefs.gender))sfx('tap');renderStory();b.focus({preventScroll:true});});
 $('rerollBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup(0);const a=$('storyAvatar');a.style.animation='none';void a.offsetWidth;a.style.animation='';});
-$('beginGameBtn').addEventListener('click',()=>{unlockAudio();beginLife();});
+$('beginGameBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');openWizard();});
+$('wizBody').addEventListener('click',e=>{const b=e.target.closest('[data-wiz]');if(!b)return;const p=S().profile,k=WIZ[ui.wiz.step].key;p[k]=b.dataset.wiz;sfx('tap');renderWizard(false);renderStory();const again=$('wizBody').querySelector('[data-wiz="'+b.dataset.wiz+'"]');if(again)again.focus({preventScroll:true});});
+$('wizBack').addEventListener('click',()=>{if(ui.wiz.step>0){ui.wiz.step-=1;sfx('tap');renderWizard(true);}});
+$('wizNext').addEventListener('click',()=>{if(ui.wiz.step<WIZ.length-1){ui.wiz.step+=1;sfx('tap');renderWizard(true);return;}hideOverlay('profileOverlay');$('app').inert=false;beginLife();});
+$('wizSkip').addEventListener('click',()=>{hideOverlay('profileOverlay');$('app').inert=false;beginLife();});
+$('hudHappy').addEventListener('click',()=>{sfx('tap');openHappy();});
 $('restartBtn').addEventListener('click',requestRestart);
 $('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup(0);});
 $('aboutBtn').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
@@ -2789,7 +3033,7 @@ $('sheetSound').addEventListener('click',()=>{$('soundBtn').click();renderMore()
 $('sheetAbout').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
 $('sheetRestart').addEventListener('click',requestRestart);
 $('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
- const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
+ const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}if(r.openPlan)setTimeout(()=>{if(S().status!=='playing'||M.blockingEvent())return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');},350);ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('trackCard').addEventListener('click',ev=>{const b=ev.target.closest('[data-card-choice]');if(!b||b.disabled)return;const e=S().event;if(!e||e.tier!=='card'||String(e.id)!==b.dataset.eventId)return;
  ev.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(e.id,b.dataset.cardChoice);if(r)sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('wallet').addEventListener('click',e=>{const c=e.target.closest('[data-finance-detail]');if(!c)return;const k=c.dataset.financeDetail;ui.financeDetail[k]=!ui.financeDetail[k];renderPlay();});

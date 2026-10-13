@@ -33,7 +33,7 @@ function loadGame(seed){return new Promise((res,rej)=>{const f=document.createEl
 async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'no'},profile||{}));g.L.render();return g;}
 const SAFE={savings:1,save:1,full:0};
 // Deterministic auto-player used by long-run scenarios.
-function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event,ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
+function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event;if(e.type==='pitstop'){assert(L.resolveEvent(e.id,'go',{pit:{cover:'renew'}}),'pit stop');return;}const ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
  const want=(policy&&policy[e.type])||['savings','save','stay','yes','modest','later','part','search','work','buffer','clear','keep','budget','one','shagun','regular','half','train','home','cake','gift','report','pass','small','accept','foster','take','skip','pay','ride','fan','k1','govHospital','private','share','mediate','join'].find(x=>ch.includes(x))||ch[0];
  const pick=ch.includes(want)?want:ch[0];const r=L.resolveEvent(e.id,pick);assert(r,'event '+e.type+' failed to resolve with '+pick);}
 function run(L,months,policy){for(let i=0;i<months&&L.state.status==='playing';i++){autoResolve(L,policy);L.advanceMonth();}autoResolve(L,policy);}
@@ -71,10 +71,10 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
  L.startEvent('kidsQ');L.resolveEvent(s.event.id,'k1');assert(s.life.nextBirthMonth>s.month,'birth scheduled');s.month=s.life.nextBirthMonth;L.startEvent('birth');L.resolveEvent(s.event.id,'govHospital');
  eq(s.children.length,1,'one child');eq(s.life.nextBirthMonth,0,'no second birth planned');eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,1,'child cost charged once');
  s.month+=21*12;eq(L.monthlyBudget().lines.filter(l=>l.key.startsWith('child')).length,0,'child cost stops at 21');});
-/* 8 */ await test('8. Layoff: severance once, three months without pay, recovery',async()=>{const {L}=await game(19);const s=L.state;s.month=80;s.nextEventMonth=9999;const pay=s.salary;
+/* 8 */ await test('8. Layoff: severance once, a 6–18 month search without pay, then work again',async()=>{const {L}=await game(19);const s=L.state;s.month=80;s.nextEventMonth=9999;const pay=s.salary;
  L.startEvent('layoff');const e=s.event,c0=s.cash;eq(e.severance,Math.round(s.salary*(1+0.5*6)),'severance = 1 month notice + 15 days per year (6 years)');const take=L.monthlyIncome();L.resolveEvent(e.id,'search');eq(s.cash,c0+e.severance,'severance credited once');eq(L.monthlyBudget().income,0,'income shows zero');
- const incomes=[];for(let i=0;i<4;i++){s.event=null;L.advanceMonth();incomes.push(s.lastSettlement.income);}
- eq(incomes.slice(0,3).join(','),'0,0,0','no salary for 3 months');assert(incomes[3]>=take,'salary resumes in month 4');eq(s.employment,'employed','employed again');});
+ const n=e.search;assert(n>=6&&n<=18,'search takes 6–18 months: '+n);const incomes=[];for(let i=0;i<=n;i++){s.event=null;L.advanceMonth();incomes.push(s.lastSettlement.income);}
+ assert(incomes.slice(0,n).every(v=>v===0),'no salary while searching');assert(incomes[n]>=take,'salary resumes after the search');eq(s.employment,'employed','employed again');});
 /* 9 */ await test('9. Retirement only from 40; salary stops, expenses continue',async()=>{const {L}=await game(20);const s=L.state;s.month=100;eq(L.requestRetirement(),false,'blocked before 40');
  s.month=(40-23)*12+1;s.nextEventMonth=9999;assert(L.requestRetirement(),'available at 40');L.resolveEvent(s.event.id,'retire');eq(s.employment,'retired','retired');
  s.cash=0;s.invested=1000000;const b=L.monthlyBudget();eq(b.income,0,'no salary');L.advanceMonth();eq(s.lastSettlement.income,0,'settled without salary');eq(s.lastSettlement.drawdown,s.lastSettlement.expenses,'investments drawn down for costs');eq(s.distressMonths,0,'covered month is not strained');});
@@ -88,7 +88,7 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
  s.event=null;s.month=40;L.applyExpenseChange('food','foodie');eq(L.monthlyBudget().lines.find(l=>l.key==='food').amount,Math.round(10000*Math.pow(1.06,3)),'new cost enters at current price');});
 /* 12 */ await test('12. Reach age 80 and stop',async()=>{const {L}=await game(24,{home:'starter',social:'quiet'});const s=L.state;
  const pol={marriageQ:'no',retire:'work',bonus:'invest',crunch:'buffer'};
- for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);if(!s.event&&s.optionalUsedMonth!==s.month&&s.cash>6*L.monthlyBudget().total&&s.unsecuredDebt===0)L.chooseOptional(s.cash>200000?'invest50k':'invest5k');L.advanceMonth();}
+ for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);if(!s.event&&s.optionalUsedMonth!==s.month&&s.cash>6*L.monthlyBudget().total&&s.unsecuredDebt===0)(s.cash>200000?L.chooseOptional('investLump','idle'):L.chooseOptional('invest5k'));L.advanceMonth();}
  eq(s.status,'ended','ended');eq(s.finalReason,'completed','completed');eq(s.month,685,'month 685');eq(L.ageLabel(),'80.0','age 80.0');
  eq(L.advanceMonth(),false,'clock cannot advance');eq(s.month,685,'still 685');noNaN(s);});
 /* 13 */ await test('13. Early insolvency after six strained months; frozen afterwards',async()=>{const {L}=await game(25,{salary:35000,home:'premium',social:'big',food:'foodie',commute:'car'});const s=L.state;
@@ -119,8 +119,8 @@ await test('Invariant: home upgrade lock and recurring cost in every later month
 await test('Invariant: expense preview does not mutate state',async()=>{const {L}=await game(30);const s=L.state,snap=JSON.stringify(s);L.previewExpenseChange('commute','car');L.previewExpenseChange('home','premium');eq(JSON.stringify(s),snap,'unchanged');});
 await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
 await test('Invariant: no two severe shocks in a row; event cadence 12–20 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
- for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
- const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t)&&!L.EVENTS[t].life&&!L.EVENTS[t].ad);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type,!!s.event.scheduled]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
+ const ctx=['crunch','retire','burnout','squeeze','overspend','tighten','restore','renewCover','creep'],rnd=types.filter(([m,t,sch])=>m>24&&!sch&&!ctx.includes(t)&&!L.EVENTS[t].life&&!L.EVENTS[t].ad);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
  assert(rnd.length>=25&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
 await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
 await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={marriageQ:'yes',wedding:'big',kidsQ:'k2',crunch:'keep'};
@@ -190,9 +190,13 @@ await test('School: chosen at 4, fees until 18; ageing parents add support',asyn
  L.startEvent('schoolQ');const c0=s.cash;L.resolveEvent(s.event.id,'private');eq(s.children[0].school,'private','private school');eq(s.cash,c0-L.priced(30000),'admission fee once');
  assert(L.monthlyBudget().lines.some(l=>l.key==='school0'),'fees charged');s.month=1+18*12;eq(L.monthlyBudget().lines.some(l=>l.key==='school0'),false,'fees stop at 18');
  s.life.parentsMonth=s.month;eq(L.lifeEventDue(s),'parentsCare','parents need support');L.startEvent('parentsCare');L.resolveEvent(s.event.id,'support');eq(L.monthlyBudget().lines.find(l=>l.key==='parents').amount,L.priced(8000),'monthly support');eq(L.lifeEventDue(s),null,'asked once');});
-await test('Health cover: family policy premium grows; parents add-on covers parents’ bills',async()=>{const {L}=await game(99,{health:'yes'});const s=L.state;s.month=100;s.nextEventMonth=9999;
- assert(s.insured,'health cover from the setup choice');const solo=L.healthPremium();s.married=true;const duo=L.healthPremium();s.children=[{birthMonth:90,base:9000,school:null}];const fam=L.healthPremium();
- assert(solo<duo&&duo<fam,'premium grows with the family');eq(L.monthlyBudget().lines.find(l=>l.key==='insurance').label,'Family health cover','family policy label');
+await test('Health cover: renewed only by you, family cover on request; parents add-on covers parents’ bills',async()=>{const {L}=await game(99,{health:'yes'});const s=L.state;s.month=100;s.nextEventMonth=9999;s.nextPitMonth=9999;s.adNext=99999;s.life.askMonth=0;s.bigShock.due=[];s.coverRenewMonth=161;
+ assert(s.insured,'health cover from the setup choice');const solo=L.healthPremium();s.married=true;s.children=[{birthMonth:90,base:9000,school:null}];eq(L.healthPremium(),solo,'marriage does not change the policy by itself');
+ s.event=null;L.startEvent('medical');if(s.event.who!=='you')eq(s.event.amount,s.event.total,'spouse or child not covered on a “me only” policy');L.resolveEvent(s.event.id,'savings');
+ s.event=null;L.advanceMonth();eq(s.event&&s.event.type,'renewCover','asked to renew as family cover');eq(s.event.tier,'stop','the race waits for an answer');L.resolveEvent(s.event.id,'family');const fam=L.healthPremium();
+ assert(fam>solo,'family cover costs more');eq(L.monthlyBudget().lines.find(l=>l.key==='insurance').label,'Family health cover','family policy label');
+ eq(L.coverRenewalDue(),false,'not due yet');s.month=s.coverRenewMonth;assert(L.renewalQuote(),'renewal due at a pit stop');L.startEvent('pitstop');assert(s.event.renewal,'the pit stop asks');L.resolveEvent(s.event.id,'go',{pit:{}});eq(s.insured,false,'no answer: the cover lapses, it never renews by itself');
+ L.chooseOptional('insure');assert(s.insured,'bought again in More');s.month+=1;s.cash=1e6;
  L.startEvent('parentmedical');eq(s.event.amount,s.event.total,'parents not covered by default');L.resolveEvent(s.event.id,'savings');s.cash=1e6;s.month=101;
  assert(L.chooseOptional('parentsCover'),'parents added');assert(L.healthPremium()>fam,'add-on raises the premium');L.startEvent('parentmedical');eq(s.event.amount,Math.round(s.event.total*0.35),'cover pays 65% of parents’ bills');});
 await test('Term cover: cheap when young, premium locked, pays a disability benefit after an accident',async()=>{const {L}=await game(100,{health:'yes'});const s=L.state;s.nextEventMonth=9999;s.cash=1e6;
@@ -213,7 +217,7 @@ await test('Story card: a random life at 23, male or female, rerolled with New l
  const names=new Set([s.profile.name]);for(let i=0;i<6;i++){d.getElementById('rerollBtn').click();names.add(L.state.profile.name);}assert(names.size>2,'New life rolls different characters');
  const sal=L.state.profile.salary,job=L.state.profile.job;d.querySelector('[data-gender="woman"]').click();eq(L.state.profile.avatar,'woman','female picked');eq(d.querySelector('[data-gender="woman"]').getAttribute('aria-pressed'),'true','button shows it');eq(L.state.profile.salary,sal,'same life');eq(L.state.profile.job,job,'same job');eq(d.getElementById('storyAvatar').textContent,'👩','female avatar');
  d.getElementById('rerollBtn').click();eq(L.state.profile.avatar,'woman','New life keeps the choice');d.querySelector('[data-gender="man"]').click();eq(L.state.profile.avatar,'man','male picked');assert(d.getElementById('storyName').textContent.includes(L.state.profile.name),'name updated');
- const p=L.state.profile;d.getElementById('beginGameBtn').click();const g=L.state;eq(g.status,'playing','started');eq(g.profile.name,p.name,'the same character races');
+ const p=L.state.profile;d.getElementById('beginGameBtn').click();assert(!d.getElementById('profileOverlay').classList.contains('hidden'),'Start opens the profile setup');eq(d.querySelectorAll('#wizBody [data-wiz]').length,3,'three homes to pick from');d.getElementById('wizSkip').click();const g=L.state;eq(g.status,'playing','started');eq(g.profile.name,p.name,'the same character races');
  eq(g.salary,Math.round(p.salary*(p.eduLoan==='yes'?1.25:1)),'salary from the card');eq(!!g.eduLoan,p.eduLoan==='yes','education loan from the card');eq(g.insured,false,'no cover yet');
  assert(/23\.0/.test(d.getElementById('ageValue').textContent),'starts at 23');
  L.advanceMonth();eq(g.event&&g.event.type,'insureoffer','month 2: a health cover card');eq(g.event.tier,'card','it is a card');eq(g.event.defaultChoice,'yes','default: get covered');
@@ -222,7 +226,7 @@ await test('Life rings: drift toward targets, event bumps apply once, score favo
  const t=L.ringTargets();for(const k of ['me','fam','com'])assert(t[k]>=5&&t[k]<=95,'target in range '+k);
  s.rings={me:20,fam:90,com:50};const before={...s.rings};const t2=L.ringTargets();L.tickRings(s);
  for(const k of ['me','fam','com'])near(s.rings[k],before[k]+(t2[k]-before[k])*0.04,1e-9,'4% of the gap: '+k);
- eq(s.ringMonths,1,'month counted');near(L.monthPoints(s),(0.6*Math.min(s.rings.me,s.rings.fam,s.rings.com)+0.4*(s.rings.me+s.rings.fam+s.rings.com)/3)/10,1e-9,'points formula');
+ eq(s.ringMonths,1,'month counted');near(L.monthPoints(s),Math.min(100,Math.max(0,((0.6*Math.min(s.rings.me,s.rings.fam,s.rings.com)+0.4*(s.rings.me+s.rings.fam+s.rings.com)/3)-15)*2))/10,1e-9,'points formula (stretched onto 0–100)');
  s.rings={me:60,fam:60,com:60};const even=L.monthPoints(s);s.rings={me:90,fam:60,com:30};assert(L.monthPoints(s)<even,'same average, lopsided rings score less');
  s.rings={me:50,fam:50,com:50};s.event=null;L.startEvent('festivalTime');const e=s.event;L.resolveEvent(e.id,'host');eq(s.rings.com,66,'hosting a festival: Community +16');assert(!L.resolveEvent(e.id,'host'),'cannot resolve twice');eq(s.rings.com,66,'bump applied once');
  eq(s.feedback.rings.com,16,'feedback carries the ring change');
@@ -260,7 +264,7 @@ await test('Burnout: a low Me ring for 9 months, and a break pauses then resumes
 await test('Endings: lifetime happiness and real wealth pick the title; insolvency is its own ending',async()=>{const {L}=await game(205);const s=L.state;
  const at=(h,cash)=>{s.month=1;s.score=h*(L.A.endMonth-1)/10;s.cash=cash;s.invested=0;s.unsecuredDebt=0;s.eduLoan=null;s.vehicleLoan=null;s.homeLoan=null;s.ownsHome=false;s.finalReason='completed';return L.lifeEnding(s).key;};
  eq(L.lifeHappiness(s)>=0,true,'lifetime happiness is a number');s.score=60*684/10;eq(L.lifeHappiness(s),60,'average over every month');
- eq(at(60,2e7),'legend','rich and happy');eq(at(60,1e5),'heart','happy, modest money');eq(at(30,2e7),'restless','rich, unhappy');eq(at(30,1e5),'tough','neither');eq(at(50,5e6),'comfy','comfortable');eq(at(50,1e5),'steady','middling');
+ eq(at(75,2e7),'legend','rich and happy');eq(at(75,1e5),'heart','happy, modest money');eq(at(30,2e7),'restless','rich, unhappy');eq(at(30,1e5),'tough','neither');eq(at(55,5e6),'comfy','comfortable');eq(at(55,1e5),'steady','middling');
  assert(L.lifeEnding(s).weakArea.length>5,'names what held happiness back');
  s.finalReason='insolvent';eq(L.lifeEnding(s).key,'broke','broke');});
 await test('Ring power-ups: once a year, with lasting choices in the Big buys picker',async()=>{const {L}=await game(206);const s=L.state;s.nextEventMonth=9999;s.event=null;s.cash=1e6;
@@ -275,7 +279,7 @@ await test('Happiness UI: one ❤️ number, hearts on choices, home picker, no 
  d.querySelector('#confirmBody [data-variant="near"]').click();eq(d.querySelector('#confirmBody [data-variant="near"]').getAttribute('aria-pressed'),'true','picked');d.getElementById('confirmOk').click();eq(s.homeType,'near','bought the flat near family');
  d.getElementById('moreClose').click();
  L.workPace(s,'hustle',24,'test');L.render();assert(!d.getElementById('hudPace').classList.contains('hidden'),'hustle badge shows');assert(/Hustle/.test(d.getElementById('hudPace').textContent),'badge text');
- s.event=null;s.month=1;s.score=60*684/10;s.cash=2e7;L.endRun('completed');L.render();eq(d.getElementById('endTitle').textContent,'Rich and Happy','ending title');assert(/LIFETIME HAPPINESS/.test(d.getElementById('endBody').textContent),'lifetime happiness shown');assert(!/LIFE SCORE/.test(d.getElementById('endBody').textContent),'no Life Score');});
+ s.event=null;s.month=1;s.score=75*684/10;s.cash=2e7;L.endRun('completed');L.render();eq(d.getElementById('endTitle').textContent,'Rich and Happy','ending title');assert(/LIFETIME HAPPINESS/.test(d.getElementById('endBody').textContent),'lifetime happiness shown');assert(!/LIFE SCORE/.test(d.getElementById('endBody').textContent),'no Life Score');});
 await test('Phone screen: race on top, four money tiles, More sheet pauses the race',async()=>{const {L,win}=await loadGame(208);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.event=null;
  s.cash=123456;s.invested=50000;s.unsecuredDebt=7000;L.render();
  assert(d.body.classList.contains('playing'),'play layout');eq(d.querySelectorAll('#wallet .wallet-card').length,4,'four tiles');
@@ -357,6 +361,42 @@ await test('SIP explainer: shown once, pauses the race, Got it closes it',async(
  L.maybeSipInfo(true);assert(!d.getElementById('sipInfoOverlay').classList.contains('hidden'),'explainer open');eq(L.ui.modal,'sipinfo','race paused');
  d.getElementById('sipInfoClose').click();assert(d.getElementById('sipInfoOverlay').classList.contains('hidden'),'closed');eq(L.ui.modal,null,'race resumes');
  L.maybeSipInfo(true);assert(d.getElementById('sipInfoOverlay').classList.contains('hidden'),'only once');});
+await test('Money check: 2 months over income stops the race; trim, basics or More',async()=>{const {L,win}=await loadGame(401);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.adNext=99999;s.bigShock.due=[];s.life.askMonth=0;s.month=30;s.event=null;s.cash=5e6;s.openers={shock:1,bonus:1,social:1};
+ L.applyExpenseChange('home','premium');L.applyExpenseChange('food','foodie');L.applyExpenseChange('social','big');L.applyExpenseChange('other','big');s.salary=30000;
+ L.advanceMonth();eq(s.event,null,'one month over is not enough');L.advanceMonth();eq(s.event&&s.event.type,'overspend','two months in a row: money check');eq(s.event.tier,'stop','the race stops');
+ const ids=L.EVENTS.overspend.choices(s.event,s).map(c=>c.id);assert(['trim','basics','more','keep'].every(x=>ids.includes(x)),'trim, basics, More or keep');
+ const before=L.monthlyBudget().total;L.render();d.querySelector('#eventChoices [data-choice="more"]').click();await new Promise(r=>setTimeout(r,500));assert(!d.getElementById('expenseOverlay').classList.contains('hidden'),'“Let me choose” opens the monthly plan');
+ d.getElementById('expenseDone').click();s.lastOverspendMonth=-999;s.overspendMonths=2;s.event=null;L.advanceMonth();eq(s.event&&s.event.type,'overspend','asked again');L.resolveEvent(s.event.id,'basics');
+ assert(L.monthlyBudget().total<before,'cut to basics lowers costs');eq(s.profile.food,'home','home food');eq(s.profile.social,'quiet','quiet weekends');noNaN(s);});
+await test('Job loss: a lifestyle choice with no salary, and back to the old life later if you want',async()=>{const {L}=await game(402);const s=L.state;s.month=90;s.nextEventMonth=9999;s.nextPitMonth=9999;s.adNext=99999;s.bigShock.due=[];s.life.askMonth=0;s.cash=1e6;L.applyExpenseChange('food','foodie');
+ L.startEvent('layoff');L.resolveEvent(s.event.id,'search');s.event=null;L.advanceMonth();eq(s.event&&s.event.type,'tighten','asked how to live without salary');
+ const e=s.event;assert(e.runBasics>e.runNow,'basics makes reserves last longer');L.resolveEvent(e.id,'basics');eq(s.profile.food,'home','cut back');
+ for(let i=0;i<20&&s.employment!=='employed';i++){s.event=null;L.advanceMonth();}eq(s.employment,'employed','found a job');
+ eq(s.event&&s.event.type,'restore','asked about the old lifestyle');eq(s.event.tier,'card','a card');eq(s.event.defaultChoice,'lean','default: stay lean');L.resolveEvent(s.event.id,'back');eq(s.profile.food,'foodie','old life back');eq(s.lifestyleSaved,null,'cleared');
+ s.children=[{birthMonth:80,base:9000,school:null},{birthMonth:85,base:7000,school:null}];assert(/too small/.test(L.expenseChangeBlocker('home','starter')||''),'a starter flat is too small for a family of four');});
+await test('Big shocks: every life gets at least two before 60, years apart',async()=>{for(const seed of [411,412,413,414]){const {L}=await game(seed);const s=L.state;const hits=[];
+  for(let i=0;i<460&&s.status==='playing';i++){if(s.event){if(L.BIG_SHOCKS.includes(s.event.type)&&L.preciseAge()<60)hits.push(L.preciseAge());autoResolve(L);}s.cash=Math.max(s.cash,3e6);L.advanceMonth();}
+  assert(hits.length>=2,'seed '+seed+': at least two big shocks before 60 ('+hits.length+')');eq(s.bigShock.due.length,2,'two scheduled');assert(s.bigShock.due[1]-s.bigShock.due[0]>=8*12,'8+ years apart');}});
+await test('Insurance: pit stop renewal waits for you; ads sell real cover and a 3-in-1 plan',async()=>{const {L,win}=await loadGame(403);const d=win.document;L.goToSetup();L.state.profile.health='yes';L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.adNext=99999;s.bigShock.due=[];s.life.askMonth=0;s.event=null;
+ s.month=s.coverRenewMonth-1;s.nextPitMonth=s.coverRenewMonth;L.stepMonth();eq(s.event&&s.event.type,'pitstop','pit stop');assert(d.querySelector('.pit-cover'),'renewal row shown');assert(d.querySelector('.pit-go').disabled,'Continue waits for a choice');
+ d.querySelector('[data-pit-key="cover"][data-pit-value="renew"]').click();assert(!d.querySelector('.pit-go').disabled,'chosen: Continue works');const due=s.coverRenewMonth;d.querySelector('.pit-go').click();assert(s.insured&&s.coverRenewMonth>due,'renewed for another term');
+ s.event=null;L.applyExpenseChange('insurance','cancel');s.employment='employed';L.startEvent('adCover');eq(s.event.kind,'insure','the ad offers what you lack');L.resolveEvent(s.event.id,'buy');assert(s.insured,'bought from the ad');
+ s.event=null;s.cash=2e5;s.salary=150000;L.startEvent('adPolicy');const prem=s.event.premium;const r=L.resolveEvent(s.event.id,'sign');eq(r.feedback.title,'📘 Lesson learnt','a 3-in-1 plan is a lesson');eq(L.monthlyBudget().lines.find(l=>l.key==='policy').amount,prem,'premium every month');
+ for(let i=0;i<12;i++){s.event=null;L.advanceMonth();}assert(s.policy.value>prem*11,'the plan builds value');const val=s.policy.value,c0=s.cash;L.applyExpenseChange('policy','surrender');near(s.cash-c0,Math.round(val*0.3),1,'surrender returns 30%');eq(s.policy,null,'plan gone');noNaN(s);});
+await test('Lump sum, windfalls, awards and tough calls',async()=>{const {L}=await game(404);const s=L.state;s.month=60;s.nextEventMonth=9999;s.event=null;const total=L.monthlyBudget().total;s.cash=total*6+300000;
+ const inv=s.invested;assert(L.chooseOptional('investLump','idle'),'invest the idle cash');near(s.invested-inv,300000,2,'idle cash invested');near(L.idleCash(),0,2,'cushion stays');
+ s.event=null;L.startEvent('windfall');eq(s.event.tier,'card','a windfall is a card');const c=s.cash;L.resolveEvent(s.event.id,'save');eq(s.cash-c,s.history.length?s.cash-c:0,'saved');
+ s.event=null;const xp=s.career;L.startEvent('award');L.resolveEvent(s.event.id,'invest');eq(s.career,Math.min(5,xp+1),'award: Career XP +1');
+ s.event=null;s.married=true;L.startEvent('clash');assert(/anniversary/.test(s.event.title),'the gig clashes with something that matters');eq(s.event.defaultChoice,'family','default: be there');const f=s.rings.fam;L.resolveEvent(s.event.id,'family');assert(s.rings.fam>f,'being there helps Family & Friends');noNaN(s);});
+await test('Happiness: stretched to 0–100, weakest part shown, ❤️ explains what moves it',async()=>{const {L,win}=await loadGame(405);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.event=null;s.nextEventMonth=9999;
+ s.rings={me:57,fam:45,com:38};eq(L.happiness(),Math.round((0.6*38+0.4*140/3-15)*2),'typical start ≈ 52');s.rings={me:75,fam:75,com:65};assert(L.happiness()>=80,'a balanced life scores 80+');
+ s.rings={me:60,fam:55,com:30};L.render();eq(L.weakestRing().key,'com','Community is the weakest');assert(/low/.test(d.getElementById('happyLow').textContent),'HUD flags the weak part');
+ d.getElementById('hudHappy').click();assert(!d.getElementById('confirmOverlay').classList.contains('hidden'),'❤️ opens the panel');eq(d.querySelectorAll('#confirmBody .hp-ring').length,3,'three parts');assert(/Community: what moves it/.test(d.getElementById('confirmBody').textContent),'explains the weakest');eq(L.ui.modal,'confirm','race paused');});
+await test('Profile setup: five animated steps that set your lifestyle before the race',async()=>{const {L,win}=await loadGame(406);const d=win.document;L.goToSetup();L.render();d.getElementById('beginGameBtn').click();
+ const ov=d.getElementById('profileOverlay');assert(!ov.classList.contains('hidden'),'opens');assert(/Take-home/.test(ov.textContent),'shows what is left of the salary');
+ d.querySelector('#wizBody [data-wiz="starter"]').click();eq(L.state.profile.home,'starter','home picked');d.getElementById('wizNext').click();d.querySelector('#wizBody [data-wiz="home"]').click();d.getElementById('wizNext').click();d.querySelector('#wizBody [data-wiz="big"]').click();d.getElementById('wizNext').click();d.getElementById('wizNext').click();
+ d.querySelector('#wizBody [data-wiz="yes"]').click();assert(/Start the race/.test(d.getElementById('wizNext').textContent),'last step starts the race');d.getElementById('wizNext').click();
+ const s=L.state;eq(s.status,'playing','racing');eq(s.profile.food,'home','food kept');eq(s.profile.social,'big','weekends kept');assert(s.insured,'health cover from the setup');assert(ov.classList.contains('hidden'),'closed');});
 await test('Running out of money: every failure is a lesson',async()=>{const {L,win}=await game(314);const d=win.document;const s=L.state;s.whatIf.idle=5e5;L.endRun('insolvent');L.render();
  assert(/Every failure is a lesson/.test(d.getElementById('endBody').textContent),'failure framed as a lesson');});
 
