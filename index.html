@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#F3EFE6">
-<meta name="application-version" content="2026.10.11-pitstops-1">
+<meta name="application-version" content="2026.10.13-phone-1">
 <meta name="description" content="Life Happens: race through life from 23 to 80 and see how everyday money decisions add up.">
 <title>Life Happens — Race from 23 to 80</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23DCE7D9%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 text-anchor=%27middle%27%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
@@ -101,6 +101,61 @@ button:disabled{cursor:not-allowed}
 .clockbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#9DBFA5,#E2B95C);border-radius:0 999px 999px 0}
 .run-status{display:flex;justify-content:space-between;align-items:center;gap:8px;font:700 12px var(--sans);color:var(--muted);padding:0 4px;margin-top:-4px}
 .run-status b{color:var(--forest)}
+
+/* ---------- Phone play screen: everything on one screen, no page scroll ---------- */
+body.playing .topbar{display:none}
+body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.screen.play{flex:1;min-height:0;gap:8px}
+.play .race-wrap{flex:0 0 auto}
+.play .race-canvas{height:clamp(150px,30dvh,240px)}
+.stage{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding:9px 2px 4px;margin:0 -2px}
+.controls{display:flex;gap:8px;align-items:center}
+.controls button{min-height:50px;min-width:54px;border-radius:16px;border:2px solid #fff;background:var(--paper);box-shadow:0 3px 0 #2E3A3322;font:700 17px var(--display);color:var(--ink);padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.controls button:active{transform:translateY(2px);box-shadow:0 1px 0 #2E3A3322}
+.controls button:disabled{opacity:.55}
+.controls button .vector-icon{width:20px;height:20px}
+.controls .more-button{margin-left:auto;background:var(--sage);min-width:96px}
+.controls .retire-button{flex:1;min-width:0;background:var(--peach);color:#6C4132}
+.hud-happy{right:10px;top:9px;display:flex;align-items:center;gap:5px;background:#FFFDF8E6;border-radius:999px;padding:4px 12px 4px 8px;box-shadow:0 2px 0 #2E3A3318;font:700 22px var(--display)}
+.hud-happy .emoji{font-size:20px;filter:none}
+.hud-happy.low b{color:var(--danger-ink)}
+.hud-happy.pop{animation:heartPop .5s ease-out}
+@keyframes heartPop{40%{transform:scale(1.25)}}
+.hud-happy .hdelta{position:absolute;right:6px;top:100%;font:800 13px var(--sans);border-radius:999px;padding:0 7px;background:#FFFDF8;animation:deltaFloat 1.8s ease-out forwards}
+.hud-happy .hdelta.up{color:#2F6B4A}.hud-happy .hdelta.down{color:var(--danger-ink)}
+.hud-pace{right:10px;top:52px;background:#FFFDF8D9;border-radius:999px;padding:3px 10px;font:800 12px var(--sans);color:#6C4132;box-shadow:0 2px 0 #2E3A3314}
+.sheet-overlay{align-items:flex-end;padding-bottom:0}
+.dialog.sheet{max-width:540px;border-radius:26px 26px 0 0;display:flex;flex-direction:column;gap:10px;background:var(--bg);max-height:calc(100dvh - 40px);animation:sheetUp .3s ease-out}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet-top h2{margin:0}
+.sheet-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sheet-actions .secondary{padding:0 6px}
+/* ---------- Story card (a random life to start) ---------- */
+.story-card{background:var(--paper);border:3px solid #fff;border-radius:26px;box-shadow:var(--shadow);padding:18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.story-avatar{font-size:64px;line-height:1.1;filter:none;animation:popin .4s ease-out}
+.story-card h1{font:700 clamp(26px,7.5vw,32px)/1.08 var(--display);letter-spacing:-.02em;margin:0}
+.story-facts{list-style:none;margin:4px 0;padding:0;display:grid;gap:6px;width:100%;text-align:left}
+.story-facts li{display:flex;gap:10px;align-items:center;background:#F6F1E6;border-radius:14px;padding:8px 12px;font-size:14px;font-weight:700;line-height:1.3}
+.story-facts li .emoji{font-size:22px;flex:0 0 26px;text-align:center}
+.story-facts li small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.story-goal{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--sage);border-radius:16px;padding:10px 12px;width:100%}
+.story-goal .emoji{font-size:24px}
+.story-goal b{font:700 16px var(--display)}
+.story-goal p{margin:2px 0 0;font-size:13.5px;line-height:1.4;font-weight:700;color:#34463B}
+.story-actions{display:grid;grid-template-columns:auto 1fr;gap:8px;width:100%;margin-top:4px}
+.story-actions .secondary{min-height:52px}
+.pit-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.pit-stats>div{background:#F6F1E6;border-radius:14px;padding:8px 10px;text-align:center}
+.pit-stats span{display:block;font:800 10px var(--sans);letter-spacing:.1em;color:var(--muted)}
+.pit-stats b{display:block;font:700 24px/1.1 var(--display)}
+.pit-stats small{font:800 12px var(--sans);color:var(--muted)}
+.pit-stats small.up{color:#2F6B4A}.pit-stats small.down{color:var(--danger-ink)}
+.pit-sip{width:100%;min-height:52px;border:2px dashed var(--sage-strong);border-radius:14px;background:var(--paper);display:flex;gap:9px;align-items:center;text-align:left;padding:6px 12px;margin:4px 0 10px;color:var(--ink)}
+.pit-sip[aria-pressed=true]{border-style:solid;background:var(--sage);box-shadow:0 3px 0 var(--sage-strong)}
+.pit-sip .emoji{font-size:22px}
+.pit-sip strong{display:block;font-size:14px}.pit-sip small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.pit-go b{font:800 13px var(--sans);background:#FFFDF833;border-radius:99px;padding:1px 8px;margin-left:6px}
 
 /* ---------- Track cards (small surprises) & pit stops ---------- */
 .track-card{background:var(--paper);border:2px solid #fff;border-radius:18px;padding:10px 12px 12px;box-shadow:var(--shadow)}
@@ -199,13 +254,16 @@ button:disabled{cursor:not-allowed}
 .life-tags>span{font-size:12px;font-weight:800;background:var(--paper);border:1.5px solid var(--line);color:#3E5A47;border-radius:999px;padding:3px 9px 3px 6px;display:inline-flex;gap:4px;align-items:center}
 
 /* ---------- Wallet ---------- */
-.wallet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.wallet-card{position:relative;min-width:0;min-height:84px;text-align:left;border:2px solid #fff;border-radius:18px;padding:9px 9px;box-shadow:var(--shadow);overflow:hidden;color:var(--ink)}
-.wallet-card.cash{background:var(--sage)}.wallet-card.invest{background:var(--lavender)}.wallet-card.debt{background:var(--peach)}
-.wallet-card .emoji{font-size:22px;display:block}
-.wallet-title{display:block;font-size:11px;font-weight:900;letter-spacing:.06em;margin-top:4px;color:#46584C}
-.wallet-card b{display:block;font:700 19px/1.1 var(--display);margin-top:2px;overflow-wrap:anywhere}
-.wallet-card small{display:block;font-size:11px;color:#55635A;margin-top:2px;font-weight:700}
+.wallet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.wallet-card{position:relative;min-width:0;min-height:62px;text-align:left;border:2px solid #fff;border-radius:14px;padding:6px 7px;box-shadow:var(--shadow);overflow:hidden;color:var(--ink);transition:background .3s}
+.wallet-card.cash{background:var(--sage)}.wallet-card.invest{background:var(--lavender)}.wallet-card.loans{background:var(--sky)}.wallet-card.debt{background:#EFEADD}
+.wallet-card.debt.bad{background:var(--danger-bg);animation:debtPulse 1.8s ease-in-out infinite}
+@keyframes debtPulse{50%{box-shadow:0 0 0 3px #C98A7A66}}
+.wallet-card .emoji{font-size:13px;margin-right:3px}
+.wallet-title{display:flex;align-items:center;font-size:10.5px;font-weight:900;letter-spacing:.02em;color:#46584C;white-space:nowrap}
+.wallet-card b{display:block;font:700 17px/1.15 var(--display);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wallet-card small{display:block;font-size:10px;color:#55635A;margin-top:1px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wallet-card.debt.bad b,.wallet-card.debt.bad small{color:var(--danger-ink)}
 .money-delta{position:absolute;right:6px;top:6px;border-radius:999px;padding:2px 7px;font:700 12px var(--display);animation:deltaFloat 1.8s ease-out forwards;pointer-events:none}
 .money-delta.up{background:#FFFDF8;color:#2F6B4A}.money-delta.down{background:#FFFDF8;color:#84402F}
 @keyframes deltaFloat{0%{opacity:0;transform:translateY(6px) scale(.8)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
@@ -369,10 +427,38 @@ button:disabled{cursor:not-allowed}
 
 @media(max-width:370px){
  .app{padding-left:10px;padding-right:10px}
- .wallet-card b{font-size:16px}
+ .wallet-card b{font-size:14px}
+ .wallet-card{padding:6px 5px}
+ .wallet-title{font-size:9.5px}
+ .wallet-card .emoji{display:none}
+ .controls .more-button{min-width:80px}
  .move-deck{grid-template-columns:1fr}
  .move-card{min-height:100px}
  .chips.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Short phones: keep the race, money, the card's choices and the controls on one screen. */
+@media(max-height:740px){
+ .play .race-canvas{height:clamp(128px,25dvh,190px)}
+ .hud-age{padding:3px 8px 4px;min-width:70px}.hud-age b{font-size:21px}.hud-age small{font-size:9px}
+ .hud-happy{font-size:18px;padding:3px 10px 3px 6px}.hud-happy .emoji{font-size:16px}.hud-pace{top:42px}
+ .stage{padding-top:7px;gap:6px}
+ .track-card{padding:8px 10px 10px}
+ .tc-head .tc-art{font-size:24px}.tc-head b{font-size:14.5px}
+ .tc-desc{-webkit-line-clamp:2;font-size:12px;margin-top:4px}
+ .tc-note{font-size:11px;padding:4px 7px;margin-top:4px}
+ .tc-choices{gap:5px;margin-top:6px}
+ .tc-choice{min-height:40px;padding:4px 9px}
+ .tc-choice small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .controls button{min-height:44px}
+ .story-card{padding:12px 12px;gap:6px}
+ .story-avatar{font-size:40px}
+ .story-card h1{font-size:24px}
+ .story-facts{gap:4px;margin:2px 0}
+ .story-facts li{padding:5px 10px;font-size:13px}
+ .story-facts li .emoji{font-size:18px}
+ .story-facts li small{font-size:11px}
+ .story-goal{padding:7px 10px}.story-goal p{font-size:12.5px}
+ .story-actions .secondary,.story-actions .primary{min-height:46px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -395,83 +481,82 @@ button:disabled{cursor:not-allowed}
   <div class="hero-copy">
    <div class="kicker">Age 23 · Day one · First job</div>
    <h1>Life is a race.<br>Money is the fuel.</h1>
-   <p>Race from 23 to 80. Keep yourself, your people and your community happy, and don’t run out of fuel. Goa trips, weddings, kids, taxes, layoffs and very persuasive sales will try to slow you down.</p>
-   <div class="stamps"><span class="stamp"><span class="emoji">🏁</span>Reach 80</span><span class="stamp"><span class="emoji">🎯</span>3 life rings</span><span class="stamp"><span class="emoji">🎲</span>Random life events</span><span class="stamp"><span class="emoji">🌱</span>Monthly SIPs</span><span class="stamp"><span class="emoji">🏡</span>Bikes, cars, homes</span></div>
+   <p>Race from 23 to 80. Stay happy and don’t run out of money. Goa trips, weddings, kids, taxes, layoffs and very persuasive sales will try to slow you down.</p>
+   <div class="stamps"><span class="stamp"><span class="emoji">🏁</span>Reach 80</span><span class="stamp"><span class="emoji">❤️</span>Stay happy</span><span class="stamp"><span class="emoji">🎲</span>Random life events</span><span class="stamp"><span class="emoji">🌱</span>Monthly SIPs</span><span class="stamp"><span class="emoji">🏡</span>Bikes, cars, homes</span></div>
    <button class="primary" id="startBtn" type="button">Start your engine →</button>
   </div>
  </section>
- <div class="info-line"><strong>How it works:</strong> every month your pay comes in and your bills go out; what is left builds your savings. Big life moments pause the race so you can choose; small surprises slide onto the track as cards while you keep racing; every 5 years a pit stop lets you retune your pace, lifestyle and SIP. Your score comes from three life rings (🧍 Me, 👨‍👩‍👧 Family & Friends, 🏘️ Community), mostly the weakest one. Six months in a row of unpaid bills ends the race early.</div>
+ <div class="info-line"><strong>How it works:</strong> you get a random life at 23. Every month pay comes in and bills go out. Surprises slide onto the track: tap a choice before the bar runs out. Big life moments pause the race. A whole life takes about 7 minutes. Finish rich <em>and</em> happy.</div>
 </main>
 
 <main id="setupScreen" class="screen hidden">
- <div class="setup-head"><div class="kicker">Character select · Age 23</div><h1>Build your starting life.</h1><p>Pick the life you want, not a perfect answer. You can change costs later in your Monthly Plan.</p></div>
- <section class="group"><h2>Who’s racing? <span>YOUR AVATAR</span></h2><div class="chips two" id="avatarChoice" data-group="avatar"></div></section>
- <section class="group salary"><h2>First salary <span>PER MONTH, BEFORE TAX</span></h2>
-  <div class="chips" id="salaryChoices">
-   <button type="button" class="chip" data-salary="35000" aria-pressed="false"><span class="emoji">🌱</span><strong>₹35K</strong><small>starter</small></button>
-   <button type="button" class="chip" data-salary="45000" aria-pressed="true"><span class="emoji">🌿</span><strong>₹45K</strong><small>typical</small></button>
-   <button type="button" class="chip" data-salary="60000" aria-pressed="false"><span class="emoji">🌳</span><strong>₹60K</strong><small>stretch</small></button>
-  </div>
+ <section class="story-card" aria-labelledby="storyName">
+  <div class="kicker">Your new life · Age 23</div>
+  <div class="story-avatar emoji" id="storyAvatar" aria-hidden="true">🧑</div>
+  <h1 id="storyName">You’re Aarav, 23</h1>
+  <ul class="story-facts" id="storyFacts"></ul>
+  <div class="story-goal"><span class="emoji" aria-hidden="true">🎯</span><div><b>Your goal</b><p>Reach 80 rich <em>and</em> happy. Keep ❤️ happiness up and never run out of money.</p></div></div>
+  <div class="story-actions"><button class="secondary" id="rerollBtn" type="button">🎲 New life</button><button class="primary" id="beginGameBtn" type="button">Start ▶</button></div>
  </section>
- <section class="group"><h2>College <span>EDUCATION LOAN?</span></h2><div class="chips two" id="eduLoanChoice" data-group="eduLoan"></div><p class="commute-hint" id="eduHint" aria-live="polite"></p></section>
- <section class="group"><h2>Home <span>RENT / MONTH</span></h2><div class="chips" id="homeChoice" data-group="home"></div></section>
- <section class="group"><h2>Food <span>PER MONTH</span></h2><div class="chips" id="foodChoice" data-group="food"></div></section>
- <section class="group"><h2>Social life <span>PER MONTH</span></h2><div class="chips" id="socialChoice" data-group="social"></div></section>
- <section class="group"><h2>Your ride <span>COMMUTE</span></h2><div class="chips four" id="commuteChoice" data-group="commute"></div><p class="commute-hint" id="commuteHint" aria-live="polite"></p></section>
- <section class="group"><h2>Health cover <span>PREMIUM / MONTH</span></h2><div class="chips two" id="healthChoice" data-group="health"></div></section>
- <div class="profile-preview" id="profilePreview" aria-live="polite"></div>
- <button class="primary" id="beginGameBtn" type="button">Let life happen →</button>
  <p class="fineprint">Illustrative game costs, not live quotes or advice.</p>
 </main>
 
-<main id="playScreen" class="screen hidden">
+<main id="playScreen" class="screen play hidden">
  <section class="race-wrap" aria-label="Your life race">
   <canvas id="race" class="race-canvas" aria-hidden="true"></canvas>
   <div class="hud">
    <div class="hud-age"><small>AGE</small><b id="ageValue">23.0</b><span id="yearLap">YEAR 1 / 57</span></div>
-   <div class="hud-coins" aria-hidden="true"><span class="emoji">🪙</span><b id="hudCash">₹0</b></div>
-   <div class="hud-rings" id="hudRings" role="img" aria-label="Life rings"></div>
-   <div class="hud-controls"><button id="speedBtn" type="button" aria-label="Simulation speed. Tap to change.">1×</button><button id="pauseBtn" type="button" aria-label="Pause"></button></div>
+   <div class="hud-happy" id="hudHappy" role="img" aria-label="Happiness"><span class="emoji" aria-hidden="true">❤️</span><b id="happyValue">60</b></div>
+   <div class="hud-pace hidden" id="hudPace"></div>
    <div class="hud-banner hidden" id="banner" role="status"></div>
    <div class="countdown hidden" id="countdown" aria-hidden="true"></div>
   </div>
   <div class="clockbar" role="progressbar" aria-label="Progress through this month" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="clockProgress"></i></div>
  </section>
- <section id="trackCard" class="track-card hidden" aria-live="polite" aria-label="A small surprise on the track"></section>
- <div class="run-status" id="runStatus" aria-live="polite"></div>
- <section class="bubble" aria-live="polite"><span class="face emoji" id="bubbleFace" aria-hidden="true">🙂</span><div><p id="sceneMessage"></p><small id="sceneSub"></small></div></section>
- <section id="feedbackCard" class="feedback hidden" aria-live="polite"></section>
- <section class="card rings-card" aria-labelledby="ringsTitle">
-  <div class="card-top"><h2 id="ringsTitle"><span class="emoji" aria-hidden="true">🎯</span>Life rings</h2><span class="ring-hint">Score comes mostly from your weakest ring</span></div>
-  <div id="ringRows"></div>
-  <div class="pace-row"><span class="emoji" id="paceEmoji" aria-hidden="true">⚖️</span><div><b id="paceTitle">Pace: Balanced</b><small id="paceNote"></small></div><button type="button" class="secondary" id="paceBtn">Change</button></div>
- </section>
- <div class="life-tags" id="lifeTags"></div>
- <div id="strainNote" class="strain hidden" role="status"></div>
  <section class="wallet" id="wallet" aria-label="Your money">
-  <button type="button" class="wallet-card cash" data-finance-detail="cash"><span class="emoji" aria-hidden="true">🐷</span><span class="wallet-title">SAVINGS</span><b id="cashValue">₹0</b><small>Cash for surprises</small></button>
-  <button type="button" class="wallet-card invest" data-finance-detail="invested"><span class="emoji" aria-hidden="true">🌱</span><span class="wallet-title">INVESTED</span><b id="investValue">₹0</b><small>Can rise or fall</small></button>
-  <button type="button" class="wallet-card debt" data-finance-detail="debt"><span class="emoji" aria-hidden="true">⛓️</span><span class="wallet-title">LOANS & DEBT</span><b id="debtValue">₹0</b><small id="debtNote">None</small></button>
+  <button type="button" class="wallet-card cash" data-finance-detail="cash"><span class="wallet-title"><span class="emoji" aria-hidden="true">🐷</span>Savings</span><b id="cashValue">₹0</b><small id="cashNote"></small></button>
+  <button type="button" class="wallet-card invest" data-finance-detail="invested"><span class="wallet-title"><span class="emoji" aria-hidden="true">📈</span>Invested</span><b id="investValue">₹0</b><small id="investNote"></small></button>
+  <button type="button" class="wallet-card loans" data-finance-detail="loans"><span class="wallet-title"><span class="emoji" aria-hidden="true">🏦</span>Loans</span><b id="loanValue">₹0</b><small id="loanNote"></small></button>
+  <button type="button" class="wallet-card debt" data-finance-detail="debt"><span class="wallet-title"><span class="emoji" aria-hidden="true">💳</span>Debt</span><b id="debtValue">₹0</b><small id="debtNote"></small></button>
  </section>
- <section class="sip-row" aria-label="Monthly SIP"><span class="emoji" aria-hidden="true">🌱</span><div><b id="sipTitle">No SIP yet</b><small id="sipNote">Invest a fixed amount automatically every month.</small></div><button type="button" class="secondary" id="sipBtn">Set SIP</button></section>
- <section class="card" aria-labelledby="planTitle">
-  <div class="card-top"><h2 id="planTitle"><span class="emoji" aria-hidden="true">🧾</span>Monthly plan</h2><button type="button" class="secondary" id="editExpensesBtn">Edit plan</button></div>
-  <div class="money-bar" id="moneyBar" aria-hidden="true"></div>
-  <div class="legend" id="legend"></div>
-  <p class="plan-note" id="budgetNote"></p>
-  <div id="statusLine" class="status-line" aria-live="polite"></div>
+ <section class="stage" id="stage">
+  <section id="trackCard" class="track-card hidden" aria-live="polite" aria-label="A surprise on the track"></section>
+  <section class="bubble" aria-live="polite"><span class="face emoji" id="bubbleFace" aria-hidden="true">🙂</span><div><p id="sceneMessage"></p><small id="sceneSub"></small></div></section>
+  <section id="feedbackCard" class="feedback hidden" aria-live="polite"></section>
+  <div id="strainNote" class="strain hidden" role="status"></div>
  </section>
- <section class="card" aria-labelledby="powerTitle">
-  <div class="card-top"><h2 id="powerTitle"><span class="emoji" aria-hidden="true">⭐</span>Power-ups</h2></div>
-  <div class="choice-tabs" role="tablist" aria-label="Optional choice type"><button type="button" role="tab" id="tabOneTime" data-choice-tab="one-time" aria-selected="true">🎯 One-time</button><button type="button" role="tab" id="tabRecurring" data-choice-tab="recurring" aria-selected="false">🔁 Monthly</button><button type="button" role="tab" id="tabBig" data-choice-tab="big" aria-selected="false">🛒 Big buys</button></div>
-  <p class="move-hint" id="moveHint">One power-up per month.</p>
-  <div id="moveDeck" class="move-deck" role="tabpanel" style="margin-top:8px"></div>
- </section>
- <button id="retireBtn" class="retire-button hidden" type="button">🌅 Retire…</button>
- <details class="card journal"><summary>📔 Life journal</summary><ol id="journal"></ol></details>
+ <nav class="controls" aria-label="Race controls">
+  <button type="button" id="pauseBtn" aria-label="Pause"></button>
+  <button type="button" id="speedBtn" aria-label="Speed. Tap to change.">1×</button>
+  <button id="retireBtn" class="retire-button hidden" type="button">🌅 Retire</button>
+  <button type="button" id="moreBtn" class="more-button" aria-haspopup="dialog">☰ More</button>
+ </nav>
+ <div class="sr-only" id="runStatus" aria-live="polite"></div>
 </main>
 </div>
 
+<div class="overlay sheet-overlay hidden" id="moreOverlay" role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+ <div class="dialog sheet">
+  <div class="sheet-top"><h2 id="moreTitle">Your life</h2><button type="button" class="secondary" id="moreClose">Back to the race</button></div>
+  <div class="life-tags" id="lifeTags"></div>
+  <section class="sip-row" aria-label="Monthly SIP"><span class="emoji" aria-hidden="true">🌱</span><div><b id="sipTitle">No SIP yet</b><small id="sipNote">Invest a fixed amount automatically every month.</small></div><button type="button" class="secondary" id="sipBtn">Set SIP</button></section>
+  <section class="card" aria-labelledby="planTitle">
+   <div class="card-top"><h2 id="planTitle"><span class="emoji" aria-hidden="true">🧾</span>Monthly plan</h2><button type="button" class="secondary" id="editExpensesBtn">Edit plan</button></div>
+   <div class="money-bar" id="moneyBar" aria-hidden="true"></div>
+   <div class="legend" id="legend"></div>
+   <p class="plan-note" id="budgetNote"></p>
+   <div id="statusLine" class="status-line" aria-live="polite"></div>
+  </section>
+  <section class="card" aria-labelledby="powerTitle">
+   <div class="card-top"><h2 id="powerTitle"><span class="emoji" aria-hidden="true">⭐</span>Power-ups</h2></div>
+   <div class="choice-tabs" role="tablist" aria-label="Optional choice type"><button type="button" role="tab" id="tabOneTime" data-choice-tab="one-time" aria-selected="true">🎯 One-time</button><button type="button" role="tab" id="tabRecurring" data-choice-tab="recurring" aria-selected="false">🔁 Monthly</button><button type="button" role="tab" id="tabBig" data-choice-tab="big" aria-selected="false">🛒 Big buys</button></div>
+   <p class="move-hint" id="moveHint">One power-up per month.</p>
+   <div id="moveDeck" class="move-deck" role="tabpanel" style="margin-top:8px"></div>
+  </section>
+  <details class="card journal"><summary>📔 Life journal</summary><ol id="journal"></ol></details>
+  <div class="sheet-actions"><button type="button" class="secondary" id="sheetSound">🔊 Sound</button><button type="button" class="secondary" id="sheetAbout">ℹ️ About</button><button type="button" class="secondary" id="sheetRestart">↺ New life</button></div>
+ </div>
+</div>
 <div class="overlay hidden" id="eventOverlay" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
  <div class="dialog event-dialog" id="eventDialog"><div class="event-art" id="eventArtBox"><span class="sticker" id="eventKicker">LIFE HAPPENS</span><span class="sticker-art emoji" id="eventArt" aria-hidden="true"></span><span class="badge" id="eventAge"></span></div><div class="event-inner"><h2 id="eventTitle"></h2><p id="eventDescription"></p><div id="eventSnapshot" class="snapshot"></div><div id="eventChoices" class="event-choices"></div><div class="event-foot" id="eventFoot"></div></div></div>
 </div>
@@ -505,8 +590,8 @@ window.addEventListener('unhandledrejection',function(event){var box=document.ge
 const A=Object.freeze({
  startAge:23,endAge:80,
  endMonth:685,                 // month 1 = age 23.0, month 685 = age 80.0
- monthMs:5000,                 // 1× speed ≈ 5 s per month ≈ 1 year per minute
- speeds:[0.5,1,2,3,5,8,10],
+ monthMs:450,                  // 1× speed ≈ 0.45 s per month ≈ 5.4 s per year: a whole life in about 7 minutes with stops
+ speeds:[1,2,4],
  annualInflation:0.06,         // applied to indexed costs at the start of each simulated year
  // Salary: a first review at month 7, then a yearly appraisal that shrinks with age.
  // Promotions are big and frequent early in a career, then slow down.
@@ -557,15 +642,17 @@ const A=Object.freeze({
  // Life rings (0–100). Each month a ring moves 4% of the way toward the target your
  // current life sets (see ringDrivers); event choices add one-off bumps that fade.
  rings:{start:{me:60,fam:60,com:45},base:{me:40,fam:35,com:30},pull:0.04,healthy:55,low:40},
- // Pace: Hustle lifts promotion odds and raises; Chill lowers them. Rings pay the difference.
+ // Pace: how hard you work. Never set directly: your choices set it for a while
+ // (a stretch project, a side gig or a startup means Hustle; slowing down after
+ // burnout means Chill), then it settles back to Balanced. Rings pay the difference.
  pace:{hustle:{promo:1.5,raise:0.01},balanced:{promo:1,raise:0},chill:{promo:0.6,raise:-0.01}},
  promoPenalty:0.6,promoPenaltyMonths:24,   // promotion odds after choosing to slow down for family
  burnout:{lowMe:35,months:9,cooldown:36,breakMonths:2},
  squeeze:{lowFam:35,cooldown:60},
  // Phase 3 flow: small surprises are cards on the track (the race keeps going; a
  // default is applied if you don't tap in time); big moments still stop the race.
- cards:{maxMonths:4},          // a card left pending this many months gets its default applied
- // Pit stop every 5 years (28, 33 … 78): a lap report and one screen for pace, lifestyle and SIP.
+ cards:{maxMonths:14},         // a card left pending this many months gets its default applied (the UI slows the race while a card waits)
+ // Pit stop every 5 years (28, 33 … 78): a short lap report with one optional SIP top-up.
  pit:{firstAge:28,everyMonths:60},
  ringActionCooldown:12,        // ring power-ups (family day, volunteering, donating): once a year each
 });
@@ -619,7 +706,7 @@ let runCounter=0;
 function createState(){
  return {
   runId:++runCounter,status:'intro',seed:0,month:0,
-  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes'},
+  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes',name:'',city:'',cityArt:'',job:''},
   salary:45000,career:0,jobStartMonth:1,lastPromotionYear:0,promotions:0,
   employment:'employed',           // employed | laidoff | retired ("laidoff" also covers accident recovery; see breakReason)
   laidOffMonthsLeft:0,breakReason:'',lastLayoffMonth:-999,retiredAtAge:null,retirePromptShown:false,startupUntil:0,
@@ -641,7 +728,7 @@ function createState(){
   // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
   rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
   homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{},
-  nextPitMonth:0,pitCount:0,lastPit:null
+  nextPitMonth:0,pitCount:0,lastPit:null,paceUntil:0,openers:{shock:0,bonus:0,social:0}
  };
 }
 let state=createState();
@@ -808,6 +895,10 @@ function tickRings(s=state){
  s.ringMonths+=1;s.score+=monthPoints(s);
  s.lowMeMonths=s.rings.me<A.burnout.lowMe?s.lowMeMonths+1:0;
 }
+// ❤️ Happiness, the one number players see: 60% the weakest ring, 40% the average.
+function happiness(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return Math.round(0.6*Math.min(...v)+0.4*sum(v)/3);}
+// Lifetime happiness: the average over every month of a full life (months you never reach count as 0).
+function lifeHappiness(s=state){return Math.round(s.score*10/(A.endMonth-1));}
 function monthPoints(s=state){const v=RING_KEYS.map(k=>s.rings[k]);return (0.6*Math.min(...v)+0.4*sum(v)/3)/10;}
 function ringAverages(s=state){const n=Math.max(1,s.ringMonths),o={};RING_KEYS.forEach(k=>{o[k]=s.ringMonths?s.ringSum[k]/n:s.rings[k];});return o;}
 // One-off ring bumps per event choice: [Me, Family & Friends, Community]. '*' applies to any choice.
@@ -850,17 +941,19 @@ function ringEffect(type,choiceId){
  return v&&v.some(x=>x)?{me:v[0],fam:v[1],com:v[2]}:null;
 }
 function applyRingFx(s,fx){if(!fx)return null;RING_KEYS.forEach(k=>{s.rings[k]=clamp(s.rings[k]+(fx[k]||0),0,100);});return fx;}
-// The ending title comes from your rings averaged over the whole run.
+// The ending title combines lifetime ❤️ happiness with real wealth (net worth in today's money).
+const WEAK_AREA={me:'time for yourself',fam:'time with family and friends',com:'community life'};
+function realNetWorth(s=state){return netWorth(s)/inflationFactor(s);}
 function lifeEnding(s=state){
- const a=ringAverages(s),H=A.rings.healthy,Lo=A.rings.low,weak=RINGS.slice().sort((x,y)=>a[x[0]]-a[y[0]])[0];
- const e=(key,emoji,title,line)=>({key,emoji,title,line,avg:a,weakest:weak[0]});
- if(s.finalReason==='insolvent')return e('broke','💸','Lived Fast, Ran Out of Fuel','The money ran dry before the finish line, and every month you missed scored nothing.');
- if(a.me>=H&&a.fam>=H&&a.com>=H)return e('legend','🏆','Full Life Legend','You kept yourself, your people and your community going strong. That is the win.');
- if(a.me>=H&&a.fam>=H)return e('home','🏡','Home Is Where the Heart Is','A happy you and a happy home. The wider community saw less of you.');
- if(a.fam>=H&&a.com>=H&&a.me<Lo)return e('gave','🕯️','Gave Everything, Kept Nothing','Everyone leaned on you, and you never refilled your own tank.');
- if(a.me>=H&&a.fam<Lo)return e('corner','💼','Corner Office, Empty House','You did well for yourself, but your people barely saw you.');
- if(a.fam>=H&&a.com>=H)return e('people','🤝','People Person','Family, friends and neighbours loved you. Look after yourself a little more next time.');
- return e('steady','🚗','Steady Cruiser','A steady life. Your '+weak[1]+' ring held the others back.');
+ const a=ringAverages(s),H=lifeHappiness(s),w=realNetWorth(s),rich=w>=1e7,comfy=w>=4e6,weak=RING_KEYS.slice().sort((x,y)=>a[x]-a[y])[0];
+ const e=(key,emoji,title,line)=>({key,emoji,title,line,avg:a,happy:H,weakest:weak,weakArea:WEAK_AREA[weak]});
+ if(s.finalReason==='insolvent')return e('broke','💸','Lived Fast, Ran Out of Fuel','The money ran dry before the finish line.');
+ if(H>=55&&rich)return e('legend','🏆','Rich and Happy','Plenty of money and a life you enjoyed. That is the win.');
+ if(H>=55)return e('heart','😊','Happy Heart','Rich in the ways that count, even if the bank balance stayed modest.');
+ if(H<40&&rich)return e('restless','💼','Rich but Restless','The money piled up, but the joy did not. Most of what was missing: '+WEAK_AREA[weak]+'.');
+ if(H<40)return e('tough','🌧️','A Tough Road','Money was tight and happiness was hard to find. Next life, try a little more '+WEAK_AREA[weak]+'.');
+ if(rich||comfy)return e('comfy','💰','Comfortably Off','Money worked out. Happiness was fine, held back mostly by too little '+WEAK_AREA[weak]+'.');
+ return e('steady','🚗','Steady Cruiser','A steady life. More '+WEAK_AREA[weak]+' would have made it a happier one.');
 }
 
 /* =====================================================================
@@ -1062,25 +1155,25 @@ const EVENTS={
   eligible:s=>s.employment==='employed'&&preciseAge(s)<55,
   create:s=>{const amount=Math.round(monthlyIncome(s)*(0.3+rand()*0.5));return{amount,description:'Four weekends of work for '+money(amount)+' after tax. Your sofa will miss you.',foot:'Extra income is powerful, if you still get some rest.'};},
   choices:e=>[{id:'take',emoji:'💪',title:'Take the gig',detail:'+'+money(e.amount)+' to savings. Goodbye, weekends.'},{id:'rest',emoji:'😴',title:'Protect your weekends',detail:'No money, full batteries.'}],
-  resolve:(e,c)=>{const s=state;if(c==='rest')return{text:'You kept your weekends.',feedback:fb('solid','Rest is not laziness. Burnout is expensive too.')};s.cash+=e.amount;return{text:'Gig done: '+money(e.amount)+' added to savings.',feedback:fb('great','Extra income straight into savings speeds everything up.')};}},
+  resolve:(e,c)=>{const s=state;if(c==='rest')return{text:'You kept your weekends.',feedback:fb('solid','Rest is not laziness. Burnout is expensive too.')};s.cash+=e.amount;workPace(s,'hustle',6,'weekend gigs');return{text:'Gig done: '+money(e.amount)+' added to savings.',feedback:fb('great','Extra income straight into savings speeds everything up.')};}},
  promotion:{kicker:'BOSS LEVEL',art:'🧗',titles:['A stretch project is on offer.','Your manager wants you on the “impossible” project.'],
   eligible:s=>s.employment==='employed'&&s.career<A.maxXp,
   create:()=>({description:'It is demanding and visible. It could build skills that raise your chances of a promotion later, but it costs evenings and energy.',foot:'Growth has a cost too. Neither answer is wrong.'}),
   choices:()=>[{id:'yes',emoji:'🚀',title:'Take the challenge',detail:'Career XP +1. Raises the chance of promotions at future appraisals (not guaranteed).'},{id:'no',emoji:'⚖️',title:'Keep your balance',detail:'No change to pay or XP. Protects your time.'}],
-  resolve:(e,c)=>{const s=state;if(c==='yes'){s.career=Math.min(A.maxXp,s.career+1);return{text:'Career XP is now '+s.career+' of '+A.maxXp+'.',feedback:fb('great','Career XP raises your odds of promotions. Early in a career, promotions are big; that compounds for decades.')};}return{text:'You protected your time. Career growth can happen at a different pace.',feedback:fb('solid','Time and energy matter. You can still grow your career through training later.')};}},
+  resolve:(e,c)=>{const s=state;if(c==='yes'){s.career=Math.min(A.maxXp,s.career+1);workPace(s,'hustle',24,'a stretch project');return{text:'Career XP is now '+s.career+' of '+A.maxXp+'.',feedback:fb('great','Career XP raises your odds of promotions. Early in a career, promotions are big; that compounds for decades.')};}return{text:'You protected your time. Career growth can happen at a different pace.',feedback:fb('solid','Time and energy matter. You can still grow your career through training later.')};}},
  startup:{kicker:'RECRUITER DM',art:'🦄',titles:['A startup offers you +35% pay and ESOPs.','“We are disrupting chai. Join us?”'],
   eligible:s=>s.employment==='employed'&&preciseAge(s)>=25&&preciseAge(s)<45&&!(s.seen.startup>0),
   create:s=>({hike:Math.round(s.salary*0.35),description:'A fast-growing startup wants you: pay jumps by '+money(Math.round(s.salary*0.35))+' a month. Startups also restructure more often.',foot:'Higher pay, higher risk. Savings make risk easier to take.'}),
   choices:(e,s)=>[{id:'join',emoji:'🚀',title:'Join the rocket ship',detail:'Pay '+money(s.salary)+' → '+money(s.salary+e.hike)+'. Layoff risk is higher for 5 years.'},{id:'counter',emoji:'🗣️',title:'Use it to negotiate a raise',detail:'60% chance your employer matches with +10%.'},{id:'stay',emoji:'🏢',title:'Stay put',detail:'No change. Stability has value.'}],
   resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed. The startup pivoted to selling AI-powered socks.',feedback:fb('solid','Stability is a fair choice, especially with a thin cushion.')};
-   if(c==='join'){const before=s.salary;s.salary+=e.hike;s.jobStartMonth=s.month;s.startupUntil=s.month+60;record('Joined a startup at '+ageLabel()+': pay '+money(before)+' → '+money(s.salary)+'.',{major:true,kind:'career'});return{text:'Welcome to the startup! Pay is now '+money(s.salary)+'.',feedback:monthsOfCushion(s)>=3?fb('great','A big raise with a cushion to absorb the extra risk. Bold and covered.'):fb('risky','A big raise, but your cushion is under three months and layoffs are more likely here.')};}
+   if(c==='join'){const before=s.salary;s.salary+=e.hike;s.jobStartMonth=s.month;s.startupUntil=s.month+60;workPace(s,'hustle',24,'startup life');record('Joined a startup at '+ageLabel()+': pay '+money(before)+' → '+money(s.salary)+'.',{major:true,kind:'career'});return{text:'Welcome to the startup! Pay is now '+money(s.salary)+'.',feedback:monthsOfCushion(s)>=3?fb('great','A big raise with a cushion to absorb the extra risk. Bold and covered.'):fb('risky','A big raise, but your cushion is under three months and layoffs are more likely here.')};}
    if(rand()<0.6){const before=s.salary;s.salary=Math.round(s.salary*1.1);record('Negotiated a 10% raise at '+ageLabel()+'.',{kind:'career'});return{text:'Your employer matched: pay '+money(before)+' → '+money(s.salary)+'.',feedback:fb('great','Negotiating cost nothing and raised every future paycheck.')};}
    return{text:'Your employer said “budget is tight this year”. No change.',feedback:fb('solid','Worth a try. Nothing lost, and you know your market value now.')};}},
  course:{kicker:'LEVEL UP',art:'📜',titles:['An executive course could fast-track your career.','Your boss suggests a weekend MBA.'],snapshot:true,
   eligible:s=>s.employment==='employed'&&preciseAge(s)>=25&&preciseAge(s)<46&&s.career<A.maxXp-1,
   create:()=>{const amount=priced(120000);return{amount,description:'Fees are '+money(amount)+' for a year of weekend classes. Career XP +2 when done.',foot:'Education can pay back, but only if the cost does not sink you first.'};},
   choices:(e,s)=>fundingChoices(e.amount).map(c=>Object.assign(c,{title:c.title+' and enrol'})).concat([{id:'skip',emoji:'🙅',title:'Not now',detail:'No cost, no XP.'}]),
-  resolve:(e,c)=>{const s=state;if(c==='skip')return{text:'You skipped the course.',feedback:fb('solid','Fair. Not every course pays back.')};const r=fundExpense(e.amount,c,true);s.career=Math.min(A.maxXp,s.career+2);record('Took an executive course at '+ageLabel()+' (Career XP +2).',{kind:'career'});return{text:'Enrolled! Career XP is now '+s.career+'. '+r.text,feedback:r.borrowed>0?fb('risky','A smart investment in yourself, partly on debt at 1% a month.'):fb(preciseAge(s)<35?'great':'solid','Skills early in a career have more years to pay back.')};}},
+  resolve:(e,c)=>{const s=state;if(c==='skip')return{text:'You skipped the course.',feedback:fb('solid','Fair. Not every course pays back.')};const r=fundExpense(e.amount,c,true);s.career=Math.min(A.maxXp,s.career+2);workPace(s,'hustle',12,'weekend classes');record('Took an executive course at '+ageLabel()+' (Career XP +2).',{kind:'career'});return{text:'Enrolled! Career XP is now '+s.career+'. '+r.text,feedback:r.borrowed>0?fb('risky','A smart investment in yourself, partly on debt at 1% a month.'):fb(preciseAge(s)<35?'great':'solid','Skills early in a career have more years to pay back.')};}},
  crypto:{kicker:'HOT TIP',art:'🪙',titles:['Your gym buddy has a “sure-shot” coin tip.','“Bro, this coin will 100× by Friday.”'],snapshot:true,
   eligible:s=>s.cash>=priced(20000,s)&&(s.seen.crypto||0)<2,
   create:()=>({big:priced(20000),small:priced(5000),description:'It has a dog logo, a rocket emoji and zero revenue. Your buddy is very confident.',foot:'If something promises fast, huge returns, the risk is usually huge too.'}),
@@ -1248,18 +1341,25 @@ const EVENTS={
  /* ---- rings: triggered by how your life is going (contextEventDue), never at random ---- */
  burnout:{kicker:'RUNNING ON EMPTY',art:'🫠',titles:['You are running on empty.','Burnout: your body wants a word.','You cried in the office lift. Twice.'],
   create:s=>({bill:priced(15000),description:'Months of stress have caught up with you: bad sleep, short temper, no joy in anything. Something has to give.',foot:'Rest is part of the plan, not a break from it.'}),
-  choices:(e,s)=>[{id:'break',emoji:'🏝️',title:'Take a '+A.burnout.breakMonths+'-month break',detail:'No salary for '+A.burnout.breakMonths+' months (about '+money(monthlyIncome(s)*A.burnout.breakMonths)+'). Your job waits for you.'},{id:'slow',emoji:'🌿',title:'Switch to a chill pace',detail:'Keep earning. Lower raises and promotion odds while you stay chill.'},{id:'push',emoji:'☕',title:'Push through',detail:'A doctor’s bill of about '+money(e.bill)+' and no real rest.'}],
+  choices:(e,s)=>[{id:'break',emoji:'🏝️',title:'Take a '+A.burnout.breakMonths+'-month break',detail:'No salary for '+A.burnout.breakMonths+' months (about '+money(monthlyIncome(s)*A.burnout.breakMonths)+'). Your job waits for you.'},{id:'slow',emoji:'🌿',title:'Slow down at work',detail:'Keep earning. Lower raises and promotion odds for 2 years.'},{id:'push',emoji:'☕',title:'Push through',detail:'A doctor’s bill of about '+money(e.bill)+' and no real rest.'}],
   resolve:(e,c)=>{const s=state;s.lastBurnoutMonth=s.month;s.lowMeMonths=0;
    if(c==='break'){s.employment='laidoff';s.breakReason='break';s.laidOffMonthsLeft=A.burnout.breakMonths;record('Took a '+A.burnout.breakMonths+'-month break to recover from burnout at '+ageLabel()+'.',{major:true,kind:'health'});return{text:'Out-of-office: on. Salary pauses for '+A.burnout.breakMonths+' months.',feedback:monthsOfCushion(s)>=A.burnout.breakMonths?fb('great','Your savings could carry a short break. That is exactly what a cushion is for.'):fb('solid','Rest was needed, but your cushion is thin, so the break will strain your savings.')};}
-   if(c==='slow'){s.pace='chill';record('Switched to a chill pace after burnout at '+ageLabel()+'.',{kind:'pace'});return{text:'Pace set to Chill. Fewer late nights, slower career.',feedback:fb('solid','Slower growth, saner life. You can change your pace any time.')};}
-   const r=fundExpense(e.bill,'savings');return{text:'You pushed through. '+r.text,feedback:fb('risky','Pushing through burnout rarely works for long. Your Me ring stays low, and a low Me ring drags your Life Score.')};}},
+   if(c==='slow'){workPace(s,'chill',24,'recovering from burnout');return{text:'You slowed down for 2 years. Fewer late nights, slower career.',feedback:fb('solid','Slower growth, saner life.')};}
+   const r=fundExpense(e.bill,'savings');return{text:'You pushed through. '+r.text,feedback:fb('risky','Pushing through burnout rarely works for long. Your happiness stays low.')};}},
  squeeze:{kicker:'HOME IS CALLING',art:'🍽️',titles:['You have missed 3 family dinners this quarter.','Your kid asked if you live here.','Your best friend’s birthday: you sent a voice note. From the office.'],
   create:()=>({description:'Hustle mode is paying off at work, but the people who matter are seeing less and less of you.',foot:'Promotions come back. Missed years do not.'}),
-  choices:()=>[{id:'slow',emoji:'🫶',title:'Slow down',detail:'Pace back to Balanced. Lower promotion odds for 2 years.'},{id:'push',emoji:'🚀',title:'Push through',detail:'Career stays on track. Home waits a little longer.'}],
+  choices:()=>[{id:'slow',emoji:'🫶',title:'Slow down',detail:'Back to normal hours. Lower promotion odds for 2 years.'},{id:'push',emoji:'🚀',title:'Push through',detail:'Career stays on track. Home waits a little longer.'}],
   resolve:(e,c)=>{const s=state;s.lastSqueezeMonth=s.month;
-   if(c==='slow'){s.pace='balanced';s.promoPenaltyUntil=s.month+A.promoPenaltyMonths;record('Slowed down at work for family at '+ageLabel()+'.',{major:true,kind:'pace'});return{text:'Pace set to Balanced. Dinner is at 8. You are there.',feedback:fb('great','You traded some promotion odds for time with your people. Over a lifetime, that is often the better deal.')};}
-   return{text:'You pushed through. The family group chat has gone quiet.',feedback:fb('risky','Your career keeps its speed, but your Family & Friends ring keeps draining. The weakest ring sets most of your Life Score.')};}}
+   if(c==='slow'){workPace(s,'balanced',0,'time for family');s.promoPenaltyUntil=s.month+A.promoPenaltyMonths;record('Slowed down at work for family at '+ageLabel()+'.',{major:true,kind:'pace'});return{text:'Back to normal hours. Dinner is at 8. You are there.',feedback:fb('great','You traded some promotion odds for time with your people. Over a lifetime, that is often the better deal.')};}
+   return{text:'You pushed through. The family group chat has gone quiet.',feedback:fb('risky','Your career keeps its speed, but time with family keeps draining your happiness.')};}}
 };
+/* ---------- Health cover offer: a card in month 2 (and now and then later) while you have none ---------- */
+EVENTS.insureoffer={kicker:'RING RING',art:'🛡️',titles:['An insurance agent calls. Again.','HR asks: “Want health cover too?”','Your aunt sells insurance now.'],weight:0.6,
+ eligible:s=>!s.insured&&s.employment==='employed',
+ create:s=>{const premium=priced(healthPremiumBase(s),s);return{premium,description:'Health cover for '+money(premium)+' a month pays 65% of hospital bills. One hospital stay can cost lakhs.',foot:'Insurance is boring until the day it is not.'};},
+ choices:e=>[{id:'yes',emoji:'🛡️',title:'Cover me',detail:money(e.premium)+'/month. Hospital bills shrink by 65%.'},{id:'no',emoji:'🎲',title:'Skip it',detail:'₹0 now. Every medical bill is all yours.'}],
+ resolve:(e,c)=>{const s=state;if(c==='no')return{text:'No cover for now. Fingers crossed.',feedback:fb('risky','You saved a small premium but carry the full risk of a big hospital bill.')};
+  s.insured=true;record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month.',feedback:fb('great','A small fixed cost that turns a ruinous hospital bill into a manageable one.')};}};
 /* ---------- Pit stop: every 5 years (see A.pit) ---------- */
 // One stop for reflection: a lap report (rings, points, one line about the last
 // five years, one tip) and one screen to change pace, lifestyle and SIP together.
@@ -1273,7 +1373,7 @@ const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'saving
  goa:'skip',weddings:'shagun',concert:'skip',festival:'skip',friendloan:'no',sibling:'part',parentstrip:'later',
  kidparty:'cake',school:'savings',bonus:'save',taxrefund:'save',sidegig:'rest',promotion:'no',course:'skip',
  crypto:'pass',boom:'stay',market:'stay',landlord:'accept',leak:'savings',vehiclebill:'savings',challan:'pay',
- pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories'};
+ pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories',insureoffer:'yes'};
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
  c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Spend it all on something nice. Gone by next week.'});return c;}
@@ -1289,7 +1389,7 @@ function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
 // lifeEventDue(), inside believable age windows.
 // After that, a random event every 12–20 months, weighted away from events you
 // have already seen. Contextual events (retirement at 60, burnout, missing your
-// family on Hustle pace) happen when the situation calls for them. Never two severe shocks in a row, never
+// family while work is in Hustle mode) happen when the situation calls for them. Never two severe shocks in a row, never
 // the same type twice in a row.
 const CONTEXT_EVENTS=['retire','burnout','squeeze'];
 const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life);
@@ -1345,10 +1445,12 @@ function maybeStartEvent(){
  const s=state,m=s.month;
  if(s.event){if(s.event.tier==='card'&&m-s.event.month>=A.cards.maxMonths)resolveEvent(s.event.id,s.event.defaultChoice,{auto:true});if(s.event)return;}
  if(pitDue(s)){startEvent('pitstop');return;}
- const st=s.lastSettlement;
- if(m===3){const t=pickRandomEvent(s,OPENERS.shock);if(t)startEvent(t);return;}
- if(m===12&&s.employment==='employed'){startEvent('bonus',{first:true});return;}
- if(m===24){const t=pickRandomEvent(s,OPENERS.social);if(t)startEvent(t,{first:true});return;}
+ if(m===2&&eligibleEvent('insureoffer',s)){startEvent('insureoffer');return;}
+ // Openers fire at months 3, 12 and 24, or as soon as a card still waiting there is out of the way (within a year).
+ const op=s.openers;
+ if(!op.shock&&m>=3){op.shock=1;if(m<12){const t=pickRandomEvent(s,OPENERS.shock);if(t){startEvent(t);return;}}}
+ if(!op.bonus&&m>=12){op.bonus=1;if(m<24&&s.employment==='employed'){startEvent('bonus',{first:true});return;}}
+ if(!op.social&&m>=24){op.social=1;if(m<36){const t=pickRandomEvent(s,OPENERS.social);if(t){startEvent(t,{first:true});return;}}}
  if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
  const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
@@ -1382,6 +1484,18 @@ function beginLife(profile){
  const o=settleMonth(s);
  s.message='First payday. '+settlementMessage(o);s.story=edu?'Fancy degree, fancy first paycheck. The education loan EMI starts now.':'A new job in a new city. Your first paycheck is in!';
 }
+/* ---------- A random starting life (the story card) ---------- */
+const NAMES={man:['Aarav','Rohan','Kabir','Arjun','Vihaan','Ishaan','Rahul','Aditya','Karan','Siddharth','Farhan','Joseph','Harpreet','Vikram','Nikhil','Manoj'],
+ woman:['Ananya','Priya','Diya','Meera','Ishita','Kavya','Sana','Riya','Aisha','Neha','Tanvi','Mariam','Simran','Pooja','Lakshmi','Fatima']};
+const CITIES=[['Pune','🏙️'],['Bengaluru','🌳'],['Hyderabad','🕌'],['Chennai','🌊'],['Mumbai','🌆'],['Delhi','🏛️'],['Kolkata','🚋'],['Ahmedabad','🪁'],['Jaipur','🏯'],['Kochi','🛶'],['Indore','🍲'],['Noida','🏢']];
+const JOBS=['software developer','sales executive','graphic designer','bank officer','marketing associate','data analyst','nurse','school teacher','mechanical engineer','accountant','customer support lead','hotel manager'];
+// Uses the run's seeded generator, so a run code always gives the same character.
+function randomProfile(){
+ const avatar=rand()<0.5?'man':'woman',salary=pick([35000,45000,45000,60000]),edu=rand()<0.35,city=pick(CITIES);
+ return {avatar,name:pick(NAMES[avatar]),city:city[0],cityArt:city[1],job:pick(JOBS),salary,eduLoan:edu?'yes':'no',
+  home:salary>=60000?'comfort':salary<=35000?'starter':pick(['starter','comfort']),food:'balanced',social:'regular',commute:'public',other:'none',health:'no'};
+}
+function newCharacter(seed){newRun(seed);state.status='setup';Object.assign(state.profile,randomProfile());return state.profile;}
 function monthAtAge(age){return Math.round((age-A.startAge)*12)+1;}
 // Yearly appraisal and a possible promotion (called at the start of each new simulated year).
 function yearlyRaise(s){
@@ -1416,6 +1530,7 @@ function advanceMonth(){
  const due=s.receivables.filter(r=>r.month<=s.month);
  if(due.length){const amt=sum(due.map(r=>r.amount));s.receivables=s.receivables.filter(r=>r.month>s.month);s.cash+=amt;s.story='Plot twist: your friend paid back '+money(amt)+'!';record('A friend repaid '+money(amt)+' at '+ageLabel()+'.');celebrate('repaid','🤝','Paid back!','+'+compact(amt)+' from your friend');}
  const o=settleMonth(s);
+ settlePace(s);
  tickRings(s);
  s.message=settlementMessage(o);
  if(o.loanPaidOff)celebrate('loan','🎉',o.loanPaidOff+' loan cleared!','No more '+o.loanPaidOff.toLowerCase()+' EMI');
@@ -1562,22 +1677,23 @@ function chooseOptional(id,variant){
  s.cash-=o.cost(s,variant);s.optionalUsedMonth=s.month;s.optionalUsedName=o.name;
  const r=o.apply(s,variant);s.feedback=Object.assign({source:o.name,art:o.emoji,rings:r.rings||null},r.feedback);s.message=r.text;return r;
 }
-/* Pace: how hard you work. Free to change while racing; every pit stop asks too. */
+/* Pace: how hard you work. Set only by your choices, for a while (see A.pace). */
 const PACES={hustle:{emoji:'🚀',label:'Hustle',blurb:'Higher promotion odds and raises (+1%/yr). Less time for people and yourself.'},balanced:{emoji:'⚖️',label:'Balanced',blurb:'Work hard, go home.'},chill:{emoji:'🌿',label:'Chill',blurb:'Lower promotion odds and raises (−1%/yr). More time for everyone, you included.'}};
 Object.keys(PACES).forEach(k=>{PACES[k].rings=LIFESTYLE_RINGS.pace[k];});
-function paceBlocker(p){const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';if(!PACES[p])return 'Unknown pace.';if(p===s.pace)return 'Already set.';if(s.employment==='retired')return 'Retired: your pace is your own now.';return null;}
-function setPace(p){
- const s=state;if(paceBlocker(p))return null;s.pace=p;record('Switched to a '+PACES[p].label.toLowerCase()+' pace at '+ageLabel()+'.',{kind:'pace'});
- const text='Pace set to '+PACES[p].label+'.',feedback=p==='hustle'?fb('solid','Faster career, less time. Watch your Family & Friends and Me rings.'):p==='chill'?fb('solid','More life, slower career. Make sure the money still adds up.'):fb('great','Balanced: steady career, time for your people.');
- s.feedback=Object.assign({source:'Pace',art:PACES[p].emoji},feedback);s.message=text;return{text,feedback};
+function workPace(s,p,months,why){
+ if(s.employment==='retired'||!PACES[p])return;
+ const was=s.pace;s.pace=p;s.paceUntil=p==='balanced'?0:Math.max(s.paceUntil,s.month+months);
+ if(was!==p)record(PACES[p].emoji+' Work pace: '+PACES[p].label+' ('+why+').',{kind:'pace'});
 }
+// Called every month: a temporary pace settles back to Balanced.
+function settlePace(s){if(s.pace!=='balanced'&&s.paceUntil&&s.month>=s.paceUntil){s.pace='balanced';s.paceUntil=0;s.story=s.story||'Work settles back to a normal pace.';}}
 
 /* =====================================================================
    10c. PIT STOPS — every 5 years: a lap report, then pace, lifestyle and
    SIP on one screen. Optional decisions gather here instead of interrupting.
    ===================================================================== */
 const LIFESTYLE_STEPS={food:['home','balanced','foodie'],social:['quiet','regular','big']};
-function lapSnapshot(s=state){return {month:s.month,age:Math.round(preciseAge(s)),rings:Object.assign({},s.rings),score:s.score,netWorth:netWorth(s),promotions:s.promotions,strained:s.stats.strainedMonths,layoff:s.lastLayoffMonth};}
+function lapSnapshot(s=state){return {month:s.month,age:Math.round(preciseAge(s)),rings:Object.assign({},s.rings),happy:happiness(s),score:s.score,netWorth:netWorth(s),promotions:s.promotions,strained:s.stats.strainedMonths,layoff:s.lastLayoffMonth};}
 // Lifestyle moves food and social life one step together (null when already at the end).
 function lifestyleShift(s,dir){
  const F=LIFESTYLE_STEPS.food,So=LIFESTYLE_STEPS.social,P=BASE_PRICES,L=LIFESTYLE_RINGS,f0=s.profile.food,s0=s.profile.social;
@@ -1604,16 +1720,16 @@ function pitInsight(s,lap){
  if(d[worst]<=-6)return lead+', but '+RING_DROP[worst]+'.';
  if(d[best]>=6)return lead+', and '+RING_RISE[best]+'.';
  const low=RING_KEYS.reduce((a,k)=>s.rings[k]<s.rings[a]?k:a,'me');
- if(s.rings[low]<A.rings.low)return lead+'. Your '+ringName(low)+' ring is still running low.';
- return lead+'. All three rings held steady.';
+ if(s.rings[low]<A.rings.low)return lead+'. You still need more '+WEAK_AREA[low]+'.';
+ return lead+'. Life felt steady.';
 }
 // One tip from the pit crew: the most useful thing to look at next.
 function pitTip(s){
  const b=monthlyBudget(s),low=RING_KEYS.reduce((a,k)=>s.rings[k]<s.rings[a]?k:a,'me');
  if(s.unsecuredDebt>0)return 'Clear the card debt first: it costs 1% a month, more than investments usually earn.';
  if(s.rings[low]<A.rings.low){
-  if(s.pace==='hustle')return 'Your '+ringName(low)+' ring is low. A calmer pace refills all three.';
-  return {me:'Your Me ring is low. A bigger savings cushion, a little comfort or a calmer pace help.',fam:'Family & Friends is low. Try the “day with your people” power-up or a livelier social life.',com:'Community is low. Volunteering is free, and festivals count.'}[low];}
+  if(s.pace==='hustle')return 'Work is eating your happiness. Saying no to the next big project would help.';
+  return {me:'You need some time for yourself. A savings cushion and a little comfort help.',fam:'Your people miss you. A day with them or a livelier social life helps.',com:'You feel disconnected. Volunteering is free, and festivals count.'}[low];}
  if(s.employment==='employed'&&!s.sip&&b.leftover>b.income*0.1)return 'Money is left over every month. A SIP would put it to work.';
  if(monthsOfCushion(s)<3)return 'Build a 3-month savings cushion before upgrading anything.';
  if(!s.insured)return 'No health cover: one hospital stay could wipe out your savings.';
@@ -1623,14 +1739,14 @@ function pitTip(s){
 function pitReport(s){
  const lap=s.lastPit||lapSnapshot(s),age=Math.round(preciseAge(s)),delta={};
  RING_KEYS.forEach(k=>{delta[k]=Math.round(s.rings[k])-Math.round(lap.rings[k]);});
- return {title:'Pit stop: age '+age,age,fromAge:lap.age,lapPoints:Math.round(s.score-lap.score),delta,
+ return {title:'Lap done: age '+age,age,fromAge:lap.age,lapPoints:Math.round(s.score-lap.score),delta,
+  happy:happiness(s),happyDelta:happiness(s)-(lap.happy===undefined?happiness(s):lap.happy),netWorth:netWorth(s),worthDelta:netWorth(s)-lap.netWorth,
   description:pitInsight(s,lap),tip:pitTip(s),down:lifestyleShift(s,-1),up:lifestyleShift(s,1),sipBoost:pitSipBoost(s),
   foot:'Changes apply from next month. '+(age+5<A.endAge?'Next pit stop at '+(age+5)+'.':'Next stop: the finish line.')};
 }
-// c = {pace, life: -1|0|1, sip: 'keep'|'boost'|'stop'}; works on any state copy (used for the preview too).
+// c = {life: -1|0|1, sip: 'keep'|'boost'|'stop'}; works on any state copy (used for the preview too).
 function applyPitChoices(s,c){
  const out=[],boost=pitSipBoost(s);   // the top-up offered is based on the budget before any changes
- if(c.pace&&PACES[c.pace]&&c.pace!==s.pace&&s.employment!=='retired'){s.pace=c.pace;out.push('pace → '+PACES[c.pace].label);}
  const shift=c.life===-1||c.life===1?lifestyleShift(s,c.life):null;
  if(shift){applyExpenseTo(s,'food',shift.food);applyExpenseTo(s,'social',shift.social);out.push((c.life<0?'simpler':'fancier')+' lifestyle ('+shift.label.toLowerCase()+')');}
  if(c.sip==='boost'&&boost&&boost!==s.sip){out.push((s.sip?'SIP raised to ':'SIP started at ')+money(boost)+'/month');s.sip=boost;}
@@ -1644,7 +1760,7 @@ function finishPit(e,c){
  record('🏁 Pit stop at '+e.age+': '+(changes.length?changes.join(', '):'no changes')+'.',{kind:'pit'});
  const low=Math.min(...RING_KEYS.map(k=>s.rings[k])),label=low<A.rings.low?'risky':low>=A.rings.healthy?'great':'solid';
  return {text:changes.length?'Pit stop done: '+changes.join(', ')+'. Back on track!':'Pit stop done. Same setup, back on track!',
-  feedback:Object.assign(fb(label,e.tip),{title:'Lap done: +'+e.lapPoints+' points'})};
+  feedback:Object.assign(fb(label,e.tip),{title:'Lap done: ❤️ '+(e.happyDelta>=0?'+':'−')+Math.abs(e.happyDelta)})};
 }
 
 /* =====================================================================
@@ -1740,10 +1856,10 @@ function endSummary(){
  if(s.stats.recoveries>0)reasons.push('You recovered from '+s.stats.recoveries+' strained period'+(s.stats.recoveries>1?'s':'')+'. Getting back to a fully paid month mattered.');
  if(completed&&s.stats.strainedMonths===0)reasons.push('Every month was fully paid. A steady surplus and reserves carried you through.');
  const ending=lifeEnding(s),avg=ending.avg;
- const strong=RINGS.filter(r=>avg[r[0]]>=A.rings.healthy).map(r=>r[1]),weak=RINGS.filter(r=>avg[r[0]]<A.rings.low).map(r=>r[1]);
- if(strong.length)reasons.unshift('Strong rings: '+strong.join(', ')+'.'+(weak.length?' Weak: '+weak.join(', ')+'.':''));else if(weak.length)reasons.unshift('Your weakest rings were '+weak.join(' and ')+'.');
+ const weak=RING_KEYS.filter(k=>avg[k]<A.rings.low).map(k=>WEAK_AREA[k]);
+ if(weak.length)reasons.unshift('Your happiness was held back by too little '+weak.join(' and ')+'.');
  const decisions=s.history.filter(h=>h.major).map(h=>h.text);
- return{completed,reasons,decisions,budget:b,ending,score:Math.round(s.score)};
+ return{completed,reasons,decisions,budget:b,ending,score:Math.round(s.score),happy:lifeHappiness(s),realWorth:realNetWorth(s)};
 }
 
 window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
@@ -1752,7 +1868,8 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
- RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,setPace,paceBlocker,houseSpec,rideSpec,vehicleLabel};
+ RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
+ happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,allEmis};
 })();
 </script>
 <script>
@@ -1848,7 +1965,7 @@ const Sound=(function(){
    speeds make the runner go faster and a paused game stands still. Birthday flags mark
    each age, coins wait at every payday, and a "?" block appears when life happens. */
 const Race=(function(){
- const MONTH_PX=420;
+ const MONTH_PX=64;
  const lerp=(a,b,t)=>a+(b-a)*t;
  const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
  const mix=(a,b,t)=>{const x=hex(a),y=hex(b);return 'rgb('+x.map((v,i)=>Math.round(lerp(v,y[i],t))).join(',')+')';};
@@ -1996,7 +2113,7 @@ const Race=(function(){
    const stripe=22,co=dist%(stripe*2);for(let x=-co;x<w;x+=stripe){c.fillStyle=Math.round((x+co)/stripe)%2?'#FFFDF8':'#E8BBA9';c.fillRect(x,ground,stripe,6);}
    const rg=c.createLinearGradient(0,ground+6,0,h);rg.addColorStop(0,'#A6A79F');rg.addColorStop(1,'#93958D');c.fillStyle=rg;c.fillRect(0,ground+6,w,h-ground-6);
    const dashY=ground+6+(h-ground-6)*0.5,dash=30,dOff=dist%(dash*2);c.fillStyle='#EFE9D9';for(let x=-dOff;x<w;x+=dash*2)c.fillRect(x,dashY-1.5,dash,3);
-   if(S.speed>=5&&S.moving){c.strokeStyle='#FFFFFF66';c.lineWidth=2;for(let i=0;i<5;i++){const ly=30+hash(i+Math.floor(r.t*6))*(ground-40),lx=(w-((r.t*900+i*170)%(w+200)));c.beginPath();c.moveTo(lx,ly);c.lineTo(lx+40,ly);c.stroke();}}
+   if(S.speed>=2&&S.moving){c.strokeStyle='#FFFFFF66';c.lineWidth=2;for(let i=0;i<5;i++){const ly=30+hash(i+Math.floor(r.t*6))*(ground-40),lx=(w-((r.t*900+i*170)%(w+200)));c.beginPath();c.moveTo(lx,ly);c.lineTo(lx+40,ly);c.stroke();}}
    const toX=m=>runnerX+(m-mf)*MONTH_PX;
    // birthday flags and the finish line
    for(let a=Math.floor(age);a<=Math.floor(age)+2;a++){const x=toX((a-A.startAge)*12+1)+20;if(a>A.startAge&&a<A.endAge&&x>-40&&x<w+40)flag(c,x,ground,a,s);}
@@ -2051,8 +2168,7 @@ function hydrateIcons(){document.querySelectorAll('[data-icon]').forEach(el=>{el
 /* ---------- UI-only state (never financial) ---------- */
 const ui={modal:null,paused:false,hidden:document.hidden,elapsed:0,timer:null,lastTick:0,countdown:false,
  optionalTab:'one-time',financeDetail:{},lastBalances:null,renderedEventId:null,shownEventId:null,renderedEnd:false,
- pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pacePick:null,pitPick:null,card:null,cardsSeen:0,
- setup:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes'}};
+ pendingExpense:null,confirmAction:null,lastFocus:null,audioUnlocked:false,lastCelebSeq:0,bannerTimer:null,lastCoinSfx:0,sipPick:null,variantPick:null,pitPick:null,card:null,cardsSeen:0,pit:null,lastHappy:null};
 
 /* ---------- Sound wiring ---------- */
 function sfx(kind){if(prefs.soundOn&&ui.audioUnlocked&&!document.hidden)Sound.sfx(kind);}
@@ -2061,13 +2177,17 @@ function renderSound(){$('soundGlyph').innerHTML=iconSVG(prefs.soundOn?'sound':'
 
 /* ---------- Clock: one interval per run; never advances past a decision ---------- */
 function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
-function monthMs(){return A.monthMs/prefs.speed;}
+// While a card waits on the track the race slows down, so there is time to read and tap.
+const CARD_MONTH_MS=900;
+function cardWaiting(){const e=S().event;return !!(e&&e.tier==='card');}
+function monthMs(){const ms=A.monthMs/prefs.speed;return cardWaiting()?Math.max(ms,CARD_MONTH_MS):ms;}
 function startClock(){
  stopClock();if(TEST_MODE)return;
  const runId=S().runId;ui.lastTick=performance.now();
  ui.timer=setInterval(()=>{
   if(S().runId!==runId||S().status!=='playing'){stopClock();return;}  // stale timer from an old run: shut it down
   const now=performance.now(),dt=Math.min(250,now-ui.lastTick);ui.lastTick=now;  // cap dt so a throttled tab can't jump ahead
+  tickPit(dt);
   if(!clockRunning())return;
   if(tickCard(dt))return;
   ui.elapsed+=dt;
@@ -2075,12 +2195,20 @@ function startClock(){
  },100);
 }
 // A track card's countdown runs only while the race runs; at zero the default is applied.
-const CARD_MS=8000,CARD_FIRST_MS=12000;
+const CARD_MS=6000,CARD_FIRST_MS=9000;
 function tickCard(dt){
  const e=S().event;if(!e||e.tier!=='card'||!ui.card||ui.card.id!==e.id)return false;
  ui.card.elapsed+=dt;const bar=$('cardTimer');if(bar)bar.style.width=Math.max(0,100-ui.card.elapsed/ui.card.ms*100)+'%';
  if(ui.card.elapsed<ui.card.ms)return false;
  const r=M.resolveEvent(e.id,e.defaultChoice,{auto:true});if(r)sfx('tap');render();return true;
+}
+// A pit stop restarts the race by itself once its bar runs out (unless paused or a panel is open).
+const PIT_MS=7000;
+function tickPit(dt){
+ const e=S().event;if(!e||e.type!=='pitstop'||!ui.pit||ui.pit.id!==e.id||ui.shownEventId!==e.id||ui.paused||ui.hidden||ui.modal)return;
+ ui.pit.elapsed+=dt;const bar=$('pitTimer'),n=$('pitCount'),left=Math.max(0,ui.pit.ms-ui.pit.elapsed);
+ if(bar)bar.style.width=(left/ui.pit.ms*100)+'%';if(n)n.textContent=Math.ceil(left/1000)+'s';
+ if(left<=0){ui.pit=null;const r=M.resolveEvent(e.id,'go',{pit:Object.assign({},ui.pitPick)});if(r){ui.elapsed=0;ui.lastTick=performance.now();sfx('go');}render();}
 }
 function stopClock(){if(ui.timer){clearInterval(ui.timer);ui.timer=null;}}
 function stepMonth(){
@@ -2113,16 +2241,16 @@ function sceneState(){
   short:s.employment!=='retired'&&b.leftover<0,coins:s.employment==='retired'||b.income<=0?0:Math.max(1,Math.min(5,1+Math.floor(Math.max(0,b.free)/Math.max(1,b.income)*10)))};
 }
 let demoStart=performance.now();
-function demoScene(){const t=(performance.now()-demoStart)/1000,mf=1+t*0.45,age=A.startAge+((mf-1)/12)%(A.endAge-A.startAge),leg=Math.floor(t/7)%5;return {runId:-1,monthFloat:mf,age,moving:true,speed:1,vehicle:['public','bike','public','car','cabs'][leg],transit:leg===2?'metro':'bus',retired:false,hero:{skin:'#C98F70',hair:'#3B2F2A',shirt:'#8FB39B',pants:'#56657A',mood:'happy',bag:'#C9A684'},partner:null,kids:[],pet:true,distress:false,event:false,short:false,coins:3};}
+function demoScene(){const t=(performance.now()-demoStart)/1000,mf=1+t*2.2,age=A.startAge+((mf-1)/12)%(A.endAge-A.startAge),leg=Math.floor(t/7)%5;return {runId:-1,monthFloat:mf,age,moving:true,speed:1,vehicle:['public','bike','public','car','cabs'][leg],transit:leg===2?'metro':'bus',retired:false,hero:{skin:'#C98F70',hair:'#3B2F2A',shirt:'#8FB39B',pants:'#56657A',mood:'happy',bag:'#C9A684'},partner:null,kids:[],pet:true,distress:false,event:false,short:false,coins:3};}
 const playRace=Race.create($('race'),sceneState),introRace=Race.create($('introRace'),demoScene);
 
 /* ---------- Overlays ---------- */
-const OVERLAYS=['eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay'];
+const OVERLAYS=['moreOverlay','eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay'];
 function anyOverlayOpen(){return OVERLAYS.some(id=>!$(id).classList.contains('hidden'));}
 function showOverlay(id){const el=$(id);if(el.classList.contains('hidden')){if(!anyOverlayOpen())ui.lastFocus=document.activeElement;el.classList.remove('hidden');}$('app').inert=true;const f=el.querySelector('button:not([disabled])');if(f)f.focus({preventScroll:true});if(ui.audioUnlocked)Sound.duck(true);}
 function hideOverlay(id){const el=$(id);if(el.classList.contains('hidden'))return;el.classList.add('hidden');if(!anyOverlayOpen()){$('app').inert=false;if(ui.audioUnlocked)Sound.duck(false);if(ui.lastFocus&&document.contains(ui.lastFocus)&&!ui.lastFocus.disabled)ui.lastFocus.focus({preventScroll:true});}}
 function openModal(name,id){ui.modal=name;showOverlay(id);renderStatus();}
-function closeModal(id){hideOverlay(id);ui.modal=['expenseOverlay','confirmOverlay','aboutOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
+function closeModal(id){hideOverlay(id);ui.modal=['moreOverlay','expenseOverlay','confirmOverlay','aboutOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
 function openConfirm(opts){ui.confirmAction=opts.onOk;$('confirmKicker').textContent=opts.kicker||'CONFIRM';$('confirmTitle').textContent=opts.title;$('confirmBody').innerHTML=opts.body||'';$('confirmOk').textContent=opts.okLabel||'Confirm';$('confirmOk').disabled=!!opts.okDisabled;openModal('confirm','confirmOverlay');}
 
 /* ---------- Rendering (reads state; never changes it) ---------- */
@@ -2130,32 +2258,28 @@ function render(){
  const s=S();
  const screen=s.status==='intro'?'intro':s.status==='setup'?'setup':'play';
  ['intro','setup','play'].forEach(n=>$(n+'Screen').classList.toggle('hidden',n!==screen));
+ document.body.classList.toggle('playing',screen==='play');
  if(SHOW_RACE){if(screen==='intro')introRace.start();else introRace.stop();if(screen==='play')playRace.start();else playRace.stop();}
- if(screen==='setup')renderSetup();
+ if(screen==='setup')renderStory();
  if(screen==='play')renderPlay();
  renderEvent();renderEnd();renderCelebration();
  if(!$('expenseOverlay').classList.contains('hidden'))renderExpenses();
+ if(!$('moreOverlay').classList.contains('hidden'))renderMore();
  playRace.redraw();
 }
-// Setup-only choices that are not monthly prices.
-const SETUP_EXTRA={
- avatar:{man:{label:'Man',emoji:'🧑',tag:'races as him'},woman:{label:'Woman',emoji:'👩',tag:'races as her'}},
- eduLoan:{no:{label:'No loan',emoji:'📘',tag:'regular start'},yes:{label:'Took a loan',emoji:'🎓',tag:'+25% salary'}},
- health:{yes:{label:'Yes, cover me',emoji:'🛡️',tag:'₹1,000/mo'},no:{label:'Skip it',emoji:'🎲',tag:'₹0, all risk'}}
-};
-const SETUP_GROUPS=['avatar','eduLoan','home','food','social','commute','health'];
-function eduEmi(){return M.emiFor(A.eduLoan.principal,A.eduLoan.annualRate/12,A.eduLoan.termMonths);}
-function priceTag(group,key,o){if(SETUP_EXTRA[group])return o.tag;if(group==='commute')return o.loan?'EMI '+compact(M.emiFor(o.loan)):compact(o.running+o.fuel);return compact(o.cost);}
-function renderSetup(){
- const p=ui.setup,ride=P.commute[p.commute];
- document.querySelectorAll('[data-salary]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.salary)===p.salary)));
- SETUP_GROUPS.forEach(g=>{const el=$(g+'Choice');el.innerHTML=Object.entries(SETUP_EXTRA[g]||P[g]).map(([k,o])=>'<button type="button" class="chip" data-group="'+g+'" data-value="'+k+'" aria-pressed="'+(p[g]===k)+'">'+em(o.emoji)+'<strong>'+esc(o.label)+'</strong><small>'+priceTag(g,k,o)+'</small></button>').join('');});
- const emi=ride.loan?M.emiFor(ride.loan):0,edu=p.eduLoan==='yes',study=edu?eduEmi():0,salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),tax=Math.round(M.annualTax(salary*12)/12),cover=p.health==='yes'?A.healthCover.premium:0;
- $('eduHint').textContent=edu?'An ₹'+(A.eduLoan.principal/1e5)+' lakh education loan at 10% a year got you into a better college: your first salary is '+money(salary)+' instead of '+money(p.salary)+', but the EMI is '+money(study)+' a month for 8 years.':'No loan EMI. You start on the salary you picked.';
- $('commuteHint').textContent=ride.loan?ride.label+': '+money(ride.loan)+' loan (counted as debt), about '+money(emi)+' EMI a month for 36 months, plus '+money(ride.fuel)+' fuel and '+money(ride.running)+' upkeep a month. You can also buy one later in Big buys.':ride.label+': no loan, '+money(ride.running)+' a month. You can buy a two-wheeler or car later in Big buys.';
- const costs=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+ride.running+ride.fuel+emi+study+cover,take=salary-tax,left=take-costs;
- $('profilePreview').innerHTML='<strong>'+money(salary)+'</strong> pay'+(tax?' − <strong>'+money(tax)+'</strong> tax':' (no income tax yet)')+' − <strong>'+money(costs)+'</strong> monthly costs'+(emi||study?' (incl. EMIs)':'')+' = <strong>'+(left<0?'−':'')+money(Math.abs(left))+'</strong> '+(left<0?'short every month. Costs above income eat savings, then investments, then become debt. Try cheaper options.':'left over each month to save, invest or spend. 🎉');
+// The story card: who you are at 23, what you start with and the goal.
+function renderStory(){
+ const s=S(),p=s.profile,edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),tax=Math.round(M.annualTax(salary*12)/12),home=P.home[p.home];
+ $('storyAvatar').textContent=p.avatar==='woman'?'👩':'🧑';
+ $('storyName').textContent='You’re '+p.name+', 23';
+ const fact=(e,main,sub)=>'<li>'+em(e)+'<span>'+main+(sub?'<small>'+sub+'</small>':'')+'</span></li>';
+ $('storyFacts').innerHTML=fact('💼','First job as a '+esc(p.job),'in '+esc(p.city)+' '+(p.cityArt||''))
+  +fact('💰',compact(salary)+'/month salary',tax?money(salary-tax)+' after '+money(tax)+' tax':'No income tax yet')
+  +(edu?fact('🎓',compact(A.eduLoan.principal)+' education loan',money(eduEmi())+'/month EMI for 8 years. It got you the better pay.'):fact('📘','No education loan','Nothing to repay'))
+  +fact(home.emoji,'Renting: '+home.label,money(home.cost)+'/month')
+  +fact('🚇','Bus and Metro to work','No vehicle yet');
 }
+function eduEmi(){return M.emiFor(A.eduLoan.principal,A.eduLoan.annualRate/12,A.eduLoan.termMonths);}
 function stageName(age){return age<28?'Early career':age<36?'Building your life':age<46?'Mid-career':age<60?'Later career':age<70?'Freedom years':'Golden years';}
 const IDLE_LINES={
  'Early career':['Hustling at the new job. Instant noodles: 4 nights a week.','Figuring out adulting, one bill at a time.','Your playlist is great. Your sleep schedule is not.'],
@@ -2165,39 +2289,32 @@ const IDLE_LINES={
  'Freedom years':['Morning walks, afternoon naps, evening chai.','Grandparent WhatsApp forwards: activated.','Finally reading all the books you bought.'],
  'Golden years':['The finish line is in sight.','Telling stories about the good old days.','Every month is a victory lap.']
 };
-/* ---------- Life rings ---------- */
-const RING_ICON={me:'🧍',fam:'👨‍👩‍👧',com:'🏘️'},RING_NAME={me:'Me',fam:'Family & Friends',com:'Community'};
-// Up to `max` chips for a ring effect, biggest first ({me,fam,com} or [me,fam,com]).
-function ringChips(fx,max,suffix){
- if(!fx)return '';if(Array.isArray(fx))fx={me:fx[0],fam:fx[1],com:fx[2]};
- const list=Object.keys(RING_ICON).filter(k=>fx[k]).sort((a,b)=>Math.abs(fx[b])-Math.abs(fx[a])).slice(0,max||3);
- return list.map(k=>'<span class="rchip '+(fx[k]>0?'up':'down')+'" aria-label="'+RING_NAME[k]+' '+(fx[k]>0?'plus ':'minus ')+Math.abs(fx[k])+'">'+RING_ICON[k]+' '+(fx[k]>0?'+':'−')+Math.abs(fx[k])+(suffix||'')+'</span>').join('');
+/* ---------- Happiness ---------- */
+// A choice's effect on happiness, shown as hearts (bigger effect, more signs) instead of numbers.
+function heartChip(fx,suffix){
+ if(!fx)return '';const v=Array.isArray(fx)?fx[0]+fx[1]+fx[2]:(fx.me||0)+(fx.fam||0)+(fx.com||0);if(!v)return '';
+ const n=Math.abs(v)<=4?1:Math.abs(v)<=12?2:3;
+ return '<span class="rchip '+(v>0?'up':'down')+'" aria-label="Happiness '+(v>0?'up':'down')+(n===3?' a lot':n===2?'':' a little')+(suffix?', lasting':'')+'">'+(v>0?'❤️'+'+'.repeat(n):'💔'+'−'.repeat(n))+(suffix||'')+'</span>';
 }
-function bragChip(n){return n?'<span class="rchip brag" aria-label="Show-off value '+n+' of 3, worth 0 points">'+'✨'.repeat(n)+' brag</span>':'';}
-function renderRings(){
- const s=S(),t=M.ringTargets(),drivers=M.ringDrivers();
- $('hudRings').innerHTML=M.RINGS.map(([k,name,icon])=>'<span class="ring r-'+k+(s.rings[k]<A.rings.low?' low':'')+'" style="--v:'+Math.round(s.rings[k])+'">'+em(icon)+'</span>').join('');
- $('hudRings').setAttribute('aria-label','Life rings: '+M.RINGS.map(([k,name])=>name+' '+Math.round(s.rings[k])).join(', '));
- $('ringRows').innerHTML=M.RINGS.map(([k,name,icon],i)=>{
-  const v=Math.round(s.rings[k]),gap=t[k]-s.rings[k],trend=gap>2?'<em class="up">▲ rising</em>':gap<-2?'<em class="down">▼ falling</em>':'<em>steady</em>';
-  const mine=drivers.map(d=>({label:d.label,v:d.v[i]})).filter(d=>d.v),best=mine.filter(d=>d.v>0).sort((a,b)=>b.v-a.v)[0],worst=mine.filter(d=>d.v<0).sort((a,b)=>a.v-b.v)[0];
-  const why=[best?'＋ '+best.label:'',worst?'− '+worst.label:''].filter(Boolean).join(' · ')||'Nothing much is feeding this ring.';
-  return '<div class="ring-row r-'+k+'">'+em(icon)+'<div><b>'+esc(name)+'</b><div class="ring-track"><i style="width:'+v+'%"></i></div><small>'+esc(why)+'</small></div><div class="ring-val">'+v+trend+'</div></div>';
- }).join('');
- const pace=M.PACES[s.pace];$('paceEmoji').textContent=pace.emoji;$('paceTitle').textContent='Pace: '+pace.label;
- $('paceNote').textContent=s.employment==='retired'?'Retired: all the time in the world.':pace.blurb;
- $('paceBtn').disabled=!!M.blockingEvent()||s.status!=='playing'||s.employment==='retired';
+function bragChip(n){return n?'<span class="rchip brag" aria-label="Show-off value '+n+' of 3">'+'✨'.repeat(n)+' brag</span>':'';}
+const PACE_BADGE={hustle:'🚀 Hustle mode',chill:'🌿 Taking it easy'};
+function renderHappy(){
+ const s=S(),h=M.happiness(),el=$('hudHappy');
+ $('happyValue').textContent=h;el.setAttribute('aria-label','Happiness '+h+' out of 100');el.classList.toggle('low',h<A.rings.low);
+ const prev=ui.lastHappy;ui.lastHappy={v:h,runId:s.runId};
+ if(prev&&prev.runId===s.runId&&prev.v!==h&&Math.abs(h-prev.v)>=2){el.querySelectorAll('.hdelta').forEach(n=>n.remove());const d=document.createElement('span');d.className='hdelta '+(h>prev.v?'up':'down');d.textContent=(h>prev.v?'+':'−')+Math.abs(h-prev.v);d.setAttribute('aria-hidden','true');el.appendChild(d);el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+ const pace=$('hudPace'),busy=s.employment==='employed'&&PACE_BADGE[s.pace];pace.classList.toggle('hidden',!busy);if(busy)pace.textContent=busy;
 }
 function renderPlay(){
  const s=S(),age=M.preciseAge(),b=M.monthlyBudget(),res=M.resilience();
  $('ageValue').textContent=M.ageLabel();
  const years=A.endAge-A.startAge,yr=Math.min(years,Math.floor((Math.max(1,s.month)-1)/12)+1),lap=$('yearLap');
  lap.textContent=age>=79?'FINAL LAP!':'YEAR '+yr+' / '+years;lap.classList.toggle('final',age>=79);
- $('hudCash').textContent=compact(s.cash);
- renderRings();
+ renderHappy();
  renderStatus();renderClock();
  $('speedBtn').textContent=prefs.speed+'×';
  $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause');$('pauseBtn').setAttribute('aria-label',ui.paused?'Resume':'Pause');$('pauseBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
+ $('moreBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('retireBtn').classList.toggle('hidden',!(s.status==='playing'&&age>=A.retireMinAge&&s.employment!=='retired'));
  // Story bubble from your character.
  const stage=stageName(age),lines=IDLE_LINES[stage];
@@ -2206,22 +2323,35 @@ function renderPlay(){
  $('bubbleFace').textContent=face;
  $('sceneMessage').textContent=s.story||lines[Math.floor(s.month/7)%lines.length];
  $('sceneSub').textContent=(s.employment==='retired'?'Retired · living off your savings':s.employment==='laidoff'?(s.breakReason==='recovery'?'Recovering · ':s.breakReason==='break'?'Recharging · ':'Between jobs · ')+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left':stage)+' · '+compact(s.salary)+'/month salary';
- const ride=M.rideSpec(s.vehicle,s.carModel),home=s.ownsHome?M.houseSpec(s.homeType):null;
- const tags=[[home?home.emoji:P.home[s.profile.home].emoji,home?'Own '+home.label.toLowerCase():P.home[s.profile.home].label+(s.homeUpgraded?' +':'')],[ride.emoji,ride.label+(s.vehicleLoan?' (loan)':'')]];
- if(s.married)tags.push(['💞','Married']);const kids=M.activeChildren().length;if(kids)tags.push(['👶',kids+' kid'+(kids>1?'s':'')]);if(s.pet)tags.push(['🐶','Pet']);if(s.insured)tags.push(['🛡️',(s.married||kids?'Family cover':'Health cover')+(s.parentsCovered?' + parents':'')]);if(s.termCover)tags.push(['☂️','Term cover']);tags.push(['⭐','XP '+s.career+'/'+A.maxXp]);if(s.promotions)tags.push(['🏆',s.promotions+' promotion'+(s.promotions>1?'s':'')]);
- $('lifeTags').innerHTML=tags.map(t=>'<span>'+em(t[0])+esc(t[1])+'</span>').join('');
  // Decision feedback: reaction face + label + text (never colour alone).
  const f=s.feedback,fc=$('feedbackCard');
- if(f){const chips=ringChips(f.rings),key=f.title+f.why+chips;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+(f.auto?' · picked for you':'')+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
+ if(f){const chips=heartChip(f.rings),key=f.title+f.why+chips;if(fc.dataset.key!==key){fc.dataset.key=key;fc.className='feedback '+f.label;fc.innerHTML=em({great:'🤩',solid:'🙂',risky:'😬',missed:'🤔'}[f.label],'face')+'<div><b>'+esc(f.title)+(f.source?'<em>'+(f.art?f.art+' ':'')+esc(f.source)+(f.auto?' · picked for you':'')+'</em>':'')+'</b><p>'+esc(f.why)+'</p>'+(chips?'<div class="rchips">'+chips+'</div>':'')+'</div>';}}
  else{fc.className='feedback hidden';fc.dataset.key='';}
  const strain=$('strainNote');
  if(s.distressMonths>0){strain.classList.remove('hidden');strain.innerHTML=em('🌧️')+'<span>Rainy patch: bills could not be fully paid for '+s.distressMonths+' month'+(s.distressMonths>1?'s':'')+' in a row. Six in a row ends the race. One fully paid month clears the sky.</span>';}
  else strain.classList.add('hidden');
  // Wallet
+ // Wallet: four tiles, always on screen
+ const loans=M.totalDebt()-s.unsecuredDebt;
  const show=(id,key,v,label)=>{const el=$(id);el.textContent=ui.financeDetail[key]?money(v):compact(v);el.parentElement.setAttribute('aria-label',label+': '+money(v)+'. Tap to switch between compact and exact.');};
- show('cashValue','cash',s.cash,'Savings');show('investValue','invested',s.invested,'Invested');show('debtValue','debt',M.totalDebt(),'Loans and debt');
- $('debtNote').textContent=M.totalDebt()<=0?'Debt-free 🎉':[s.homeLoan?'Home '+compact(s.homeLoan.balance):'',s.vehicleLoan?'Vehicle '+compact(s.vehicleLoan.balance):'',s.eduLoan?'Study '+compact(s.eduLoan.balance):'',s.unsecuredDebt>0?'Card '+compact(s.unsecuredDebt):''].filter(Boolean).join(' · ');
+ show('cashValue','cash',s.cash,'Savings');show('investValue','invested',s.invested,'Invested');show('loanValue','loans',loans,'Loans');show('debtValue','debt',s.unsecuredDebt,'Card debt');
+ const cushion=M.monthsOfCushion();$('cashNote').textContent=s.cash<=0?'Empty!':cushion>=1?Math.floor(cushion)+' mo of bills':'Under a month';
+ $('investNote').textContent=s.sip>0&&s.employment==='employed'?'SIP '+compact(s.sip)+'/mo':s.invested>0?'Can rise or fall':'Nothing yet';
+ $('loanNote').textContent=loans>0?'EMI '+compact(M.allEmis())+'/mo':'None';
+ $('debtNote').textContent=s.unsecuredDebt>0?'1% a month!':'None 🎉';
+ document.querySelector('.wallet-card.debt').classList.toggle('bad',s.unsecuredDebt>0);
  animateBalances();
+ if(!$('moreOverlay').classList.contains('hidden'))renderMore();
+}
+// The More sheet: SIP, monthly plan, power-ups, life tags and the journal.
+function renderMore(){
+ const s=S(),b=M.monthlyBudget(),tags=[];
+ const ride=M.rideSpec(s.vehicle,s.carModel),home=s.ownsHome?M.houseSpec(s.homeType):null;
+ tags.push([home?home.emoji:P.home[s.profile.home].emoji,home?'Own '+home.label.toLowerCase():P.home[s.profile.home].label+(s.homeUpgraded?' +':'')],[ride.emoji,ride.label+(s.vehicleLoan?' (loan)':'')]);
+ if(s.married)tags.push(['💞','Married']);const kids=M.activeChildren().length;if(kids)tags.push(['👶',kids+' kid'+(kids>1?'s':'')]);if(s.pet)tags.push(['🐶','Pet']);if(s.insured)tags.push(['🛡️',(s.married||kids?'Family cover':'Health cover')+(s.parentsCovered?' + parents':'')]);if(s.termCover)tags.push(['☂️','Term cover']);
+ if(s.pace!=='balanced'&&s.employment==='employed')tags.push(s.pace==='hustle'?['🚀','Hustle mode']:['🌿','Taking it easy']);tags.push(['⭐','XP '+s.career+'/'+A.maxXp]);if(s.promotions)tags.push(['🏆',s.promotions+' promotion'+(s.promotions>1?'s':'')]);
+ $('lifeTags').innerHTML=tags.map(t=>'<span>'+em(t[0])+esc(t[1])+'</span>').join('');
+ $('sheetSound').textContent=prefs.soundOn?'🔊 Sound on':'🔇 Sound off';
  // SIP
  const sipLocked=!!M.blockingEvent()||s.status!=='playing';
  if(s.sip>0){$('sipTitle').textContent='SIP '+money(s.sip)+'/month';$('sipNote').textContent=s.employment!=='employed'?'Paused while there is no salary.':(s.lastSettlement&&s.lastSettlement.sipSkipped?'Skipped last month: not enough savings. ':'')+money(s.stats.sipInvested)+' auto-invested so far.';$('sipBtn').textContent='Change';}
@@ -2252,14 +2382,14 @@ function renderMoneyBar(b){
 }
 function renderStatus(){
  const s=S(),el=$('runStatus');
- let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event&&s.event.type==='pitstop')t='🏁 Pit stop · race paused';else if(M.blockingEvent())t='❓ Life happened · race paused';else if(s.event&&!ui.modal&&!ui.paused)t='<b>●</b> A surprise is on the track: tap a choice';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='<b>●</b> Racing through life';
- el.innerHTML='<span>'+t+'</span><span>1 year ≈ '+Math.round(60/prefs.speed)+' s at '+prefs.speed+'×</span>';
+ let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event&&s.event.type==='pitstop')t='🏁 Lap done';else if(M.blockingEvent())t='❓ Life happened · race paused';else if(s.event&&!ui.modal&&!ui.paused)t='A surprise is on the track: tap a choice';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='Racing through life';
+ el.innerHTML=t;
 }
 function renderClock(){const p=Math.min(100,ui.elapsed/monthMs()*100);$('clockProgress').style.width=p+'%';$('clockProgress').parentElement.setAttribute('aria-valuenow',String(Math.round(p)));}
 function animateBalances(){
- const s=S(),vals={cash:s.cash,invested:s.invested,debt:M.totalDebt()},prev=ui.lastBalances;ui.lastBalances={...vals,runId:s.runId};
+ const s=S(),vals={cash:s.cash,invested:s.invested,loans:M.totalDebt()-s.unsecuredDebt,debt:s.unsecuredDebt},prev=ui.lastBalances;ui.lastBalances={...vals,runId:s.runId};
  if(!prev||prev.runId!==s.runId)return;   // a new run never animates against the old run's numbers
- Object.keys(vals).forEach(k=>{const card=document.querySelector('[data-finance-detail="'+k+'"]');card.querySelectorAll('.money-delta').forEach(n=>n.remove());const d=Math.round(vals[k]-prev[k]);if(!d)return;const tag=document.createElement('span');tag.className='money-delta '+((k==='debt'?d<0:d>0)?'up':'down');tag.textContent=(d>0?'+':'−')+compact(Math.abs(d));tag.setAttribute('aria-hidden','true');card.appendChild(tag);});
+ Object.keys(vals).forEach(k=>{const card=document.querySelector('[data-finance-detail="'+k+'"]');card.querySelectorAll('.money-delta').forEach(n=>n.remove());const d=Math.round(vals[k]-prev[k]);if(!d)return;const tag=document.createElement('span');tag.className='money-delta '+((k==='debt'||k==='loans'?d<0:d>0)?'up':'down');tag.textContent=(d>0?'+':'−')+compact(Math.abs(d));tag.setAttribute('aria-hidden','true');card.appendChild(tag);});
 }
 function signed(v){return (v<0?'−':'+')+compact(Math.abs(v));}
 function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
@@ -2275,10 +2405,10 @@ function renderOptional(){
   const m=o.monthly(s),after=s.cash-o.cost(s),left=M.monthlyBudget().leftover;
   const effect=o.cost(s)?'Savings after: '+compact(Math.max(0,after)):'Left over: '+compact(left)+' → '+compact(left-m);
   const desc=o.variants?o.variants(s).map(v=>v.emoji+' '+v.label).join(' · '):o.describe(s);
-  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(o.rings?'<span class="rchips">'+ringChips(o.rings,2)+'</span>':'')+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
+  return '<button type="button" class="move-card '+o.color+'" data-move="'+id+'"'+(block?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.name)+'</strong><small>'+esc(desc)+'</small>'+(o.rings?'<span class="rchips">'+heartChip(o.rings)+'</span>':'')+(locked?'<span class="lock">🔒 '+esc(block)+'</span>':'<small>'+esc(effect)+'</small>')+'<em>'+esc(optionalCost(id,o,s))+'</em></button>';
  }).join('');
 }
-function snapshotHTML(){const s=S(),b=M.monthlyBudget();return '<div><span>🐷 SAVINGS</span><strong>'+money(s.cash)+'</strong></div><div><span>🌱 INVESTED</span><strong>'+money(s.invested)+'</strong></div><div><span>⛓️ LOANS & DEBT</span><strong>'+money(M.totalDebt())+'</strong></div><div><span>'+(b.leftover<0?'📉 SHORT / MONTH':'🪙 LEFT / MONTH')+'</span><strong>'+money(b.leftover)+'</strong></div>';}
+function snapshotHTML(){const s=S(),b=M.monthlyBudget();return '<div><span>🐷 SAVINGS</span><strong>'+money(s.cash)+'</strong></div><div><span>🌱 INVESTED</span><strong>'+money(s.invested)+'</strong></div><div><span>🏦 LOANS + 💳 DEBT</span><strong>'+money(M.totalDebt())+'</strong></div><div><span>'+(b.leftover<0?'📉 SHORT / MONTH':'🪙 LEFT / MONTH')+'</span><strong>'+money(b.leftover)+'</strong></div>';}
 function renderEvent(){
  const s=S(),e=s.event;
  renderTrackCard();
@@ -2294,31 +2424,22 @@ function renderEvent(){
  $('eventKicker').textContent=e.kicker;$('eventAge').textContent='Age '+M.ageLabel();$('eventTitle').textContent=e.title;$('eventDescription').textContent=e.description;
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
- if(def.pit){ui.pitPick={pace:s.pace,life:0,sip:'keep'};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent=e.foot;}
- else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
+ if(def.pit){ui.pitPick={life:0,sip:'keep'};ui.pit={id:e.id,elapsed:0,ms:PIT_MS};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent='';}
+ else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=heartChip(M.ringEffect(e.type,c.id));return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
  if(!def.pit)$('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
- playRace.bump();sfx(def.pit?'go':'bump');
+ playRace.bump();sfx(def.pit?'powerup':'bump');if(def.pit)playRace.confetti();
  const id=e.id;
  if(TEST_MODE||REDUCED||$('playScreen').classList.contains('hidden')){ui.shownEventId=id;showOverlay('eventOverlay');}
  else setTimeout(()=>{const cur=S().event;if(cur&&cur.id===id&&ui.renderedEventId===id){ui.shownEventId=id;showOverlay('eventOverlay');}},650);
 }
-/* ---------- Pit stop (every 5 years) ---------- */
-const PACE_SHORT={hustle:'More pay, less time',balanced:'Steady',chill:'More time, less pay'};
+/* ---------- Pit stop (every 5 years): a short lap report that restarts by itself ---------- */
 function pitBody(){
- const s=S(),e=s.event,pk=ui.pitPick,pv=M.pitPreview(pk);
- let h='<div class="pit-rings">'+M.RINGS.map(([k,name,icon])=>{const v=Math.round(s.rings[k]),d=e.delta[k];return '<div class="pit-ring" aria-label="'+esc(name)+' '+v+', '+(d>0?'up '+d:d<0?'down '+(-d):'no change')+' this lap"><span class="ring r-'+k+'" style="--v:'+v+'">'+em(icon)+'</span><b>'+v+'</b><small class="'+(d>0?'up':d<0?'down':'')+'">'+(d>0?'▲'+d:d<0?'▼'+(-d):'＝')+'</small></div>';}).join('')
-  +'<div class="pit-pts"><b>+'+e.lapPoints.toLocaleString('en-IN')+'</b><small>points since '+e.fromAge+'</small></div></div>';
+ const s=S(),e=s.event,pk=ui.pitPick,arrow=(d,f)=>d>0?'<small class="up">▲ '+f(d)+'</small>':d<0?'<small class="down">▼ '+f(-d)+'</small>':'<small>steady</small>';
+ let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div></div>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
- const seg=(key,title,opts)=>'<div class="pit-group" role="group" aria-label="'+title+'"><span class="pit-label">'+title+'</span><div class="pit-seg">'+opts.map(o=>'<button type="button" data-pit-key="'+key+'" data-pit-value="'+o.v+'" aria-pressed="'+(String(pk[key])===String(o.v))+'"'+(o.dis?' disabled':'')+'>'+em(o.emoji)+'<strong>'+esc(o.label)+'</strong><small>'+esc(o.sub)+'</small></button>').join('')+'</div></div>';
- if(s.employment!=='retired')h+=seg('pace','Pace',Object.entries(M.PACES).map(([id,p])=>({v:id,emoji:p.emoji,label:p.label,sub:PACE_SHORT[id]})));
- const cur=P.food[s.profile.food].label+' + '+P.social[s.profile.social].label.toLowerCase();
- h+=seg('life','Lifestyle',[{v:-1,emoji:'⬇️',label:'Simpler',sub:e.down?'−'+compact(-e.down.monthly)+'/mo':'Already simple',dis:!e.down},{v:0,emoji:'🍱',label:'Keep',sub:cur},{v:1,emoji:'⬆️',label:'Fancier',sub:e.up?'+'+compact(e.up.monthly)+'/mo':'Already max',dis:!e.up}]);
- if(s.employment==='employed'||s.sip>0){const sipOpts=[{v:'keep',emoji:'🌱',label:s.sip?'Keep':'No SIP',sub:s.sip?compact(s.sip)+'/mo':'Keep it off'},{v:'boost',emoji:'📈',label:s.sip?'Raise':'Start',sub:e.sipBoost?compact(e.sipBoost)+'/mo':'No room yet',dis:!e.sipBoost}];if(s.sip>0)sipOpts.push({v:'stop',emoji:'⏸️',label:'Pause',sub:'Stop investing'});h+=seg('sip','Monthly SIP',sipOpts);}
- const diff={};let any=false;M.RINGS.forEach(([k])=>{diff[k]=Math.round(pv.targets[k])-Math.round(pv.now[k]);if(diff[k])any=true;});
- const lb=pv.before.leftover-S().sip,la=pv.after.leftover-pv.sip;
- h+='<div class="pit-preview" aria-live="polite">'+(lb===la?'Left over each month after bills and SIP: <b>'+money(la)+'</b>':'Left over each month after bills and SIP: <b>'+money(lb)+' → '+money(la)+'</b>')+(any?'<div class="rchips"><span>Ring targets:</span>'+ringChips(diff,3)+'</div>':'')+'</div>';
- return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Back on track</button>';
+ if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong><small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small></span></button>';}
+ return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Keep racing<b id="pitCount" aria-hidden="true"></b></button><div class="tc-timer" aria-hidden="true"><i id="pitTimer"></i></div>';
 }
 /* ---------- Track cards: small surprises that don't stop the race ---------- */
 function renderTrackCard(){
@@ -2329,8 +2450,8 @@ function renderTrackCard(){
  ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};
  el.innerHTML='<div class="tc-head">'+em(e.art||'❓','tc-art')+'<div><small>'+esc(e.kicker)+' · AGE '+esc(M.ageLabel())+'</small><b>'+esc(e.title)+'</b></div></div>'
   +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
-  +(first?'<p class="tc-note">A small surprise: the race keeps going. Tap a choice, or “'+esc(dflt?dflt.title:'')+'” happens when the bar runs out.</p>':'')
-  +'<div class="tc-choices">'+choices.map(c=>{const ch=ringChips(M.ringEffect(e.type,c.id),2);return '<button type="button" class="tc-choice'+(c.id===e.defaultChoice?' default':'')+'" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+(c.id===e.defaultChoice?' <em>default</em>':'')+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
+  +(first?'<p class="tc-note">The race slows down while you choose. Tap a choice, or “'+esc(dflt?dflt.title:'')+'” happens when the bar runs out.</p>':'')
+  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice'+(c.id===e.defaultChoice?' default':'')+'" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+(c.id===e.defaultChoice?' <em>default</em>':'')+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
   +'<div class="tc-timer" aria-hidden="true"><i id="cardTimer"></i></div>';
  el.classList.remove('hidden');el.classList.remove('tc-in');void el.offsetWidth;el.classList.add('tc-in');
  playRace.bump();sfx('bump');
@@ -2345,23 +2466,21 @@ function renderEnd(){
  const s=S();
  if(s.status!=='ended'){ui.renderedEnd=false;hideOverlay('endOverlay');return;}
  if(ui.renderedEnd)return;ui.renderedEnd=true;
- const sum=M.endSummary(),age=M.ageLabel(),end=sum.ending,best=updateBest(sum.score);
+ const sum=M.endSummary(),age=M.ageLabel(),end=sum.ending,best=updateBest(sum.happy);
  $('endArt').textContent=end.emoji;
  $('endKicker').textContent=(sum.completed?'FINISH LINE':'RACE OVER')+' · AGE '+age;
  $('endTitle').textContent=end.title;
  $('endLead').textContent=end.line+(sum.completed?'':' For six months in a row, savings and investments could not cover your costs. It is a lesson about this simulated life, not about you.');
  const stat=(l,v)=>'<div><span>'+l+'</span><strong>'+v+'</strong></div>';
- const rings=M.RINGS.map(([k,name,icon])=>{const v=Math.round(end.avg[k]);return '<div class="ring-row r-'+k+'">'+em(icon)+'<div><b>'+esc(name)+'</b><div class="ring-track"><i style="width:'+v+'%"></i></div><small>'+(v>=A.rings.healthy?'Healthy':v<A.rings.low?'Running low':'Okay')+' (lifetime average)</small></div><div class="ring-val">'+v+'</div></div>';}).join('');
- $('endBody').innerHTML='<div class="end-score"><div><span>LIFE SCORE</span><strong>'+sum.score.toLocaleString('en-IN')+'</strong></div><div><span>PERSONAL BEST</span><strong>'+best.toLocaleString('en-IN')+'</strong></div></div>'
-  +'<p class="res-note" style="text-align:center">Each month adds up to 10 points, mostly from your weakest ring. Money scores nothing by itself.</p>'
-  +rings
-  +'<h3>Your money at '+esc(age)+'</h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('🌱 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('⛓️ LOANS & DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
+ $('endBody').innerHTML='<div class="end-score"><div><span>❤️ LIFETIME HAPPINESS</span><strong>'+sum.happy+'</strong></div><div><span>💎 NET WORTH</span><strong>'+compact(M.netWorth())+'</strong></div></div>'
+  +'<p class="res-note" style="text-align:center">'+(sum.happy>=best?'🎉 Your happiest life so far! ':'Your best: ❤️ '+best+'. ')+'In today’s money your net worth is '+compact(sum.realWorth)+'.</p>'
+  +'<h3>Your money at '+esc(age)+'</h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('📈 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('🏦 LOANS & 💳 DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
   +(sum.reasons.length?'<h3>What shaped this race</h3><ul class="end-list">'+sum.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>':'')
   +'<h3>Big moments</h3><ul class="end-list">'+sum.decisions.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul>'
   +'<p class="res-note">Illustrative game outcome, not a forecast. Run code: '+s.seed+'.</p>';
  showOverlay('endOverlay');
 }
-function updateBest(score){let best=score;try{const prior=Number(localStorage.getItem('lifeHappensBestScore')||0);best=Math.max(score,prior);localStorage.setItem('lifeHappensBestScore',String(best));}catch(e){}return best;}
+function updateBest(happy){let best=happy;try{const prior=Number(localStorage.getItem('lifeHappensBestHappy')||0);best=Math.max(happy,prior);localStorage.setItem('lifeHappensBestHappy',String(best));}catch(e){}return best;}
 
 /* ---------- Monthly plan editor ---------- */
 function renderExpenses(){
@@ -2411,7 +2530,7 @@ function openSip(){const s=S();if(M.blockingEvent()||s.status!=='playing')return
 /* ---------- Big-buy versions (home, car) ---------- */
 function variantBody(id){
  const s=S(),o=M.OPTIONAL[id],vs=o.variants(s),pick=vs.find(v=>v.id===ui.variantPick),before=M.monthlyBudget();
- let h='<p class="lead">Each version trades comfort, people and show-off value differently. Show-off value earns no points.</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong><small>'+esc(v.blurb)+'</small><small>'+(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo</small><span class="rchips">'+ringChips(v.rings,3,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
+ let h='<p class="lead">Each version trades comfort, people and show-off value differently. Show-off value doesn’t make you happier.</p><div class="variant-list">'+vs.map(v=>'<button type="button" class="variant" data-variant="'+v.id+'" aria-pressed="'+(v.id===ui.variantPick)+'"'+(v.block?' disabled':'')+'>'+em(v.emoji)+'<span><strong>'+esc(v.label)+'</strong><small>'+esc(v.blurb)+'</small><small>'+(v.upfront!==undefined?compact(v.upfront)+' down · ':'')+'EMI '+compact(v.emi)+'/mo</small><span class="rchips">'+heartChip(v.rings,' lasting')+bragChip(v.brag)+'</span>'+(v.block?'<small style="color:var(--danger-ink)">🔒 '+esc(v.block)+'</small>':'')+'</span></button>').join('')+'</div>';
  if(pick){const cost=o.cost(s,pick.id),m=o.monthly(s,pick.id),rows=[['Cost now',cost?money(cost):'None'],['Savings',money(s.cash)+' → '+money(s.cash-cost)],['Monthly expenses',money(before.total)+' → '+money(before.total+m)],[before.leftover-m<0?'Monthly shortfall':'Left over',money(before.leftover)+' → '+money(before.leftover-m)]];
   h+='<p class="res-note">'+esc(o.describe(s,pick.id))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div>';}
  return h+'<p class="res-note">This uses your one power-up for this month.</p>';
@@ -2420,47 +2539,41 @@ function syncVariant(id){$('confirmBody').innerHTML=variantBody(id);$('confirmOk
 function openVariants(id){const o=M.OPTIONAL[id],first=o.variants(S()).find(v=>!v.block);ui.variantPick=first?first.id:null;
  openConfirm({kicker:'BIG BUY',title:o.emoji+' '+o.name,body:variantBody(id),okLabel:'Buy it',okDisabled:!first,onOk:()=>{const r=M.chooseOptional(id,ui.variantPick);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});
  $('confirmBody').dataset.variantFor=id;}
-function paceBody(){
- const s=S();return '<p class="lead">How hard do you work? Pace changes your raises and promotion odds, and how much time is left for you and your people. Changing it is free.</p><div class="variant-list">'+Object.entries(M.PACES).map(([id,p])=>'<button type="button" class="variant" data-pace="'+id+'" aria-pressed="'+(id===ui.pacePick)+'">'+em(p.emoji)+'<span><strong>'+esc(p.label)+(id===s.pace?' (now)':'')+'</strong><small>'+esc(p.blurb)+'</small><span class="rchips">'+ringChips(p.rings,3,' lasting')+'</span></span></button>').join('')+'</div>';
-}
-function openPace(){const s=S();if(M.blockingEvent()||s.status!=='playing'||s.employment==='retired')return;ui.pacePick=s.pace;
- openConfirm({kicker:'PACE',title:'🏎️ Set your pace',body:paceBody(),okLabel:'Set pace',okDisabled:true,onOk:()=>{const r=M.setPace(ui.pacePick);if(r)sfx('good');}});}
-
 /* ---------- About ---------- */
 function renderAbout(){
- const rows=[['Goal','Reach 80 with all three life rings healthy: 🧍 Me, 👨‍👩‍👧 Family & Friends and 🏘️ Community. Money is the fuel, not the score'],
-  ['Life rings','Each ring runs from 0 to 100. Every month it moves 4% of the way toward a target set by how you live: food, extras, social life, home, ride, savings cushion, debt, marriage, kids, pets, parents, pace and life stage. Choices in life events add one-off bumps that fade over time, so people need regular attention'],
-  ['Life Score','Each month adds up to 10 points: 60% from your weakest ring and 40% from the average of all three. Running out of money early forfeits every month you do not reach. Your ending title comes from your lifetime ring averages (55+ is healthy, under 40 is low)'],
-  ['Pace','Hustle: +1% on yearly raises and 1.5× promotion odds; costs Me −8, Family & Friends −12 and Community −6 on ring targets. Chill: −1% raises and 0.6× promotion odds; adds Me +6, Family & Friends +8, Community +5. If you slow down for your family when asked, promotion odds drop to 0.6× for 2 years'],
-  ['Burnout','If your Me ring stays under 35 for 9 months while working, burnout hits: take a 2-month unpaid break, switch to Chill, or push through with a doctor’s bill'],
-  ['Ring power-ups','A day with your people (₹6,000), volunteering (free) and donating (₹10,000), at age-23 prices. Each can be used once a year'],
-  ['Start / finish','Age 23.0 to 80.0, one month at a time (month 685 = age 80.0)'],['Pacing','About 5 seconds per month at 1× (1 year ≈ 1 minute). Speeds 0.5× to 10×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
+ const rows=[['Goal','Reach 80 rich and happy. ❤️ Happiness (0 to 100) is the score; money is the fuel'],
+  ['Happiness','Built from three parts of life: time for yourself, time with family and friends, and community life. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. Happiness is 60% the weakest part plus 40% the average, so balance matters. Choices add bumps that fade over time: ❤️+ to ❤️+++ up, 💔− to 💔−−− down'],
+  ['Lifetime happiness','Your happiness averaged over every month from 23 to 80. Months you never reach count as zero. Your ending combines it with your net worth in today’s money (₹1 crore or more counts as rich). Your best lifetime happiness is saved in this browser'],
+  ['Work pace','Set by your choices, never by a dial. A stretch project (2 years), weekend gigs (6 months), a startup (2 years) or weekend classes (1 year) put you in 🚀 Hustle mode: +1% on yearly raises and 1.5× promotion odds, but less happiness. Slowing down after burnout means 2 years of 🌿 Taking it easy: −1% raises, 0.6× promotion odds, more happiness. Then work settles back to normal. Slowing down for family when asked lowers promotion odds to 0.6× for 2 years'],
+  ['Burnout','If your time for yourself stays very low (under 35) for 9 months while working, burnout hits: take a 2-month unpaid break, slow down for 2 years, or push through with a doctor’s bill'],
+  ['Happiness power-ups','A day with your people (₹6,000), volunteering (free) and donating (₹10,000), at age-23 prices, in More → Power-ups. Each can be used once a year'],
+  ['Start / finish','You start at 23 with a random life: name, city, job, salary (₹35K to ₹60K a month), maybe an education loan, a rented home and the bus or Metro. 🎲 New life rolls another. The race runs from age 23.0 to 80.0 (month 685), one month at a time'],['Pacing','About 0.45 seconds per month at 1× (1 year ≈ 5.4 s), so a whole life takes about 7 minutes with stops. Speeds 1×, 2× and 4×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
   ['Salary','Monthly pay before tax. First review at month 7 (+5%, +1% per Career XP). Then a yearly appraisal of 11% to 28, 8.5% to 35, 6.5% to 45 and 4.5% after that'],
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],
-  ['Education loan','Optional at the start: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI) for a 25% higher first salary'],
+  ['Education loan','Some lives start with one: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI), which bought a 25% higher first salary'],
   ['Investments','About 7% a year on average with monthly ups and downs, plus occasional booms and dips. Gains are not taxed in this model'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
-  ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; Family & Friends +6) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; Me +8, most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
-  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹35 lakh (maintenance ₹3,000/month; Community +12), an independent villa at ₹63 lakh (₹6,000/month; Me +16, Community −4, most show-off value) or a flat near family at ₹29.75 lakh (₹2,500/month; Family & Friends +12). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
+  ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; good for family time) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
+  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹35 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹63 lakh (₹6,000/month; comfy for you, lonelier, most show-off value) or a flat near family at ₹29.75 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
   ['Bank check','New loans need a salary, and all EMIs together (including an education loan) must stay within 50% of take-home pay'],
   ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
-  ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide onto the track as cards while the race keeps going: about 8 seconds to tap (12 for your first two). If you don’t, the cautious default marked on the card happens'],
-  ['Pit stops','Every 5 years (ages 28, 33 … 78) the race stops at a pit: how each ring moved, points scored that lap, one line about those five years and one tip. On the same screen you can change pace, move food and social life one step simpler or fancier, and start, raise or pause your SIP'],
+  ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 6 seconds to tap (9 for your first two). If you don’t, the cautious default marked on the card happens'],
+  ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race restarts by itself after 7 seconds'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
-  ['Health cover','₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
+  ['Health cover','Offered as a card in your second month (and now and then later while you have none), or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
   ['Term cover','₹1 crore cover (today’s money) until 65 with a disability benefit of 20% if an accident stops you working. ₹800/month at 23, about 4.5% more for every year older you buy it; the premium is locked when bought. You never die in this game'],['Home upgrade','Unlocks at age 26 with 2 Career XP: ₹18,000 once + ₹8,000/month'],
   ['Music','An original chiptune written for this game, played with the Web Audio API']];
- $('aboutBody').innerHTML='<p class="lead">A playful race through life about how everyday money decisions add up.</p><ul><li>Costs, salaries, returns and events are illustrative, and outcomes vary from run to run.</li><li>This is educational entertainment, not personal financial, tax, insurance or investment advice.</li><li>Investment outcomes are uncertain. Past or simulated returns do not predict real ones.</li><li>Taxes, insurance, benefits and legal rules are simplified or left out.</li><li>No account or personal data. Only your best Life Score and sound and speed settings are saved, in this browser.</li></ul><h3>Assumptions</h3><table class="about-table">'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>';
+ $('aboutBody').innerHTML='<p class="lead">A playful race through life about how everyday money decisions add up.</p><ul><li>Costs, salaries, returns and events are illustrative, and outcomes vary from run to run.</li><li>This is educational entertainment, not personal financial, tax, insurance or investment advice.</li><li>Investment outcomes are uncertain. Past or simulated returns do not predict real ones.</li><li>Taxes, insurance, benefits and legal rules are simplified or left out.</li><li>No account or personal data. Only your best lifetime happiness and your sound and speed settings are saved, in this browser.</li></ul><h3>Assumptions</h3><table class="about-table">'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>';
 }
 
 /* ---------- Actions (UI handlers call the model; one click → one transaction) ---------- */
-function goToSetup(){stopClock();M.newRun(FIXED_SEED);S().status='setup';resetUi();render();window.scrollTo(0,0);}
-function resetUi(){ui.paused=false;ui.elapsed=0;ui.countdown=false;ui.pendingExpense=null;ui.financeDetail={};ui.lastBalances=null;ui.renderedEventId=null;ui.shownEventId=null;ui.renderedEnd=false;ui.modal=null;ui.lastCelebSeq=0;ui.card=null;ui.cardsSeen=0;ui.pitPick=null;$('trackCard').classList.add('hidden');$('trackCard').innerHTML='';$('banner').classList.add('hidden');$('countdown').classList.add('hidden');$('feedbackCard').dataset.key='';OVERLAYS.forEach(id=>$(id).classList.add('hidden'));$('app').inert=false;Sound.setFinalLap(false);}
+function goToSetup(seed){stopClock();M.newCharacter(seed===undefined?FIXED_SEED:seed);resetUi();render();window.scrollTo(0,0);}
+function resetUi(){ui.paused=false;ui.elapsed=0;ui.countdown=false;ui.pendingExpense=null;ui.financeDetail={};ui.lastBalances=null;ui.renderedEventId=null;ui.shownEventId=null;ui.renderedEnd=false;ui.modal=null;ui.lastCelebSeq=0;ui.card=null;ui.cardsSeen=0;ui.pitPick=null;ui.pit=null;ui.lastHappy=null;$('trackCard').classList.add('hidden');$('trackCard').innerHTML='';$('banner').classList.add('hidden');$('countdown').classList.add('hidden');$('feedbackCard').dataset.key='';OVERLAYS.forEach(id=>$(id).classList.add('hidden'));$('app').inert=false;Sound.setFinalLap(false);}
 function countdown(done){
  if(TEST_MODE||REDUCED){done();return;}
  ui.countdown=true;const el=$('countdown');el.classList.remove('hidden');const runId=S().runId;
@@ -2469,15 +2582,14 @@ function countdown(done){
  steps.forEach((st,i)=>setTimeout(()=>{if(S().runId!==runId)return;frame(st[0],st[1]);sfx(st[2]);},i*650));
  setTimeout(()=>{if(S().runId!==runId)return;el.classList.add('hidden');ui.countdown=false;ui.lastTick=performance.now();done();render();},steps.length*650+250);
 }
-function beginLife(){if(S().status!=='setup')return;M.beginLife({...ui.setup});ui.elapsed=0;ui.paused=false;render();window.scrollTo(0,0);countdown(()=>{startClock();});}
-function requestRestart(){unlockAudio();const s=S();if(s.status==='playing'){openConfirm({kicker:'RESTART',title:'Start a new life?',body:'<p class="lead">This race ends and everything resets to age 23. Your personal best is kept.</p>',okLabel:'Start over',onOk:goToSetup});}else goToSetup();}
+function beginLife(){if(S().status!=='setup')return;M.beginLife();ui.elapsed=0;ui.paused=false;render();window.scrollTo(0,0);countdown(()=>{startClock();});}
+function requestRestart(){unlockAudio();const s=S();if(s.status==='playing'){openConfirm({kicker:'RESTART',title:'Start a new life?',body:'<p class="lead">This race ends and you get a new life at 23. Your best happiness score is kept.</p>',okLabel:'New life',onOk:()=>goToSetup(0)});}else goToSetup(0);}
 
 $('startBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup();});
-$('salaryChoices').addEventListener('click',e=>{const b=e.target.closest('[data-salary]');if(!b)return;ui.setup.salary=Number(b.dataset.salary);renderSetup();sfx('tap');});
-$('setupScreen').addEventListener('click',e=>{const b=e.target.closest('.chip[data-group]');if(!b)return;ui.setup[b.dataset.group]=b.dataset.value;renderSetup();sfx('tap');const again=document.querySelector('.chip[data-group="'+b.dataset.group+'"][data-value="'+b.dataset.value+'"]');if(again)again.focus({preventScroll:true});});
+$('rerollBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup(0);const a=$('storyAvatar');a.style.animation='none';void a.offsetWidth;a.style.animation='';});
 $('beginGameBtn').addEventListener('click',()=>{unlockAudio();beginLife();});
 $('restartBtn').addEventListener('click',requestRestart);
-$('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup();});
+$('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup(0);});
 $('aboutBtn').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
 $('aboutClose').addEventListener('click',()=>closeModal('aboutOverlay'));
 $('soundBtn').addEventListener('click',()=>{ui.audioUnlocked=true;prefs.soundOn=!prefs.soundOn;M.savePrefs();if(prefs.soundOn){Sound.unlock();Sound.startMusic();if(anyOverlayOpen())Sound.duck(true);sfx('good');}else Sound.stopMusic();renderSound();});
@@ -2485,9 +2597,14 @@ $('pauseBtn').addEventListener('click',()=>{const s=S();if(M.blockingEvent()||s.
 $('speedBtn').addEventListener('click',()=>{const frac=ui.elapsed/monthMs(),sp=A.speeds;prefs.speed=sp[(sp.indexOf(prefs.speed)+1)%sp.length];M.savePrefs();ui.elapsed=frac*monthMs();sfx('tap');render();});
 $('retireBtn').addEventListener('click',()=>{if(M.requestRetirement())render();});
 $('sipBtn').addEventListener('click',openSip);
-$('paceBtn').addEventListener('click',openPace);
-$('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
- const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
+$('moreBtn').addEventListener('click',()=>{const s=S();if(M.blockingEvent()||s.status!=='playing')return;sfx('tap');renderMore();openModal('more','moreOverlay');});
+$('moreClose').addEventListener('click',()=>{sfx('tap');closeModal('moreOverlay');});
+$('moreOverlay').addEventListener('click',e=>{if(e.target===$('moreOverlay'))closeModal('moreOverlay');});
+$('sheetSound').addEventListener('click',()=>{$('soundBtn').click();renderMore();});
+$('sheetAbout').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
+$('sheetRestart').addEventListener('click',requestRestart);
+$('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;if(ui.pit)ui.pit.elapsed=0;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+ const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('trackCard').addEventListener('click',ev=>{const b=ev.target.closest('[data-card-choice]');if(!b||b.disabled)return;const e=S().event;if(!e||e.tier!=='card'||String(e.id)!==b.dataset.eventId)return;
  ev.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(e.id,b.dataset.cardChoice);if(r)sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('wallet').addEventListener('click',e=>{const c=e.target.closest('[data-finance-detail]');if(!c)return;const k=c.dataset.financeDetail;ui.financeDetail[k]=!ui.financeDetail[k];renderPlay();});
@@ -2500,7 +2617,6 @@ $('moveDeck').addEventListener('click',e=>{const b=e.target.closest('[data-move]
  const kick={'one-time':'ONE-TIME POWER-UP',recurring:'MONTHLY POWER-UP',big:'BIG BUY'}[o.tab];
  openConfirm({kicker:kick,title:o.emoji+' '+o.name,okLabel:'Confirm',body:'<p class="lead">'+esc(o.describe(s))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div><p class="res-note">This uses your one power-up for this month.</p>',onOk:()=>{const r=M.chooseOptional(id);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});});
 $('confirmBody').addEventListener('click',e=>{const v=e.target.closest('[data-variant]');if(v&&!v.disabled){ui.variantPick=v.dataset.variant;syncVariant($('confirmBody').dataset.variantFor);const again=$('confirmBody').querySelector('[data-variant="'+ui.variantPick+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
- const pc=e.target.closest('[data-pace]');if(pc){ui.pacePick=pc.dataset.pace;$('confirmBody').innerHTML=paceBody();$('confirmOk').disabled=!!M.paceBlocker(ui.pacePick);const again=$('confirmBody').querySelector('[data-pace="'+ui.pacePick+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
  const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);const c=$('sipCustom');if(c)c.value='';syncSip();sfx('tap');});
 $('confirmBody').addEventListener('input',e=>{if(e.target.id!=='sipCustom')return;const v=e.target.value.trim();ui.sipPick=v===''?null:Math.round(Number(v));if(Number.isNaN(ui.sipPick))ui.sipPick=null;syncSip();});
 $('confirmOk').addEventListener('click',()=>{const act=ui.confirmAction;ui.confirmAction=null;closeModal('confirmOverlay');if(act)act();render();});
@@ -2515,7 +2631,7 @@ $('expenseOverlay').addEventListener('click',e=>{
  if(e.target.id==='expenseDone'){closeModal('expenseOverlay');}
 });
 $('aboutOverlay').addEventListener('click',e=>{if(e.target===$('aboutOverlay'))closeModal('aboutOverlay');});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;for(const id of ['confirmOverlay','aboutOverlay','expenseOverlay']){if(!$(id).classList.contains('hidden')){if(id==='expenseOverlay')ui.pendingExpense=null;if(id==='confirmOverlay')ui.confirmAction=null;closeModal(id);return;}}});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;for(const id of ['confirmOverlay','aboutOverlay','expenseOverlay','moreOverlay']){if(!$(id).classList.contains('hidden')){if(id==='expenseOverlay')ui.pendingExpense=null;if(id==='confirmOverlay')ui.confirmAction=null;closeModal(id);return;}}});
 document.addEventListener('visibilitychange',()=>{ui.hidden=document.hidden;ui.lastTick=performance.now();if(document.hidden){Sound.stopMusic();Sound.suspend();}else if(prefs.soundOn&&ui.audioUnlocked){Sound.unlock();Sound.startMusic();if(anyOverlayOpen())Sound.duck(true);}if(S().status==='playing')renderStatus();});
 
 /* ---------- Boot ---------- */
