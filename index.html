@@ -159,6 +159,8 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .pit-stats b{display:block;font:700 24px/1.1 var(--display)}
 .pit-stats small{font:800 12px var(--sans);color:var(--muted)}
 .pit-stats small.up{color:#2F6B4A}.pit-stats small.down{color:var(--danger-ink)}
+.pit-stats>div.warn{background:var(--danger-bg)}
+.event-dialog.warn{border:3px solid var(--danger-ink)}.event-dialog.warn .event-art{background:repeating-linear-gradient(135deg,#FBE3DC 0 14px,#F6D3C8 14px 28px)}.event-dialog.warn #eventKicker{color:var(--danger-ink)}
 .pit-sip{width:100%;min-height:52px;border:2px dashed var(--sage-strong);border-radius:14px;background:var(--paper);display:flex;gap:9px;align-items:center;text-align:left;padding:6px 12px;margin:4px 0 10px;color:var(--ink)}
 .pit-sip[aria-pressed=true]{border-style:solid;background:var(--sage);box-shadow:0 3px 0 var(--sage-strong)}
 .pit-sip .emoji{font-size:22px}
@@ -609,14 +611,14 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
  <div class="dialog"><span class="sticker" id="confirmKicker">CONFIRM</span><h2 id="confirmTitle"></h2><div id="confirmBody"></div><div class="dialog-actions"><button type="button" class="secondary" id="confirmCancel">Cancel</button><button type="button" class="primary" id="confirmOk">Confirm</button></div></div>
 </div>
 <div class="overlay hidden" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
- <div class="dialog wizard"><span class="sticker">YOUR LIFE, YOUR WAY</span><div id="wizBody"></div>
+ <div class="dialog wizard"><span class="sticker" id="wizSticker">YOUR LIFE, YOUR WAY</span><div id="wizBody"></div>
   <div class="dialog-actions"><button type="button" class="secondary" id="wizBack">← Back</button><button type="button" class="primary" id="wizNext">Next →</button></div>
   <button type="button" class="link-btn" id="wizSkip">Skip: keep this setup</button></div>
 </div>
 <div class="overlay hidden" id="sipInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="sipInfoTitle">
  <div class="dialog"><div class="end-art emoji" aria-hidden="true">🌱</div><span class="sticker">QUICK TIP</span><h2 id="sipInfoTitle">What’s a SIP?</h2>
   <p>A <b>Systematic Investment Plan</b>: a fixed amount moves from your savings into investments every month, automatically.</p>
-  <ul class="sip-steps"><li>💤 Money in savings earns nothing while prices rise about 6% a year.</li><li>📈 Invested money grows about 7% a year on average, with ups and downs.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
+  <ul class="sip-steps"><li>💤 Savings earn 2.5% a year while prices rise about 6%.</li><li>📈 Invested money grows 10–15% a year over any 10 years, with ups and downs along the way.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
   <p><b>Tip:</b> start a SIP as soon as money is left over each month.</p>
   <div class="dialog-actions single"><button type="button" class="primary" id="sipInfoClose">Got it</button></div></div>
 </div>
@@ -661,8 +663,11 @@ const A=Object.freeze({
  maxXp:5,trainingCost:4000,
  cushionMonths:6,              // savings beyond 6 months of expenses count as idle cash
  ads:{first:[30,54],gap:[54,90]},   // an ad card roughly every 4½–7½ years
- investMonthlyMean:0.0057,investMonthlyVol:0.035, // ≈7%/yr average with month-to-month swings; negative months happen
- marketDipMin:0.08,marketDipMax:0.22,
+ // Markets: an index that grows 12.5% a year on trend, plus a swing that wanders but stays within ±10%
+ // of the trend (log terms). So over ANY 10 years invested money grows about 10.3–14.8% a year,
+ // while single years can still be anywhere from a loss to a big gain. Dips and booms move the swing.
+ market:{annual:0.125,band:0.10,revert:0.97,vol:0.035},
+ savingsRate:0.025,            // savings earn 2.5% a year (credited monthly) while prices rise 6%
  unsecuredMonthlyRate:0.01,    // 1% a month on unsecured debt
  debtMinRate:0.03,debtMinFloor:2000,             // minimum repayment: the larger of 3% of balance or ₹2,000 (inflation-indexed)
  vehicleLoanMonthlyRate:0.01,vehicleLoanTerm:36,
@@ -784,7 +789,7 @@ function createState(){
   event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,seen:{},
   feedback:null,message:'',story:'',milestone:'',celebration:null,celebSeq:0,
   history:[],
-  stats:{shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,taxPaid:0,insurancePaid:0,claims:0,lessons:0,listened:0},
+  stats:{savingsInterest:0,shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,taxPaid:0,insurancePaid:0,claims:0,lessons:0,listened:0},
   lastSettlement:null,finalReason:'',
   // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
   rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
@@ -793,6 +798,7 @@ function createState(){
   // Ads (own seeded generator, so they never shift the main random stream) and the end-screen what-ifs.
   overspendMonths:0,lastOverspendMonth:-999,lifestyleSaved:null,pendingTighten:false,pendingRestore:false,
   bigShock:{due:[],count:0},coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
+  mkt:{x:0,rng:0},
   adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
 }
@@ -886,7 +892,8 @@ function monthlyBudget(s=state){
   committed:sum(lines.filter(l=>l.kind!=='living').map(l=>l.amount))};     // fixed costs + debt payments, used for flexibility checks
 }
 function monthsOfCushion(s=state){return s.cash/Math.max(1,monthlyBudget(s).total);}
-// Idle cash: savings above a 6-month cushion. It earns nothing while prices rise 6% a year.
+// Idle cash: savings above a 6-month cushion. It earns 2.5% while prices rise 6% a year.
+function idleLoss(amount){return Math.round(amount*(A.annualInflation-A.savingsRate));}
 function idleCash(s=state){return Math.max(0,Math.round(s.cash-A.cushionMonths*monthlyBudget(s).total));}
 
 // Illustrative resilience indicator (not a forecast or credit score), shown as hearts.
@@ -1073,14 +1080,22 @@ function lifeEnding(s=state){
         not be paid even after selling investments. Strained months count consecutively; a fully paid month
         resets the count to zero. Six strained months in a row end the run.
    ===================================================================== */
-function monthlyReturn(){const z=(rand()+rand()+rand()+rand()-2)*Math.sqrt(3);return A.investMonthlyMean+A.investMonthlyVol*z;}
+// The market's own generator (s.mkt.rng), so market moves never shift the life events.
+function mRand(s){let a=(s.mkt.rng+0x6D2B79F5)|0;s.mkt.rng=a;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+const MKT_TREND=Math.log(1+A.market.annual)/12;
+// Keep the swing inside ±band (reflect off the edges).
+function mktClamp(x){const b=A.market.band;if(x>b)x=b-(x-b)*0.5;if(x<-b)x=-b+(-b-x)*0.5;return clamp(x,-b,b);}
+function monthlyReturn(s=state){const M=A.market,z=(mRand(s)+mRand(s)+mRand(s)+mRand(s)-2)*Math.sqrt(3),x0=s.mkt.x,x1=mktClamp(x0*M.revert+M.vol*z);s.mkt.x=x1;return Math.exp(MKT_TREND+x1-x0)-1;}
+// A dip or a boom moves the swing (never outside the band, so the 10-year promise holds).
+function marketJump(s,size){const x0=s.mkt.x,x1=clamp(x0+size,-A.market.band,A.market.band);s.mkt.x=x1;return Math.exp(x1-x0)-1;}
 function settleMonth(s=state){
  if(s.lastSettledMonth===s.month)return s.lastSettlement;
  s.lastSettledMonth=s.month;
  const out={month:s.month,income:0,expenses:0,marketChange:0,unpaid:0,missedDebt:0,drawdown:0,interest:0,loanPaidOff:'',sip:0,sipSkipped:false};
- const r=s.invested>0?monthlyReturn():A.investMonthlyMean;   // no extra random draws when nothing is invested
+ const r=monthlyReturn(s),cashRate=A.savingsRate/12;   // the market moves every month, invested or not
+ if(s.cash>0){const i=Math.round(s.cash*cashRate);s.cash+=i;out.savingsInterest=i;s.stats.savingsInterest+=i;}
  if(s.invested>0){const before=s.invested;s.invested=Math.max(0,Math.round(s.invested*(1+r)));out.marketChange=s.invested-before;}
- whatIfGrow(s,r);
+ whatIfGrow(s,r,cashRate);
  const budget=monthlyBudget(s);out.expenses=budget.total;
  out.income=budget.income;out.tax=budget.tax;s.cash+=budget.income;s.stats.taxPaid+=budget.tax;
  s.stats.insurancePaid+=sum(budget.lines.filter(l=>l.key==='insurance'||l.key==='term').map(l=>l.amount));
@@ -1121,7 +1136,7 @@ function settleMonth(s=state){
    g: growth of ₹1 since age 23. idle: extra wealth had idle cash been invested.
    ten: 10% of take-home pay invested monthly. sold: investments sold, had they stayed.
    noSipUnits: months worked before the first SIP, in units that grow to the end. */
-function whatIfGrow(s,r){const w=s.whatIf;w.g*=1+r;w.idle=w.idle*(1+r)+w.prevIdle*r;w.ten*=1+r;w.sold*=1+r;}
+function whatIfGrow(s,r,cashRate){const w=s.whatIf;w.g*=1+r;w.idle=w.idle*(1+r)+w.prevIdle*(r-cashRate);w.ten*=1+r;w.sold*=1+r;}
 function whatIfAdd(s,out,total){
  const w=s.whatIf,f=inflationFactor(s);
  w.prevIdle=Math.max(0,s.cash-A.cushionMonths*total);
@@ -1299,13 +1314,13 @@ const EVENTS={
    const amt=c==='big'?e.big:e.small;s.cash-=amt;const win=rand()<0.25;const back=win?amt*3:Math.round(amt*0.2);s.cash+=back;s.stats.fun+=Math.max(0,amt-back);
    return{text:win?'To the moon! '+money(amt)+' became '+money(back)+'.':'It crashed. '+money(amt)+' became '+money(back)+'.',feedback:win?fb('risky','You won this time. Most hype coins do not do this; luck is not a strategy.'):c==='small'?fb('solid','You only bet what you could lose. Lesson learnt cheaply.'):lessonFb(s,'Hype is not a plan. Your buddy’s “sure-shot” tip crashed.',LISTEN,true)};}},
  boom:{kicker:'BULL RUN',art:'📈',titles:['Markets are partying!','Your investments just had a great month.'],snapshot:true,
-  eligible:s=>s.invested>=10000,
-  create:s=>{const up=0.08+rand()*0.12,before=s.invested;s.invested=Math.round(s.invested*(1+up));return{gain:s.invested-before,description:'Markets rose about '+Math.round(up*100)+'%. Your investments are worth '+money(s.invested-before)+' more. Everyone on social media is now an expert.',foot:'Markets can keep rising or fall back. No one knows which in advance.'};},
+  eligible:s=>s.invested>=10000&&s.mkt.x<A.market.band-0.06,
+  create:s=>{const up=marketJump(s,0.06+rand()*0.12),before=s.invested;s.invested=Math.round(s.invested*(1+up));return{gain:s.invested-before,description:'Markets rose about '+Math.round(up*100)+'%. Your investments are worth '+money(s.invested-before)+' more. Everyone on social media is now an expert.',foot:'Markets can keep rising or fall back. No one knows which in advance.'};},
   choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'book',emoji:'💼',title:'Book some profit',detail:'Move '+money(Math.round(s.invested*0.2))+' (a fifth) into savings.'}],
   resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed invested.',feedback:fb('solid','Staying the course is a sound long-term habit. Rises and dips both come and go.')};const amt=Math.round(s.invested*0.2);s.invested-=amt;s.cash+=amt;return{text:'Moved '+money(amt)+' of gains into savings.',feedback:monthsOfCushion(s)<3?fb('great','Locking in some gains to build your cash cushion is a sensible move.'):fb('solid','Fine, though with a healthy cushion already, more could have kept compounding.')};}},
  market:{kicker:'MARKET DIP',art:'📉',titles:['Your investments fell.','Red everywhere on the market apps.'],snapshot:true,
-  eligible:s=>s.invested>=10000,
-  create:s=>{const dip=A.marketDipMin+rand()*(A.marketDipMax-A.marketDipMin),before=s.invested;s.invested=Math.round(s.invested*(1-dip));const loss=before-s.invested;return{loss,dip,description:'Markets fell about '+Math.round(dip*100)+'%. Your investments are worth '+money(loss)+' less. You have not sold anything; this is a change in market value.',foot:'Markets can recover or fall further. No one knows which in advance.'};},
+  eligible:s=>s.invested>=10000&&s.mkt.x>-A.market.band+0.06,
+  create:s=>{const dip=-marketJump(s,-(0.06+rand()*0.14)),before=s.invested;s.invested=Math.round(s.invested*(1-dip));const loss=before-s.invested;return{loss,dip,description:'Markets fell about '+Math.round(dip*100)+'%. Your investments are worth '+money(loss)+' less. You have not sold anything; this is a change in market value.',foot:'Markets can recover or fall further. No one knows which in advance.'};},
   choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'sell',emoji:'🏃',title:'Sell some',detail:'Move '+money(Math.min(s.invested,Math.round(s.invested*0.25)))+' (a quarter) into savings.'}],
   resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed invested through the dip.',feedback:fb('solid','Selling after a fall locks in the loss. Staying keeps you positioned for a recovery, though one is never guaranteed.')};
    const cushion=monthsOfCushion(s),sold=Math.min(s.invested,Math.round(s.invested*0.25));s.invested-=sold;s.cash+=sold;s.stats.investmentsSold+=sold;
@@ -1454,7 +1469,7 @@ const EVENTS={
   choices:()=>[{id:'retire',emoji:'🏖️',title:'Retire now',detail:'Salary stops this month. Expenses continue; investments are drawn down when savings run out.'},{id:'work',emoji:'💼',title:'Keep working',detail:'Keep earning. You can retire later.'}],
   resolve:(e,c)=>{const s=state;if(c==='work')return{text:'You chose to keep working.',feedback:fb('solid','More working years mean more saving and fewer years your assets must fund.')};
    s.employment='retired';s.laidOffMonthsLeft=0;s.retiredAtAge=ageLabel();record('Retired at '+s.retiredAtAge+'.',{major:true,kind:'retire'});celebrate('retire','🌅','Retired!','Your savings and investments take over from here.');
-   return{text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}},
+   return{retirePlan:true,text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}},
  /* ---- rings: triggered by how your life is going (contextEventDue), never at random ---- */
  burnout:{kicker:'RUNNING ON EMPTY',art:'🫠',titles:['You are running on empty.','Burnout: your body wants a word.','You cried in the office lift. Twice.'],
   create:s=>({bill:priced(15000),description:'Months of stress have caught up with you: bad sleep, short temper, no joy in anything. Something has to give.',foot:'Rest is part of the plan, not a break from it.'}),
@@ -1505,12 +1520,12 @@ EVENTS.pitstop={kicker:'PIT STOP',art:'🏁',life:true,pit:true,
    (guaranteed returns), and some sell big buys on easy EMIs. Every choice says
    what it costs. The default is always to scroll past. */
 const AD_KICKER='📺 AD BREAK';
-function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));return yrs>=5?' Invested instead, it could be about '+compact(Math.round(amount*Math.pow(1.07,yrs)))+' by 60.':'';}
+function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));return yrs>=5?' Invested instead, it could be about '+compact(Math.round(amount*Math.pow(1+A.market.annual,yrs)))+' by 60.':'';}
 Object.assign(EVENTS,{
  adSip:{kicker:AD_KICKER,art:'🌱',ad:true,weight:s=>idleCash(s)>priced(50000,s)||!s.sip?3:1.2,
   eligible:s=>pitSipBoost(s)>0||idleCash(s)>=priced(20000,s),
-  create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:idle>=priced(20000,s)?'“'+compact(idle)+' sleeping in savings? Put it to work!”':adPick(s,['“SIP karo, chill karo.”','“₹5,000 a month can grow to about ₹85 lakh in 35 years.”']),
-   description:'A mutual fund ad. Invested money grows about 7% a year, with ups and downs.',
+  create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:idle>=priced(20000,s)?'“'+compact(idle)+' sleeping in savings? Put it to work!”':adPick(s,['“SIP karo, chill karo.”','“₹5,000 a month for 35 years can grow to about ₹3 crore.”']),
+   description:'A mutual fund ad. Over any 10 years, invested money here grows 10–15% a year, with ups and downs.',
    foot:'Keep about 6 months of expenses in savings. The rest works harder invested.'};},
   choices:(e,s)=>{const c=[];
    if(e.idle>=priced(20000,s))c.push({id:'lump',emoji:'💰',title:'Invest the idle '+compact(e.idle),detail:'6 months of expenses stay in savings.'});
@@ -1519,7 +1534,7 @@ Object.assign(EVENTS,{
   resolve:(e,c)=>{const s=state;
    if(c==='lump'){const amt=Math.min(e.idle,idleCash(s));s.cash-=amt;s.invested+=amt;record('Invested '+money(amt)+' of idle savings at '+ageLabel()+'.',{kind:'sip'});return{text:money(amt)+' moved from savings into investments.',feedback:fb('great','Your cushion stays, and the rest now grows instead of shrinking to inflation.')};}
    if(c==='sip'){const before=s.sip;s.sip=e.boost;if(!before)record('Started a '+money(e.boost)+'/month SIP at '+ageLabel()+'.',{major:true,kind:'sip'});return{text:'SIP set to '+money(e.boost)+' a month.',feedback:fb('great','Automatic investing every month is how wealth quietly builds.')};}
-   const idle=idleCash(s);return{text:'Ad skipped.',feedback:idle>=priced(50000,s)?fb('missed',compact(idle)+' idle in savings loses about '+compact(Math.round(idle*A.annualInflation))+' a year to inflation.'):fb('solid','Fair enough. Your money plan stays as it is.')};}},
+   const idle=idleCash(s);return{text:'Ad skipped.',feedback:idle>=priced(50000,s)?fb('missed',compact(idle)+' idle in savings earns 2.5% while prices rise 6%: about '+compact(idleLoss(idle))+' a year lost.'):fb('solid','Fair enough. Your money plan stays as it is.')};}},
  adScheme:{kicker:AD_KICKER,art:'🤑',ad:true,weight:1.3,
   eligible:s=>s.cash>=priced(30000,s),
   create:s=>{const amount=Math.min(Math.round(s.cash*0.6),priced(adInt(s,4,10)*10000,s));return{amount,title:adPick(s,['“Your '+compact(s.cash)+' earns 3% in the bank. We pay 8% a MONTH!”','“Double your money in 12 months. 100% guaranteed!”','A finfluencer posing with a Lambo: “This app pays 3% daily.”']),
@@ -1608,7 +1623,7 @@ function cutChoices(e,keepDetail){const c=[];
  if(e.basics.changes.length&&e.basics.saving>e.trim.saving)c.push({id:'basics',emoji:'🧺',title:'Cut to basics: '+e.basics.label,detail:'Saves '+money(e.basics.saving)+' a month.'});
  return c.concat(keepDetail);}
 Object.assign(EVENTS,{
- overspend:{kicker:'MONEY CHECK',art:'📉',title:'You spent more than you earned, two months running.',
+ overspend:{kicker:'⚠️ MONEY WARNING',art:'⚠️',warn:true,title:'⚠️ You spent more than you earned, two months running.',
   create:s=>{const b=monthlyBudget(s);s.lastOverspendMonth=s.month;s.overspendMonths=0;return{basics:cutPlan(s,'basics'),trim:cutPlan(s,'trim'),description:'Expenses '+money(b.total)+', take-home '+money(b.income)+': '+money(b.total-b.income)+' short every month. Savings are filling the gap.',foot:'You can change rent, food, weekends, extras and commute any time in More → Monthly plan.'};},
   choices:e=>cutChoices(e,[{id:'more',emoji:'🧾',title:'Let me choose in More',detail:'Opens your monthly plan.'},{id:'keep',emoji:'🫠',title:'Keep living as I do',detail:'The gap keeps coming out of savings.'}]),
   resolve:(e,c)=>{const s=state;
@@ -1789,7 +1804,7 @@ if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePrompt
 function newRun(seed){
  state=createState();
  state.seed=(seed>>>0)||((Math.random()*2**32)>>>0);
- rng=mulberry32(state.seed);state.adRng=(state.seed^0x5EED0AD)|0;state.xRng=(state.seed^0x0B16B00B)|0;
+ rng=mulberry32(state.seed);state.adRng=(state.seed^0x5EED0AD)|0;state.mkt.rng=(state.seed^0x3A3B3C3D)|0;state.xRng=(state.seed^0x0B16B00B)|0;
  return state;
 }
 function beginLife(profile){
@@ -2068,7 +2083,7 @@ function pitTip(s){
   if(s.pace==='hustle')return 'Work is eating your happiness. Saying no to the next big project would help.';
   return {me:'You need some time for yourself. A savings cushion and a little comfort help.',fam:'Your people miss you. A day with them or a livelier social life helps.',com:'You feel disconnected. Volunteering is free, and festivals count.'}[low];}
  if(s.employment==='employed'&&!s.sip&&b.leftover>b.income*0.1)return 'Money is left over every month. A SIP would put it to work.';
- if(idleCash(s)>=Math.max(priced(50000,s),b.total*2))return compact(idleCash(s))+' is idle in savings beyond a 6-month cushion. Inflation eats about '+compact(Math.round(idleCash(s)*A.annualInflation))+' of it a year: invest it.';
+ if(idleCash(s)>=Math.max(priced(50000,s),b.total*2))return compact(idleCash(s))+' is idle in savings beyond a 6-month cushion. It earns 2.5% while prices rise 6%: invest it.';
  if(monthsOfCushion(s)<3)return 'Build a 3-month savings cushion before upgrading anything.';
  if(!s.insured)return 'No health cover: one hospital stay could wipe out your savings.';
  if((s.married||s.children.length)&&!s.termCover&&preciseAge(s)<A.term.maxAge)return 'Your family relies on your pay. Term cover is cheapest the younger you buy it.';
@@ -2078,7 +2093,7 @@ function pitReport(s){
  const lap=s.lastPit||lapSnapshot(s),age=Math.round(preciseAge(s)),delta={};
  RING_KEYS.forEach(k=>{delta[k]=Math.round(s.rings[k])-Math.round(lap.rings[k]);});
  return {title:'Lap done: age '+age,age,fromAge:lap.age,lapPoints:Math.round(s.score-lap.score),delta,
-  happy:happiness(s),happyDelta:happiness(s)-(lap.happy===undefined?happiness(s):lap.happy),netWorth:netWorth(s),worthDelta:netWorth(s)-lap.netWorth,renewal:renewalQuote(s),
+  happy:happiness(s),happyDelta:happiness(s)-(lap.happy===undefined?happiness(s):lap.happy),netWorth:netWorth(s),worthDelta:netWorth(s)-lap.netWorth,renewal:renewalQuote(s),income:monthlyIncome(s),expenses:monthlyBudget(s).total,
   description:pitInsight(s,lap),tip:pitTip(s),down:lifestyleShift(s,-1),up:lifestyleShift(s,1),sipBoost:pitSipBoost(s),
   foot:'Changes apply from next month. '+(age+5<A.endAge?'Next pit stop at '+(age+5)+'.':'Next stop: the finish line.')};
 }
@@ -2211,7 +2226,7 @@ function endSummary(){
 function whatIfLessons(s=state){
  const w=s.whatIf,f=inflationFactor(s),real=v=>Math.round(v/f),out=[];
  const age0=w.sipStart?Math.floor(ageAtMonth(w.sipStart)):0;
- if(w.idle>0)out.push({key:'idle',emoji:'💤',gain:real(w.idle),title:'Cash above a 6-month cushion, invested',take:'Keep about 6 months of expenses in savings and invest the rest. Idle cash loses about 6% a year to inflation.'});
+ if(w.idle>0)out.push({key:'idle',emoji:'💤',gain:real(w.idle),title:'Cash above a 6-month cushion, invested',take:'Keep about 6 months of expenses in savings and invest the rest. Savings earn 2.5% while prices rise 6%.'});
  if(w.sipStart&&w.noSipUnits>0)out.push({key:'sip',emoji:'⏰',gain:real(w.sipBase*w.noSipUnits*w.g),title:'Your SIP from your first salary, not from '+age0,take:'Start investing with your first salary, even a small amount. Time does the heavy lifting.'});
  if(!w.sipStart&&w.ten>s.invested)out.push({key:'ten',emoji:'🌱',gain:real(w.ten-s.invested),title:'10% of your pay invested every month',take:'Invest a fixed share of every salary, automatically, before you spend it.'});
  if(w.sold>s.stats.investmentsSold)out.push({key:'sold',emoji:'🔨',gain:real(w.sold-s.stats.investmentsSold),title:'Not selling investments to pay bills',take:'A cash cushion means a surprise never forces you to sell investments.'});
@@ -2226,7 +2241,7 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
  RINGS,RING_FX,PACES,LIFESTYLE_RINGS,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
- happiness,happyRaw,weakestRing,renewalQuote,coverRenewalDue,cutPlan,startCover,endCover,healthQuoteBase,coverDue,BIG_SHOCKS,coverAdKind,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
+ happiness,happyRaw,weakestRing,idleLoss,marketJump,monthlyReturn,renewalQuote,coverRenewalDue,cutPlan,startCover,endCover,healthQuoteBase,coverDue,BIG_SHOCKS,coverAdKind,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
 })();
 </script>
 <script>
@@ -2598,7 +2613,7 @@ function anyOverlayOpen(){return OVERLAYS.some(id=>!$(id).classList.contains('hi
 function showOverlay(id){const el=$(id);if(el.classList.contains('hidden')){if(!anyOverlayOpen())ui.lastFocus=document.activeElement;el.classList.remove('hidden');}$('app').inert=true;const f=el.querySelector('button:not([disabled])');if(f)f.focus({preventScroll:true});if(ui.audioUnlocked)Sound.duck(true);}
 function hideOverlay(id){const el=$(id);if(el.classList.contains('hidden'))return;el.classList.add('hidden');if(!anyOverlayOpen()){$('app').inert=false;if(ui.audioUnlocked)Sound.duck(false);if(ui.lastFocus&&document.contains(ui.lastFocus)&&!ui.lastFocus.disabled)ui.lastFocus.focus({preventScroll:true});}}
 function openModal(name,id){ui.modal=name;showOverlay(id);renderStatus();}
-function closeModal(id){hideOverlay(id);ui.modal=['moreOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
+function closeModal(id){hideOverlay(id);ui.modal=['moreOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
 function openConfirm(opts){ui.confirmAction=opts.onOk;$('confirmKicker').textContent=opts.kicker||'CONFIRM';$('confirmTitle').textContent=opts.title;$('confirmBody').innerHTML=opts.body||'';$('confirmOk').textContent=opts.okLabel||'Confirm';$('confirmOk').disabled=!!opts.okDisabled;openModal('confirm','confirmOverlay');}
 
 /* ---------- Rendering (reads state; never changes it) ---------- */
@@ -2639,15 +2654,22 @@ const WIZ=[
 ];
 function wizBudget(p){const edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),take=salary-Math.round(M.annualTax(salary*12)/12);
  const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
+// The same steps plan retirement spending (no health step; home only while renting), with how long the money lasts.
+function wizSteps(){return ui.wiz.mode==='retire'?WIZ.filter(w=>w.key!=='health'&&!(w.key==='home'&&S().ownsHome)):WIZ;}
+function retireBudget(){const s=S(),b=M.monthlyBudget(),assets=Math.max(0,s.cash+s.invested),yrs=assets/Math.max(1,b.total*12);return{cost:b.total,assets,yrs};}
 function renderWizard(animate){
- const p=S().profile,i=ui.wiz.step,st=WIZ[i],b=wizBudget(p),cur=st.key==='health'?(p.health==='yes'?'yes':'no'):(p[st.key]||'none');
- $('wizBody').innerHTML='<div class="wiz-dots" aria-label="Step '+(i+1)+' of '+WIZ.length+'">'+WIZ.map((w,j)=>'<i class="'+(j<i?'done':j===i?'on':'')+'"></i>').join('')+'</div>'
-  +'<div class="wiz-step'+(animate?' slide':'')+'"><div class="wiz-emoji emoji" aria-hidden="true">'+st.emoji+'</div><h2 id="wizTitle">'+esc(st.title)+'</h2><p class="lead">'+esc(st.why)+'</p>'
-  +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(o.cost)+'/month':'Free')+'</small></span>'+heartChip(st.rings(o.id))+'</button>').join('')+'</div></div>'
-  +'<div class="wiz-budget"><span>Take-home<b>'+money(b.take)+'</b></span><span>Monthly costs<b>'+money(b.cost)+'</b></span><span class="'+(b.left<0?'neg':'')+'">Left over<b>'+money(b.left)+'</b></span></div>';
- $('wizBack').disabled=i===0;$('wizNext').textContent=i===WIZ.length-1?'Start the race 🏁':'Next →';
+ const steps=wizSteps(),retire=ui.wiz.mode==='retire',p=S().profile,i=ui.wiz.step,st=steps[i],cur=st.key==='health'?(p.health==='yes'?'yes':'no'):(p[st.key]||'none');
+ const strip=retire?(()=>{const r=retireBudget();return '<div class="wiz-budget"><span>Monthly costs<b>'+money(r.cost)+'</b></span><span>Savings + invested<b>'+compact(r.assets)+'</b></span><span class="'+(r.yrs<80-M.preciseAge()?'neg':'')+'">Lasts about<b>'+r.yrs.toFixed(0)+' yrs</b></span></div>';})()
+  :(()=>{const b=wizBudget(p);return '<div class="wiz-budget"><span>Take-home<b>'+money(b.take)+'</b></span><span>Monthly costs<b>'+money(b.cost)+'</b></span><span class="'+(b.left<0?'neg':'')+'">Left over<b>'+money(b.left)+'</b></span></div>';})();
+ $('wizSticker').textContent=retire?'YOUR RETIREMENT PLAN':'YOUR LIFE, YOUR WAY';
+ $('wizBody').innerHTML='<div class="wiz-dots" aria-label="Step '+(i+1)+' of '+steps.length+'">'+steps.map((w,j)=>'<i class="'+(j<i?'done':j===i?'on':'')+'"></i>').join('')+'</div>'
+  +'<div class="wiz-step'+(animate?' slide':'')+'"><div class="wiz-emoji emoji" aria-hidden="true">'+st.emoji+'</div><h2 id="wizTitle">'+esc(st.title)+'</h2><p class="lead">'+(retire&&i===0?'No salary now: your savings and investments pay for how you live. ':'')+esc(st.why)+'</p>'
+  +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(M.priced(o.cost))+'/month':'Free')+'</small></span>'+heartChip(st.rings(o.id))+'</button>').join('')+'</div></div>'+strip;
+ $('wizBack').disabled=i===0;$('wizNext').textContent=i===steps.length-1?(retire?'Start retirement 🌅':'Start the race 🏁'):'Next →';$('wizSkip').textContent=retire?'Keep my current spending':'Skip: keep this setup';
 }
-function openWizard(){if(S().status!=='setup')return;ui.wiz={step:0};renderWizard(true);showOverlay('profileOverlay');}
+function openWizard(){if(S().status!=='setup')return;ui.wiz={step:0,mode:'setup'};renderWizard(true);showOverlay('profileOverlay');}
+function openRetirePlan(){const s=S();if(s.status!=='playing'||s.employment!=='retired'||M.blockingEvent())return;ui.wiz={step:0,mode:'retire'};renderWizard(true);openModal('retireplan','profileOverlay');}
+function closeWizard(){if(ui.wiz.mode==='retire'){closeModal('profileOverlay');const s=S();s.message='Retirement plan set: '+money(M.monthlyBudget().total)+' a month.';render();return;}hideOverlay('profileOverlay');$('app').inert=false;beginLife();}
 /* ---------- ❤️ panel: what happiness is made of and what moves it ---------- */
 function openHappy(){
  const s=S();if(s.status!=='playing'||M.blockingEvent())return;
@@ -2718,7 +2740,7 @@ function renderPlay(){
  const cushion=M.monthsOfCushion();const idle=M.idleCash(),idleBig=idle>=M.priced(50000);
  $('cashNote').textContent=s.cash<=0?'Empty!':idleBig?'💤 '+compact(idle)+' idle':cushion>=1?Math.floor(cushion)+' mo of bills':'Under a month';
  document.querySelector('.wallet-card.cash').classList.toggle('idle',idleBig);
- if(idleBig)$('cashNote').title=compact(idle)+' above a 6-month cushion loses about '+compact(Math.round(idle*A.annualInflation))+' a year to inflation.';
+ if(idleBig)$('cashNote').title=compact(idle)+' above a 6-month cushion earns 2.5% while prices rise 6%: about '+compact(M.idleLoss(idle))+' a year lost.';
  $('investNote').textContent=s.sip>0&&s.employment==='employed'?'SIP '+compact(s.sip)+'/mo':s.invested>0?'Can rise or fall':'Nothing yet';
  $('loanNote').textContent=loans>0?'EMI '+compact(M.allEmis())+'/mo':'None';
  $('debtNote').textContent=s.unsecuredDebt>0?'1% a month!':'None 🎉';
@@ -2745,7 +2767,7 @@ function renderMore(){
  const notes=[];if(s.employment==='laidoff')notes.push(s.breakReason?'Salary paused: '+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left; it resumes at '+money(s.salary)+'.':'Salary paused while you search for a job (6 to 18 months).');
  if(s.employment==='employed')notes.push(b.tax>0?'Salary '+money(b.gross)+' minus '+money(b.tax)+' income tax.':'No income tax at this salary yet.');if(s.employment==='retired')notes.push('Retired: no salary. When savings run short, investments are sold to pay costs.');
  const debtPart=b.lines.filter(l=>l.kind==='debt');if(debtPart.length)notes.push('Includes '+debtPart.map(l=>l.label.toLowerCase()+' '+money(l.amount)).join(', ')+'.');
- notes.push('Prices rise about 6% every new year.');
+ notes.push('Savings earn 2.5% a year; prices rise about 6% every new year.');
  $('budgetNote').textContent=notes.join(' ');
  $('editExpensesBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('statusLine').innerHTML='<strong>This month:</strong> '+esc(s.message||'');
@@ -2806,7 +2828,7 @@ function renderEvent(){
  ui.renderedEventId=e.id;const def=M.EVENTS[e.type];
  // Every pop-up gets its own tone, pattern and sticker tilt, so no two look the same.
  const k=(s.seed+e.id*7+e.type.length*3)>>>0;
- $('eventDialog').className='dialog event-dialog t'+(k%7);
+ $('eventDialog').className='dialog event-dialog t'+(k%7)+(def.warn?' warn':'');
  $('eventArtBox').className='event-art p'+(Math.floor(k/7)%4);
  $('eventArt').style.setProperty('--tilt',((k%15)-7)+'deg');$('eventDialog').style.setProperty('--tilt-in',((k%7)-3)+'deg');
  $('eventArt').textContent=e.art||'❓';
@@ -2825,7 +2847,9 @@ function renderEvent(){
 /* ---------- Pit stop (every 5 years): a short lap report; the race waits for Continue ---------- */
 function pitBody(){
  const s=S(),e=s.event,pk=ui.pitPick,arrow=(d,f)=>d>0?'<small class="up">▲ '+f(d)+'</small>':d<0?'<small class="down">▼ '+f(-d)+'</small>':'<small>steady</small>';
- let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div></div>';
+ let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div>'
+  +'<div><span>💰 TAKE-HOME / MO</span><b>'+compact(e.income)+'</b><small>'+(e.income?'salary after tax':'no salary')+'</small></div>'
+  +'<div class="'+(e.expenses>e.income?'warn':'')+'"><span>🧾 EXPENSES / MO</span><b>'+compact(e.expenses)+'</b>'+(e.expenses>e.income?'<small class="down">⚠️ '+compact(e.expenses-e.income)+' short</small>':'<small class="up">'+compact(e.income-e.expenses)+' left</small>')+'</div></div>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
  const rn=e.renewal;if(rn){const opt=(v,t,d)=>'<button type="button" class="pit-opt" data-pit-key="cover" data-pit-value="'+v+'" aria-pressed="'+(pk.cover===v)+'"><strong>'+t+'</strong><small>'+d+'</small></button>';
   h+='<div class="pit-cover"><b>'+em('🛡️')+' Health cover renewal due</b><small>It does not renew by itself. You pay '+money(rn.old)+'/month now.</small><div class="pit-opts">'+opt('renew','Renew',money(rn.same)+'/mo')+(rn.canFam?opt('family','Renew as family',money(rn.fam)+'/mo'):'')+opt('lapse','Let it lapse','₹0, no cover')+'</div></div>';}
@@ -2962,7 +2986,9 @@ function renderAbout(){
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],
   ['Education loan','Some lives start with one: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI), which bought a 25% higher first salary'],
-  ['Investments','About 7% a year on average with monthly ups and downs, plus occasional booms and dips. Gains are not taxed in this model'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
+  ['Investments','A market index that grows 12.5% a year on trend. Months and single years swing up and down (with occasional booms and dips), but over any 10 years invested money grows about 10% to 15% a year. Gains are not taxed in this model'],
+  ['Savings','Savings earn 2.5% a year, credited monthly, while prices rise 6%'],
+  ['Retirement plan','When you retire you set how you will live (rent, food, weekends, extras) and see how many years your savings and investments last'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
   ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; good for family time) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
   ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹35 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹63 lakh (₹6,000/month; comfy for you, lonelier, most show-off value) or a flat near family at ₹29.75 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
@@ -2973,7 +2999,7 @@ function renderAbout(){
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
   ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 10 seconds to tap (15 for your first two). If you don’t, the cautious choice happens (for ads: scroll past)'],
   ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race waits until you tap Continue'],
-  ['Idle cash','Savings earn nothing while prices rise 6% a year. About 6 months of expenses is a healthy cushion; anything above it shows as 💤 idle on the Savings tile.'],
+  ['Idle cash','Savings earn 2.5% while prices rise 6% a year. About 6 months of expenses is a healthy cushion; anything above it shows as 💤 idle on the Savings tile.'],
   ['Ad breaks','About once every 5–7 years an ad slides onto the track. Ads know your savings and your wealth class, and use both to tempt you: an SUV, a villa, a new phone, a “must-have” for your class, a “guaranteed” scheme. A few are good advice (invest idle cash, start a SIP). Not tapping scrolls past.'],
   ['Wealth class','What advertisers think you are, from your net worth in today’s money: 🌱 Just starting, 🏠 Middle class (₹5L), 🚗 Upper middle class (₹25L), 💼 Affluent (₹1Cr), 💎 Rich (₹5Cr). It shows on every ad.'],
   ['Lessons','A mistake shows as 📘 Lesson learnt, with one line to remember. The first time a SIP is offered, a short “What’s a SIP?” tip explains it once.'],
@@ -3007,10 +3033,10 @@ $('startBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup()
 document.querySelector('.gender-pick').addEventListener('click',e=>{const b=e.target.closest('[data-gender]');if(!b)return;prefs.gender=b.dataset.gender;M.savePrefs();if(M.setGender(prefs.gender))sfx('tap');renderStory();b.focus({preventScroll:true});});
 $('rerollBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup(0);const a=$('storyAvatar');a.style.animation='none';void a.offsetWidth;a.style.animation='';});
 $('beginGameBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');openWizard();});
-$('wizBody').addEventListener('click',e=>{const b=e.target.closest('[data-wiz]');if(!b)return;const p=S().profile,k=WIZ[ui.wiz.step].key;p[k]=b.dataset.wiz;sfx('tap');renderWizard(false);renderStory();const again=$('wizBody').querySelector('[data-wiz="'+b.dataset.wiz+'"]');if(again)again.focus({preventScroll:true});});
+$('wizBody').addEventListener('click',e=>{const b=e.target.closest('[data-wiz]');if(!b)return;const p=S().profile,k=wizSteps()[ui.wiz.step].key;if(ui.wiz.mode==='retire'){if(p[k]!==b.dataset.wiz)M.applyExpenseChange(k,b.dataset.wiz);}else{p[k]=b.dataset.wiz;renderStory();}sfx('tap');renderWizard(false);const again=$('wizBody').querySelector('[data-wiz="'+b.dataset.wiz+'"]');if(again)again.focus({preventScroll:true});});
 $('wizBack').addEventListener('click',()=>{if(ui.wiz.step>0){ui.wiz.step-=1;sfx('tap');renderWizard(true);}});
-$('wizNext').addEventListener('click',()=>{if(ui.wiz.step<WIZ.length-1){ui.wiz.step+=1;sfx('tap');renderWizard(true);return;}hideOverlay('profileOverlay');$('app').inert=false;beginLife();});
-$('wizSkip').addEventListener('click',()=>{hideOverlay('profileOverlay');$('app').inert=false;beginLife();});
+$('wizNext').addEventListener('click',()=>{if(ui.wiz.step<wizSteps().length-1){ui.wiz.step+=1;sfx('tap');renderWizard(true);return;}closeWizard();});
+$('wizSkip').addEventListener('click',closeWizard);
 $('hudHappy').addEventListener('click',()=>{sfx('tap');openHappy();});
 $('restartBtn').addEventListener('click',requestRestart);
 $('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup(0);});
@@ -3033,7 +3059,7 @@ $('sheetSound').addEventListener('click',()=>{$('soundBtn').click();renderMore()
 $('sheetAbout').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
 $('sheetRestart').addEventListener('click',requestRestart);
 $('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
- const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}if(r.openPlan)setTimeout(()=>{if(S().status!=='playing'||M.blockingEvent())return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');},350);ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
+ const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}if(r.retirePlan)setTimeout(openRetirePlan,450);if(r.openPlan)setTimeout(()=>{if(S().status!=='playing'||M.blockingEvent())return;ui.pendingExpense=null;renderExpenses();openModal('expenses','expenseOverlay');},350);ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('trackCard').addEventListener('click',ev=>{const b=ev.target.closest('[data-card-choice]');if(!b||b.disabled)return;const e=S().event;if(!e||e.tier!=='card'||String(e.id)!==b.dataset.eventId)return;
  ev.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(e.id,b.dataset.cardChoice);if(r)sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('wallet').addEventListener('click',e=>{const c=e.target.closest('[data-finance-detail]');if(!c)return;const k=c.dataset.financeDetail;ui.financeDetail[k]=!ui.financeDetail[k];renderPlay();});
@@ -3066,7 +3092,7 @@ document.addEventListener('visibilitychange',()=>{ui.hidden=document.hidden;ui.l
 /* ---------- Boot ---------- */
 hydrateIcons();renderSound();
 M.newRun(FIXED_SEED);render();
-if(TEST_MODE)window.LifeHappens=Object.assign(Object.create(M),{render,ui,stepMonth,goToSetup,beginLifeUI:beginLife,maybeSipInfo});
+if(TEST_MODE)window.LifeHappens=Object.assign(Object.create(M),{render,ui,stepMonth,goToSetup,beginLifeUI:beginLife,maybeSipInfo,openRetirePlan});
 })();
 </script>
 </body>

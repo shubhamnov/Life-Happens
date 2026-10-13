@@ -139,7 +139,7 @@ await test('Promotions: bigger and more frequent early, slower later',async()=>{
  assert(late.every(p=>p<=12),'late promotion raises ≤ 12%: '+late);assert(earlyCount/8>lateCount/12,'promotions slow down with age ('+earlyCount+' early vs '+lateCount+' late)');});
 await test('Monthly SIP: invested after bills, skipped (not strained) when cash is short',async()=>{const {L}=await game(53);const s=L.state;s.nextEventMonth=9999;s.invested=0;
  assert(L.setSip(5000),'SIP set');eq(s.optionalUsedMonth===s.month,false,'SIP does not use the power-up');s.cash=100000;const c0=s.cash,b=L.monthlyBudget();L.advanceMonth();
- eq(s.invested,5000,'5,000 invested');eq(s.cash,c0+b.income-b.total-5000,'cash after bills and SIP');eq(s.lastSettlement.sip,5000,'settlement records the SIP');
+ eq(s.invested,5000,'5,000 invested');eq(s.cash,c0+Math.round(c0*0.025/12)+b.income-b.total-5000,'cash after interest, bills and SIP');eq(s.lastSettlement.sip,5000,'settlement records the SIP');
  s.event=null;s.cash=0;s.salary=1000;L.advanceMonth();eq(s.lastSettlement.sipSkipped,true,'skipped when short');
  s.event=null;s.salary=200000;s.cash=0;s.unsecuredDebt=0;s.distressMonths=0;L.advanceMonth();eq(s.distressMonths,0,'a skipped SIP alone is not strain');
  s.employment='retired';eq(L.monthlyBudget().sip,0,'no SIP in retirement');assert(L.sipBlocker(10000),'cannot start a SIP when retired');});
@@ -316,7 +316,7 @@ await test('Flow UI: cards slide onto the track, the pit stop shows the lap and 
  assert(!tc.querySelector('.tc-choice.default,.ctag,.think'),'no default or recommendation tags');assert(/slows down/.test(tc.textContent),'the first card explains itself');assert(!d.getElementById('pauseBtn').disabled,'pause still works');
  tc.querySelector('[data-card-choice="regular"]').click();eq(s.event,null,'resolved by a tap');assert(tc.classList.contains('hidden'),'card gone');
  s.month=60;s.nextPitMonth=61;s.event=null;L.stepMonth();
- assert(s.event&&s.event.type==='pitstop','pit stop');assert(!d.getElementById('eventOverlay').classList.contains('hidden'),'pit screen open');eq(d.querySelectorAll('#eventChoices .pit-stats>div').length,2,'happiness and net worth');
+ assert(s.event&&s.event.type==='pitstop','pit stop');assert(!d.getElementById('eventOverlay').classList.contains('hidden'),'pit screen open');eq(d.querySelectorAll('#eventChoices .pit-stats>div').length,4,'happiness, net worth, take-home and expenses');assert(/TAKE-HOME/.test(d.querySelector('.pit-stats').textContent)&&/EXPENSES/.test(d.querySelector('.pit-stats').textContent),'pay and expenses shown');
  eq(d.querySelectorAll('[data-pit-key="pace"],[data-pit-key="life"]').length,0,'no pace or lifestyle controls');
  d.querySelector('.pit-sip').click();eq(d.querySelector('.pit-sip').getAttribute('aria-pressed'),'true','SIP top-up picked');const boost=s.event.sipBoost;
  d.querySelector('#eventChoices [data-choice="go"]').click();eq(s.event,null,'back on track');eq(s.sip,boost,'SIP applied');});
@@ -397,6 +397,17 @@ await test('Profile setup: five animated steps that set your lifestyle before th
  d.querySelector('#wizBody [data-wiz="starter"]').click();eq(L.state.profile.home,'starter','home picked');d.getElementById('wizNext').click();d.querySelector('#wizBody [data-wiz="home"]').click();d.getElementById('wizNext').click();d.querySelector('#wizBody [data-wiz="big"]').click();d.getElementById('wizNext').click();d.getElementById('wizNext').click();
  d.querySelector('#wizBody [data-wiz="yes"]').click();assert(/Start the race/.test(d.getElementById('wizNext').textContent),'last step starts the race');d.getElementById('wizNext').click();
  const s=L.state;eq(s.status,'playing','racing');eq(s.profile.food,'home','food kept');eq(s.profile.social,'big','weekends kept');assert(s.insured,'health cover from the setup');assert(ov.classList.contains('hidden'),'closed');});
+await test('Markets: every 10-year stretch grows 10–15% a year; savings earn 2.5%',async()=>{const {L}=await game(501);const s=L.state;
+ for(const seed of [1,2,3,4,5,6,7,8]){s.mkt={x:0,rng:seed*7919};let lvl=[1];for(let m=0;m<700;m++){let j=1;if(m%37===5)j*=1+L.marketJump(s,-0.2);if(m%53===9)j*=1+L.marketJump(s,0.2);lvl.push(lvl[m]*j*(1+L.monthlyReturn(s)));}
+  let lo=9,hi=0,neg=0;for(let m=0;m+120<lvl.length;m++){const c=Math.pow(lvl[m+120]/lvl[m],0.1)-1;lo=Math.min(lo,c);hi=Math.max(hi,c);}for(let m=0;m+12<lvl.length;m++)if(lvl[m+12]<lvl[m])neg++;
+  assert(lo>=0.10&&hi<=0.15,'seed '+seed+': every decade between 10% and 15% a year ('+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+'%)');assert(neg>0,'some single years still lose money');}
+ s.event=null;s.nextEventMonth=9999;s.invested=0;s.sip=0;s.cash=1e6;s.salary=0;s.employment='retired';const c0=s.cash,b=L.monthlyBudget();L.advanceMonth();near(s.cash,c0+Math.round(c0*0.025/12)-b.total,2,'2.5% a year on savings, monthly');assert(s.lastSettlement.savingsInterest>0,'interest recorded');});
+await test('Retirement: you set a spending plan; overspending comes with a warning',async()=>{const {L,win}=await loadGame(502);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.adNext=99999;s.bigShock.due=[];s.event=null;s.month=(61-23)*12;s.cash=5e6;s.invested=2e7;
+ L.applyExpenseChange('food','foodie');L.requestRetirement();L.render();d.querySelector('#eventChoices [data-choice="retire"]').click();await new Promise(r=>setTimeout(r,700));
+ assert(!d.getElementById('profileOverlay').classList.contains('hidden'),'retirement plan opens');assert(/RETIREMENT/.test(d.getElementById('wizSticker').textContent),'labelled as the retirement plan');assert(/Lasts about/.test(d.getElementById('wizBody').textContent),'shows how long the money lasts');eq(L.ui.modal,'retireplan','race paused');
+ const steps=d.querySelectorAll('#wizBody .wiz-dots i').length;eq(steps,4,'rent, food, weekends, extras');d.getElementById('wizNext').click();d.querySelector('#wizBody [data-wiz="home"]').click();eq(s.profile.food,'home','spending changed');
+ for(let i=0;i<3;i++)d.getElementById('wizNext').click();assert(d.getElementById('profileOverlay').classList.contains('hidden'),'closed');eq(L.ui.modal,null,'race resumes');eq(s.status,'playing','still playing');
+ s.employment='employed';s.salary=1000;s.overspendMonths=2;s.lastOverspendMonth=-999;s.event=null;L.startEvent('overspend');L.render();assert(/⚠️/.test(s.event.title),'warning sign');assert(d.getElementById('eventDialog').classList.contains('warn'),'warning style');});
 await test('Running out of money: every failure is a lesson',async()=>{const {L,win}=await game(314);const d=win.document;const s=L.state;s.whatIf.idle=5e5;L.endRun('insolvent');L.render();
  assert(/Every failure is a lesson/.test(d.getElementById('endBody').textContent),'failure framed as a lesson');});
 
