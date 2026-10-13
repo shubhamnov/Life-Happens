@@ -186,8 +186,22 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .tc-choice small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3;font-weight:600}
 .tc-choice span.rchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .tc-choice span.rchip{display:inline-block}
-.tc-timer{height:6px;border-radius:99px;background:#ECE6D9;overflow:hidden;margin-top:9px}
-.tc-timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#9DBFA5,#E2B95C);border-radius:99px}
+.race-hint{left:50%;bottom:8px;transform:translateX(-50%);white-space:nowrap;background:#2E3A33D9;color:#FFFDF8;border-radius:99px;padding:4px 12px;font:800 11.5px var(--sans);letter-spacing:.02em;pointer-events:none}
+.race-hint.move{background:var(--gold);color:var(--ink);animation:hintBob 1.2s ease-in-out infinite}
+@keyframes hintBob{50%{transform:translate(-50%,3px)}}
+.nudge{animation:nudge .9s ease-out}
+@keyframes nudge{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 4px var(--gold)}}
+.track-card:not(.hidden){box-shadow:0 0 0 3px #E2B95C88,var(--shadow)}
+.howto h2{margin-bottom:10px}
+.ht-phone{display:flex;flex-direction:column;gap:6px;border:3px solid var(--ink);border-radius:22px;padding:8px;background:#FFFDF8}
+.ht-zone{display:flex;gap:9px;align-items:flex-start;border-radius:13px;padding:7px 10px;text-align:left}
+.ht-zone>span{font-size:20px;line-height:1.2;flex:0 0 auto}
+.ht-zone b{display:block;font-size:13.5px}
+.ht-zone small{display:block;font-size:12px;line-height:1.35;color:#4E5E54}
+.ht-race{background:#D6E6EC;opacity:.85}
+.ht-money{background:#EFEADD}
+.ht-play{background:#FFF3CF;border:2px solid var(--gold)}
+.ht-more{background:#E6EFE8}
 .pit-rings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:center;background:#F6F1E6;border-radius:14px;padding:8px 6px;margin:8px 0}
 .pit-ring{display:flex;flex-direction:column;align-items:center;gap:1px}
 .pit-ring b{font:700 16px var(--display)}
@@ -551,6 +565,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
    <div class="paused-tag hidden" id="pausedTag" aria-hidden="true">⏸ Paused<small>tap to resume</small></div>
    <div class="hud-banner hidden" id="banner" role="status"></div>
    <div class="countdown hidden" id="countdown" aria-hidden="true"></div>
+   <div class="race-hint hidden" id="raceHint" aria-hidden="true"></div>
   </div>
   <div class="clockbar" role="progressbar" aria-label="Progress through this month" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="clockProgress"></i></div>
  </section>
@@ -595,7 +610,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
    <div id="moveDeck" class="move-deck" role="tabpanel" style="margin-top:8px"></div>
   </section>
   <details class="card journal"><summary>📔 Life journal</summary><ol id="journal"></ol></details>
-  <div class="sheet-actions"><button type="button" class="secondary" id="sheetSound">🔊 Sound</button><button type="button" class="secondary" id="sheetAbout">ℹ️ About</button><button type="button" class="secondary" id="sheetRestart">↺ New life</button></div>
+  <div class="sheet-actions"><button type="button" class="secondary" id="sheetSound">🔊 Sound</button><button type="button" class="secondary" id="sheetHowTo">❓ How to play</button><button type="button" class="secondary" id="sheetAbout">ℹ️ About</button><button type="button" class="secondary" id="sheetRestart">↺ New life</button></div>
  </div>
 </div>
 <div class="overlay hidden" id="eventOverlay" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
@@ -621,6 +636,17 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
   <ul class="sip-steps"><li>💤 Savings earn 2.5% a year while prices rise about 6%.</li><li>📈 Invested money grows 10–15% a year over any 10 years, with ups and downs along the way.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
   <p><b>Tip:</b> start a SIP as soon as money is left over each month.</p>
   <div class="dialog-actions single"><button type="button" class="primary" id="sipInfoClose">Got it</button></div></div>
+</div>
+<div class="overlay hidden" id="howToOverlay" role="dialog" aria-modal="true" aria-labelledby="howToTitle">
+ <div class="dialog howto"><span class="sticker">HOW TO PLAY</span><h2 id="howToTitle">You play below the race</h2>
+  <div class="ht-phone" aria-hidden="true">
+   <div class="ht-zone ht-race"><span>🏎️</span><div><b>The race: just watch</b><small>Your life drives itself, one month at a time. No need to tap it.</small></div></div>
+   <div class="ht-zone ht-money"><span>🐷</span><div><b>Your money</b><small>Savings, investments, loans and debt. Tap one for details.</small></div></div>
+   <div class="ht-zone ht-play"><span>👆</span><div><b>Your moves pop up here</b><small>Surprises and offers appear below the race. The race stops and waits until you tap a choice.</small></div></div>
+   <div class="ht-zone ht-more"><span>☰</span><div><b>More</b><small>Your monthly plan, SIP, insurance, big buys.</small></div></div>
+  </div>
+  <p class="ht-sr sr-only">The race at the top runs on its own. Your money is shown under it. Choices pop up below the race and it waits for you. Use More to manage your budget, SIP and insurance.</p>
+  <div class="dialog-actions single"><button type="button" class="primary" id="howToClose">Got it, let’s go 🏁</button></div></div>
 </div>
 <div class="overlay hidden" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
  <div class="dialog"><span class="sticker">ABOUT</span><h2 id="aboutTitle">About Life Happens</h2><div id="aboutBody"></div><div class="dialog-actions single"><button type="button" class="secondary" id="aboutClose">Close</button></div></div>
@@ -2548,11 +2574,10 @@ function unlockAudio(){if(ui.audioUnlocked)return;ui.audioUnlocked=true;if(prefs
 function renderSound(){$('soundGlyph').innerHTML=iconSVG(prefs.soundOn?'sound':'mute');$('soundLabel').textContent=prefs.soundOn?'On':'Off';$('soundBtn').setAttribute('aria-pressed',String(prefs.soundOn));}
 
 /* ---------- Clock: one interval per run; never advances past a decision ---------- */
-function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
-// While a card waits on the track the race slows down, so there is time to read and tap.
-const CARD_MONTH_MS=1100;
+// A card on the track stops the race until it is answered: no timer, play at your own pace.
+function clockRunning(){const s=S();return s.status==='playing'&&!M.blockingEvent()&&!cardWaiting()&&!ui.paused&&!ui.modal&&!ui.hidden&&!ui.countdown;}
 function cardWaiting(){const e=S().event;return !!(e&&e.tier==='card');}
-function monthMs(){const ms=A.monthMs/prefs.speed;return cardWaiting()?Math.max(ms,CARD_MONTH_MS):ms;}
+function monthMs(){return A.monthMs/prefs.speed;}
 function startClock(){
  stopClock();if(TEST_MODE)return;
  const runId=S().runId;ui.lastTick=performance.now();
@@ -2560,18 +2585,9 @@ function startClock(){
   if(S().runId!==runId||S().status!=='playing'){stopClock();return;}  // stale timer from an old run: shut it down
   const now=performance.now(),dt=Math.min(250,now-ui.lastTick);ui.lastTick=now;  // cap dt so a throttled tab can't jump ahead
   if(!clockRunning())return;
-  if(tickCard(dt))return;
   ui.elapsed+=dt;
   if(ui.elapsed>=monthMs()){ui.elapsed=0;stepMonth();}else renderClock();
  },100);
-}
-// A track card's countdown runs only while the race runs; at zero the default is applied.
-const CARD_MS=10000,CARD_FIRST_MS=15000;
-function tickCard(dt){
- const e=S().event;if(!e||e.tier!=='card'||!ui.card||ui.card.id!==e.id)return false;
- ui.card.elapsed+=dt;const bar=$('cardTimer');if(bar)bar.style.width=Math.max(0,100-ui.card.elapsed/ui.card.ms*100)+'%';
- if(ui.card.elapsed<ui.card.ms)return false;
- const r=M.resolveEvent(e.id,e.defaultChoice,{auto:true});if(r)sfx('tap');render();return true;
 }
 function stopClock(){if(ui.timer){clearInterval(ui.timer);ui.timer=null;}}
 function stepMonth(){
@@ -2608,12 +2624,12 @@ function demoScene(){const t=(performance.now()-demoStart)/1000,mf=1+t*2.2,age=A
 const playRace=Race.create($('race'),sceneState),introRace=Race.create($('introRace'),demoScene);
 
 /* ---------- Overlays ---------- */
-const OVERLAYS=['moreOverlay','eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay'];
+const OVERLAYS=['moreOverlay','eventOverlay','endOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay','howToOverlay'];
 function anyOverlayOpen(){return OVERLAYS.some(id=>!$(id).classList.contains('hidden'));}
 function showOverlay(id){const el=$(id);if(el.classList.contains('hidden')){if(!anyOverlayOpen())ui.lastFocus=document.activeElement;el.classList.remove('hidden');}$('app').inert=true;const f=el.querySelector('button:not([disabled])');if(f)f.focus({preventScroll:true});if(ui.audioUnlocked)Sound.duck(true);}
 function hideOverlay(id){const el=$(id);if(el.classList.contains('hidden'))return;el.classList.add('hidden');if(!anyOverlayOpen()){$('app').inert=false;if(ui.audioUnlocked)Sound.duck(false);if(ui.lastFocus&&document.contains(ui.lastFocus)&&!ui.lastFocus.disabled)ui.lastFocus.focus({preventScroll:true});}}
 function openModal(name,id){ui.modal=name;showOverlay(id);renderStatus();}
-function closeModal(id){hideOverlay(id);ui.modal=['moreOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
+function closeModal(id){hideOverlay(id);ui.modal=['moreOverlay','expenseOverlay','confirmOverlay','aboutOverlay','sipInfoOverlay','profileOverlay','howToOverlay'].filter(x=>x!==id).find(x=>!$(x).classList.contains('hidden'))||null;if(!ui.modal)ui.lastTick=performance.now();render();}
 function openConfirm(opts){ui.confirmAction=opts.onOk;$('confirmKicker').textContent=opts.kicker||'CONFIRM';$('confirmTitle').textContent=opts.title;$('confirmBody').innerHTML=opts.body||'';$('confirmOk').textContent=opts.okLabel||'Confirm';$('confirmOk').disabled=!!opts.okDisabled;openModal('confirm','confirmOverlay');}
 
 /* ---------- Rendering (reads state; never changes it) ---------- */
@@ -2715,7 +2731,7 @@ function renderPlay(){
  renderHappy();
  renderStatus();renderClock();
  $('speedBtn').textContent=prefs.speed+'×';
- $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause')+'<span>'+(ui.paused?'Resume':'Pause')+'</span>';$('pauseBtn').classList.toggle('paused',ui.paused);$('pausedTag').classList.toggle('hidden',!(ui.paused&&s.status==='playing'));$('pauseBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
+ $('pauseBtn').innerHTML=iconSVG(ui.paused?'play':'pause')+'<span>'+(ui.paused?'Resume':'Pause')+'</span>';$('pauseBtn').classList.toggle('paused',ui.paused);$('pausedTag').classList.toggle('hidden',!(ui.paused&&s.status==='playing'));renderRaceHint();$('pauseBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('moreBtn').disabled=!!M.blockingEvent()||s.status!=='playing';
  $('retireBtn').classList.toggle('hidden',!(s.status==='playing'&&age>=A.retireMinAge&&s.employment!=='retired'));
  // Story bubble from your character.
@@ -2787,9 +2803,14 @@ function renderMoneyBar(b){
 }
 function renderStatus(){
  const s=S(),el=$('runStatus');
- let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event&&s.event.type==='pitstop')t='🏁 Lap done';else if(M.blockingEvent())t='❓ Life happened · race paused';else if(s.event&&!ui.modal&&!ui.paused)t='A surprise is on the track: tap a choice';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='Racing through life';
+ let t;if(s.status==='ended')t=s.finalReason==='completed'?'🏁 Race complete':'Race over';else if(ui.countdown)t='Get ready…';else if(s.event&&s.event.type==='pitstop')t='🏁 Lap done';else if(M.blockingEvent())t='❓ Life happened · race paused';else if(s.event&&!ui.modal&&!ui.paused)t='✋ Your move: pick a choice below';else if(ui.modal)t='Paused while a panel is open';else if(ui.paused)t='Paused';else if(ui.hidden)t='Paused in background';else t='Racing through life';
  el.innerHTML=t;
 }
+// A strip on the race: points down to where you play.
+function renderRaceHint(){const s=S(),el=$('raceHint'),wait=cardWaiting();
+ const flash=performance.now()<(ui.hintFlash||0),show=s.status==='playing'&&!ui.countdown&&!ui.paused&&(wait||flash||s.month<24);
+ el.classList.toggle('hidden',!show);el.classList.toggle('move',wait||flash);
+ el.textContent=wait?'✋ Race stopped · your move is below 👇':(flash?'👇 Tap choices below, not the race':'👀 Just watch the race · you play below 👇');}
 function renderClock(){const p=Math.min(100,ui.elapsed/monthMs()*100);$('clockProgress').style.width=p+'%';$('clockProgress').parentElement.setAttribute('aria-valuenow',String(Math.round(p)));}
 function animateBalances(){
  const s=S(),vals={cash:s.cash,invested:s.invested,loans:M.totalDebt()-s.unsecuredDebt,debt:s.unsecuredDebt},prev=ui.lastBalances;ui.lastBalances={...vals,runId:s.runId};
@@ -2861,14 +2882,13 @@ function renderTrackCard(){
  const s=S(),e=s.event,el=$('trackCard');
  if(!e||e.tier!=='card'||s.status!=='playing'){if(!el.classList.contains('hidden')){el.classList.add('hidden');el.innerHTML='';}ui.card=null;return;}
  if(ui.card&&ui.card.id===e.id)return;
- ui.cardsSeen+=1;const first=ui.cardsSeen<=2,def=M.EVENTS[e.type],choices=def.choices(e,s),dflt=choices.find(c=>c.id===e.defaultChoice);
- ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};el.classList.toggle('ad',!!def.ad);
+ ui.cardsSeen+=1;const first=ui.cardsSeen<=2,def=M.EVENTS[e.type],choices=def.choices(e,s);
+ ui.card={id:e.id};el.classList.toggle('ad',!!def.ad);
  el.innerHTML='<div class="tc-head">'+em(e.art||'❓','tc-art')+'<div><small>'+esc(e.kicker)+' · AGE '+esc(M.ageLabel())+'</small><b>'+esc(e.title)+'</b></div></div>'
   +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
   +(def.ad?'<p class="tc-class">🎯 Ads see you as '+esc(M.wealthClass().emoji+' '+M.wealthClass().label)+'</p>':'')
-  +(first?'<p class="tc-note">The race slows down. No tap? “'+esc(dflt?dflt.title:'')+'” happens.</p>':'')
-  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>'
-  +'<div class="tc-timer" aria-hidden="true"><i id="cardTimer"></i></div>';
+  +(first?'<p class="tc-note">✋ The race stops and waits for you. Take your time, then tap a choice.</p>':'')
+  +'<div class="tc-choices">'+choices.map(c=>{const ch=heartChip(M.ringEffect(e.type,c.id));return '<button type="button" class="tc-choice" data-card-choice="'+c.id+'" data-event-id="'+e.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(ch?'<span class="rchips">'+ch+'</span>':'')+'</span></button>';}).join('')+'</div>';
  el.classList.remove('hidden');el.classList.remove('tc-in');void el.offsetWidth;el.classList.add('tc-in');
  playRace.bump();sfx('bump');
  if(choices.some(c=>c.id==='sip'||c.id==='lump'))maybeSipInfo();
@@ -3025,7 +3045,16 @@ function countdown(done){
  steps.forEach((st,i)=>setTimeout(()=>{if(S().runId!==runId)return;frame(st[0],st[1]);sfx(st[2]);},i*650));
  setTimeout(()=>{if(S().runId!==runId)return;el.classList.add('hidden');ui.countdown=false;ui.lastTick=performance.now();done();render();},steps.length*650+250);
 }
-function beginLife(){if(S().status!=='setup')return;M.beginLife();ui.elapsed=0;ui.paused=false;render();window.scrollTo(0,0);countdown(()=>{startClock();});}
+function beginLife(){if(S().status!=='setup')return;M.beginLife();ui.elapsed=0;ui.paused=false;render();window.scrollTo(0,0);
+ if(!prefs.howTo&&!TEST_MODE){openHowTo(()=>countdown(startClock));return;}
+ countdown(()=>{startClock();});}
+// How to play: the race up top is only to watch; every move happens below it.
+function openHowTo(then){ui.afterHowTo=then||null;openModal('howto','howToOverlay');}
+function closeHowTo(){prefs.howTo=true;M.savePrefs();closeModal('howToOverlay');const f=ui.afterHowTo;ui.afterHowTo=null;if(f)f();}
+// Tapping the race does nothing to the game, so explain where to play instead.
+function raceTap(){const s=S();if(s.status!=='playing'||ui.countdown)return;if(ui.paused){togglePause();return;}
+ ui.hintFlash=performance.now()+2600;renderRaceHint();setTimeout(renderRaceHint,2700);sfx('tap');
+ [$('stage'),$('moreBtn')].forEach(n=>{n.classList.remove('nudge');void n.offsetWidth;n.classList.add('nudge');});}
 function requestRestart(){unlockAudio();const s=S();if(s.status==='playing'){openConfirm({kicker:'RESTART',title:'Start a new life?',body:'<p class="lead">This race ends and you get a new life at 23. Your best happiness score is kept.</p>',okLabel:'New life',onOk:()=>goToSetup(0)});}else goToSetup(0);}
 
 $('startBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup();});
@@ -3047,7 +3076,9 @@ function togglePause(){const s=S();if(M.blockingEvent()||s.status!=='playing'||u
 $('pauseBtn').addEventListener('click',togglePause);
 $('sipInfoClose').addEventListener('click',()=>{sfx('tap');closeModal('sipInfoOverlay');});
 // Tapping the race scene pauses and resumes too.
-document.querySelector('#playScreen .race-wrap').addEventListener('click',togglePause);
+document.querySelector('#playScreen .race-wrap').addEventListener('click',raceTap);
+$('howToClose').addEventListener('click',()=>{sfx('tap');closeHowTo();});
+$('sheetHowTo').addEventListener('click',()=>{sfx('tap');closeModal('moreOverlay');openHowTo(null);});
 document.addEventListener('keydown',e=>{if((e.key===' '||e.key==='p')&&!anyOverlayOpen()&&S().status==='playing'&&!/INPUT|BUTTON|TEXTAREA/.test((document.activeElement||{}).tagName||'')){e.preventDefault();togglePause();}});
 $('speedBtn').addEventListener('click',()=>{const frac=ui.elapsed/monthMs(),sp=A.speeds;prefs.speed=sp[(sp.indexOf(prefs.speed)+1)%sp.length];M.savePrefs();ui.elapsed=frac*monthMs();sfx('tap');render();});
 $('retireBtn').addEventListener('click',()=>{if(M.requestRetirement())render();});
@@ -3092,7 +3123,7 @@ document.addEventListener('visibilitychange',()=>{ui.hidden=document.hidden;ui.l
 /* ---------- Boot ---------- */
 hydrateIcons();renderSound();
 M.newRun(FIXED_SEED);render();
-if(TEST_MODE)window.LifeHappens=Object.assign(Object.create(M),{render,ui,stepMonth,goToSetup,beginLifeUI:beginLife,maybeSipInfo,openRetirePlan});
+if(TEST_MODE)window.LifeHappens=Object.assign(Object.create(M),{render,ui,stepMonth,goToSetup,beginLifeUI:beginLife,maybeSipInfo,openRetirePlan,openHowTo,raceTap,clockRunning});
 })();
 </script>
 </body>
