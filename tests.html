@@ -120,7 +120,7 @@ await test('Invariant: expense preview does not mutate state',async()=>{const {L
 await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
 await test('Invariant: no two severe shocks in a row; event cadence 12–20 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
  for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
- const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t)&&!L.EVENTS[t].life);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ const rnd=types.filter(([m,t])=>m>24&&!['crunch','retire'].includes(t)&&!L.EVENTS[t].life&&!L.EVENTS[t].ad);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
  assert(rnd.length>=25&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
 await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
 await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={marriageQ:'yes',wedding:'big',kidsQ:'k2',crunch:'keep'};
@@ -316,6 +316,34 @@ await test('Flow UI: cards slide onto the track, the pit stop shows the lap and 
  eq(d.querySelectorAll('[data-pit-key="pace"],[data-pit-key="life"]').length,0,'no pace or lifestyle controls');
  d.querySelector('.pit-sip').click();eq(d.querySelector('.pit-sip').getAttribute('aria-pressed'),'true','SIP top-up picked');const boost=s.event.sipBoost;
  d.querySelector('#eventChoices [data-choice="go"]').click();eq(s.event,null,'back on track');eq(s.sip,boost,'SIP applied');});
+
+await test('Pit stop: no timer, the race waits for Continue',async()=>{const {L,win}=await loadGame(305);const d=win.document;L.goToSetup();L.beginLifeUI();const s=L.state;s.nextEventMonth=9999;s.adNext=0;s.event=null;
+ s.month=60;s.nextPitMonth=61;L.stepMonth();assert(s.event&&s.event.type==='pitstop','pit stop');
+ eq(d.querySelectorAll('#eventChoices .tc-timer,#pitTimer').length,0,'no countdown bar');assert(/Continue/.test(d.querySelector('#eventChoices [data-choice="go"]').textContent),'Continue button');
+ await new Promise(r=>setTimeout(r,6500));assert(s.event&&s.event.type==='pitstop','still waiting after 6 seconds');
+ d.querySelector('#eventChoices [data-choice="go"]').click();eq(s.event,null,'Continue restarts the race');});
+await test('Idle cash: savings above a 6-month cushion are flagged on the Savings tile',async()=>{const {L,win}=await game(306);const d=win.document;const s=L.state;s.event=null;
+ const total=L.monthlyBudget().total;s.cash=total*3;L.render();eq(L.idleCash(),0,'3 months is a cushion, not idle');assert(!d.querySelector('.wallet-card.cash').classList.contains('idle'),'not flagged');
+ s.cash=total*6+500000;L.render();near(L.idleCash(),500000,2,'idle above 6 months');assert(d.querySelector('.wallet-card.cash').classList.contains('idle'),'tile flagged');assert(/idle/.test(d.getElementById('cashNote').textContent),'note says idle');});
+await test('Ads: about once every 5–7 years, own random stream, honest choices',async()=>{const {L}=await game(307);const s=L.state;const ads=[];
+ for(let i=0;i<700&&s.status==='playing';i++){if(s.event){if(L.EVENTS[s.event.type].ad)ads.push([s.month,s.event.type]);eq(s.event.type.startsWith('ad')?s.event.defaultChoice:'skip','skip','ads default to scroll past');autoResolve(L);}s.cash=Math.max(s.cash,2e5);L.advanceMonth();}
+ assert(ads.length>=4&&ads.length<=12,'ads in a life: '+ads.length);for(let i=1;i<ads.length;i++){assert(ads[i][0]-ads[i-1][0]>=54,'gap ≥ 54 months');assert(ads[i][1]!==ads[i-1][1],'no repeat');}
+ assert(new Set(ads.map(a=>a[1])).size>=3,'a mix of ads');
+ const a=await game(308),b=await game(308);for(let i=0;i<20;i++)b.L.pickAd(b.L.state);for(let i=0;i<40;i++){a.L.state.adNext=b.L.state.adNext=99999;autoResolve(a.L);a.L.advanceMonth();autoResolve(b.L);b.L.advanceMonth();}
+ eq(a.L.state.invested,b.L.state.invested,'ads use their own random stream');});
+await test('Ads: invest idle cash, Ponzi schemes, SUV and phone on impulse',async()=>{const {L}=await game(309);const s=L.state;s.event=null;s.month=60;
+ const total=L.monthlyBudget().total;s.cash=total*6+400000;L.startEvent('adSip');const idle=s.event.idle;assert(idle>=399000,'ad knows the idle cash');const inv=s.invested;L.resolveEvent(s.event.id,'lump');near(s.invested-inv,idle,2,'idle cash invested');near(L.idleCash(),0,2,'only the cushion stays');
+ s.cash=500000;L.startEvent('adScheme');const amt=s.event.amount;L.resolveEvent(s.event.id,'check');eq(s.cash,500000,'checking costs nothing');
+ L.startEvent('adScheme');const amt2=s.event.amount;L.resolveEvent(s.event.id,'in');assert(s.cash<=500000-amt2*0.8,'the scheme takes most of it');assert(s.whatIf.adLoss>0,'counted for the end screen');
+ s.salary=300000;s.cash=2e6;L.startEvent('adCar');L.resolveEvent(s.event.id,'book');eq(s.vehicle,'car','SUV booked');eq(s.carModel,'suv','it is the SUV');assert(s.vehicleLoan,'on a loan');assert(s.whatIf.adBuys.includes('Big SUV'),'remembered');
+ const c0=s.cash;L.startEvent('adPhone');const price=s.event.price;L.resolveEvent(s.event.id,'skip');eq(s.cash,c0,'skipping is free');
+ const {L:L2}=await game(310);const s2=L2.state;s2.event=null;s2.month=80;s2.salary=40000;s2.cash=1e6;L2.startEvent('adHome');L2.resolveEvent(s2.event.id,'book');eq(s2.ownsHome,false,'the bank says no when the EMI does not fit');});
+await test('End screen: your wealth could have been, with take-home lessons',async()=>{const {L,win}=await game(311);const d=win.document;const s=L.state;
+ for(let i=0;i<700&&s.status==='playing';i++){autoResolve(L,{adSip:'skip',adScheme:'in',adPhone:'buy'});s.cash=Math.max(s.cash,L.monthlyBudget().total*6+300000);L.advanceMonth();}
+ if(s.status==='playing')L.endRun('completed');const sum=L.endSummary();
+ assert(sum.lessons.length>=1&&sum.lessons.length<=3,'one to three lessons');assert(sum.lessons.some(l=>l.key==='idle'),'idle cash lesson');assert(sum.lessons.every(l=>l.take&&isFinite(l.gain)),'every lesson has a take-home line');
+ for(let i=1;i<sum.lessons.length;i++)assert(sum.lessons[i-1].gain>=sum.lessons[i].gain,'biggest first');eq(sum.couldBe,sum.realWorth+sum.lessons[0].gain,'could have been = actual + the biggest single change');
+ L.render();const eb=d.getElementById('endBody');assert(/could have been/i.test(eb.textContent),'shown on the end screen');eq(eb.querySelectorAll('.cb-take li').length,sum.lessons.length,'take-home list');noNaN(s);});
 
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';

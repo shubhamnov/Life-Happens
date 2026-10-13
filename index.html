@@ -175,7 +175,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .tc-head b{display:block;font:700 16px/1.2 var(--display)}
 .tc-desc{margin:6px 0 0;font-size:12.5px;line-height:1.4;color:#4E5E54;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .tc-note{margin:6px 0 0;font-size:12px;font-weight:800;color:var(--forest-dark);background:var(--sage);border-radius:10px;padding:5px 8px}
-.tc-choices{display:grid;gap:6px;margin-top:8px}
+.tc-choices{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:8px}
 .tc-choice{width:100%;display:flex;gap:9px;align-items:flex-start;text-align:left;min-height:44px;border:2px solid var(--line);border-radius:13px;background:#FFFDF8;padding:6px 10px;color:var(--ink)}
 .tc-choice .emoji{font-size:20px;line-height:1.2}
 .tc-choice>span:not(.emoji){flex:1;min-width:0}
@@ -266,6 +266,15 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .wallet-card{position:relative;min-width:0;min-height:62px;text-align:left;border:2px solid #fff;border-radius:14px;padding:6px 7px;box-shadow:var(--shadow);overflow:hidden;color:var(--ink);transition:background .3s}
 .wallet-card.cash{background:var(--sage)}.wallet-card.invest{background:var(--lavender)}.wallet-card.loans{background:var(--sky)}.wallet-card.debt{background:#EFEADD}
 .wallet-card.debt.bad{background:var(--danger-bg);animation:debtPulse 1.8s ease-in-out infinite}
+.wallet-card.cash.idle{background:var(--butter)}.wallet-card.cash.idle small{color:#7A5A12}
+.track-card.ad{border:2px dashed var(--gold);background:linear-gradient(180deg,#FFF8E2,var(--paper) 60%)}
+.could-be{background:#FFF8E2;border:2px solid var(--gold);border-radius:16px;padding:10px 12px;margin:12px 0}
+.could-be.good{background:#EAF3EC;border-color:#9DBFA5}
+.could-be h3{margin:0 0 4px}
+.cb-big{font:700 28px/1.1 var(--display);color:var(--forest-dark);margin:0}.cb-big small{display:block;font:700 12px var(--sans);color:var(--muted)}
+.cb-list{list-style:none;padding:0;margin:8px 0 2px}.cb-list li{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed #E2D6B5;font-size:14px}.cb-list .cb-t{flex:1;min-width:0}.cb-list li b{color:var(--forest-dark);white-space:nowrap}
+.cb-note{font-size:11px;color:var(--muted);margin:2px 0 8px}
+.cb-take{margin:4px 0 0;padding-left:20px;font-size:14px}.cb-take li{margin:3px 0}
 @keyframes debtPulse{50%{box-shadow:0 0 0 3px #C98A7A66}}
 .wallet-card .emoji{font-size:13px;margin-right:3px}
 .wallet-title{display:flex;align-items:center;font-size:10.5px;font-weight:900;letter-spacing:.02em;color:#46584C;white-space:nowrap}
@@ -619,6 +628,8 @@ const A=Object.freeze({
  eduLoan:{principal:800000,annualRate:0.10,termMonths:96,salaryBoost:0.25},
  promoBaseChance:0.12,promoChancePerXp:0.06,promoMinGapYears:2,
  maxXp:5,trainingCost:4000,
+ cushionMonths:6,              // savings beyond 6 months of expenses count as idle cash
+ ads:{first:[30,54],gap:[54,90]},   // an ad card roughly every 4½–7½ years
  investMonthlyMean:0.0057,investMonthlyVol:0.035, // ≈7%/yr average with month-to-month swings; negative months happen
  marketDipMin:0.08,marketDipMax:0.22,
  unsecuredMonthlyRate:0.01,    // 1% a month on unsecured debt
@@ -739,7 +750,9 @@ function createState(){
   // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
   rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
   homeType:'',carModel:'hatch',parentsMode:'',lowMeMonths:0,lastBurnoutMonth:-999,lastSqueezeMonth:-999,promoPenaltyUntil:0,lastUsed:{},
-  nextPitMonth:0,pitCount:0,lastPit:null,paceUntil:0,openers:{shock:0,bonus:0,social:0}
+  nextPitMonth:0,pitCount:0,lastPit:null,paceUntil:0,openers:{shock:0,bonus:0,social:0},
+  // Ads (own seeded generator, so they never shift the main random stream) and the end-screen what-ifs.
+  adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
 }
 let state=createState();
@@ -823,6 +836,8 @@ function monthlyBudget(s=state){
   committed:sum(lines.filter(l=>l.kind!=='living').map(l=>l.amount))};     // fixed costs + debt payments, used for flexibility checks
 }
 function monthsOfCushion(s=state){return s.cash/Math.max(1,monthlyBudget(s).total);}
+// Idle cash: savings above a 6-month cushion. It earns nothing while prices rise 6% a year.
+function idleCash(s=state){return Math.max(0,Math.round(s.cash-A.cushionMonths*monthlyBudget(s).total));}
 
 // Illustrative resilience indicator (not a forecast or credit score), shown as hearts.
 function resilience(s=state){
@@ -992,7 +1007,9 @@ function settleMonth(s=state){
  if(s.lastSettledMonth===s.month)return s.lastSettlement;
  s.lastSettledMonth=s.month;
  const out={month:s.month,income:0,expenses:0,marketChange:0,unpaid:0,missedDebt:0,drawdown:0,interest:0,loanPaidOff:'',sip:0,sipSkipped:false};
- if(s.invested>0){const before=s.invested;s.invested=Math.max(0,Math.round(s.invested*(1+monthlyReturn())));out.marketChange=s.invested-before;}
+ const r=s.invested>0?monthlyReturn():A.investMonthlyMean;   // no extra random draws when nothing is invested
+ if(s.invested>0){const before=s.invested;s.invested=Math.max(0,Math.round(s.invested*(1+r)));out.marketChange=s.invested-before;}
+ whatIfGrow(s,r);
  const budget=monthlyBudget(s);out.expenses=budget.total;
  out.income=budget.income;out.tax=budget.tax;s.cash+=budget.income;s.stats.taxPaid+=budget.tax;
  s.stats.insurancePaid+=sum(budget.lines.filter(l=>l.key==='insurance'||l.key==='term').map(l=>l.amount));
@@ -1022,8 +1039,23 @@ function settleMonth(s=state){
  if(unpaid>0||missed>0){s.distressMonths+=1;s.stats.strainedMonths+=1;s.stats.maxDistress=Math.max(s.stats.maxDistress,s.distressMonths);}
  else{if(s.distressMonths>0)s.stats.recoveries+=1;s.distressMonths=0;}
  s.stats.peakNetWorth=Math.max(s.stats.peakNetWorth,netWorth(s));
+ whatIfAdd(s,out,budget.total);
  s.lastSettlement=out;
  return out;
+}
+/* What-ifs for the end screen, with this life's own market returns ("same luck").
+   g: growth of ₹1 since age 23. idle: extra wealth had idle cash been invested.
+   ten: 10% of take-home pay invested monthly. sold: investments sold, had they stayed.
+   noSipUnits: months worked before the first SIP, in units that grow to the end. */
+function whatIfGrow(s,r){const w=s.whatIf;w.g*=1+r;w.idle=w.idle*(1+r)+w.prevIdle*r;w.ten*=1+r;w.sold*=1+r;}
+function whatIfAdd(s,out,total){
+ const w=s.whatIf,f=inflationFactor(s);
+ w.prevIdle=Math.max(0,s.cash-A.cushionMonths*total);
+ if(out.income>0)w.ten+=out.income*0.1;
+ w.sold+=s.stats.investmentsSold-w.soldSeen;w.soldSeen=s.stats.investmentsSold;
+ w.interest+=out.interest/f;
+ if(!w.sipStart&&s.sip>0){w.sipStart=s.month;w.sipBase=s.sip/f;}
+ if(!w.sipStart&&s.employment==='employed')w.noSipUnits+=f/w.g;
 }
 function settlementMessage(o){
  if(!o)return '';
@@ -1378,13 +1410,73 @@ EVENTS.pitstop={kicker:'PIT STOP',art:'🏁',life:true,pit:true,
  create:s=>pitReport(s),
  choices:()=>[{id:'go',emoji:'🏎️',title:'Back on track',detail:'Apply any changes and keep racing.'}],
  resolve:(e,c,opts)=>finishPit(e,(opts&&opts.pit)||{})};
+
+/* ---------- Ad breaks (about once every 4½–7½ years, see A.ads) ----------
+   Some ads are good advice (invest idle cash, start a SIP), some are traps
+   (guaranteed returns), and some sell big buys on easy EMIs. Every choice says
+   what it costs. The default is always to scroll past. */
+const AD_KICKER='📺 AD BREAK';
+function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));return yrs>=5?' Invested instead, it could be about '+compact(Math.round(amount*Math.pow(1.07,yrs)))+' by 60.':'';}
+Object.assign(EVENTS,{
+ adSip:{kicker:AD_KICKER,art:'🌱',ad:true,weight:s=>idleCash(s)>priced(50000,s)||!s.sip?3:1.2,
+  eligible:s=>pitSipBoost(s)>0||idleCash(s)>=priced(20000,s),
+  create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:adPick(s,['“SIP karo, chill karo.” A mutual fund ad pops up.','“₹5,000 a month for 35 years can grow to about ₹85 lakh.” says the ad.','“Paisa savings mein so raha hai? Usse kaam pe lagao!”']),
+   description:idle>=priced(20000,s)?compact(idle)+' is sitting in savings beyond a 6-month cushion, earning nothing while prices rise 6% a year.':'A small amount every month, invested automatically, grows quietly for decades.',
+   foot:'Keep about 6 months of expenses in savings. The rest works harder invested.'};},
+  choices:(e,s)=>{const c=[];
+   if(e.idle>=priced(20000,s))c.push({id:'lump',emoji:'💰',title:'Invest the idle '+compact(e.idle),detail:'Savings '+compact(s.cash)+' → '+compact(s.cash-e.idle)+' (6 months of expenses stay). The value can rise or fall.'});
+   if(e.boost>0)c.push({id:'sip',emoji:'🌱',title:(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.boost)+'/month',detail:'Invested automatically after bills, from next month.'});
+   c.push({id:'skip',emoji:'📴',title:'Skip the ad',detail:'Nothing changes.'});return c;},
+  resolve:(e,c)=>{const s=state;
+   if(c==='lump'){const amt=Math.min(e.idle,idleCash(s));s.cash-=amt;s.invested+=amt;record('Invested '+money(amt)+' of idle savings at '+ageLabel()+'.',{kind:'sip'});return{text:money(amt)+' moved from savings into investments.',feedback:fb('great','Your cushion stays, and the rest now grows instead of shrinking to inflation.')};}
+   if(c==='sip'){const before=s.sip;s.sip=e.boost;if(!before)record('Started a '+money(e.boost)+'/month SIP at '+ageLabel()+'.',{major:true,kind:'sip'});return{text:'SIP set to '+money(e.boost)+' a month.',feedback:fb('great','Automatic investing every month is how wealth quietly builds.')};}
+   const idle=idleCash(s);return{text:'Ad skipped.',feedback:idle>=priced(50000,s)?fb('missed',compact(idle)+' idle in savings loses about '+compact(Math.round(idle*A.annualInflation))+' a year to inflation.'):fb('solid','Fair enough. Your money plan stays as it is.')};}},
+ adScheme:{kicker:AD_KICKER,art:'🤑',ad:true,weight:1.3,
+  eligible:s=>s.cash>=priced(30000,s),
+  create:s=>{const amount=Math.min(Math.round(s.cash*0.6),priced(adInt(s,4,10)*10000,s));return{amount,title:adPick(s,['“Double your money in 12 months. 100% guaranteed!”','“Earn 8% a MONTH with our gold scheme. Only 50 slots left!”','A finfluencer posing with a Lambo: “This app pays 3% daily.”']),
+   description:'Glossy ad, happy customers, a countdown timer. Minimum investment: '+money(amount)+'.',foot:'Real investments never promise guaranteed high returns.'};},
+  choices:e=>[{id:'in',emoji:'💸',title:'Invest '+money(e.amount),detail:'“Guaranteed” returns, says the ad.'},{id:'check',emoji:'🔍',title:'Check if it is SEBI-registered',detail:'Takes 5 minutes. Costs nothing.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}],
+  resolve:(e,c)=>{const s=state;
+   if(c==='in'){const amt=Math.min(e.amount,Math.max(0,s.cash)),back=Math.round(amt*adRand(s)*0.2),lost=amt-back;s.cash-=lost;s.stats.shocks+=lost;s.whatIf.adLoss+=lost/inflationFactor(s);record('Lost '+money(lost)+' to a “guaranteed returns” scheme at '+ageLabel()+'.',{major:true,kind:'scam'});
+    return{text:'Two months of “returns”, then the app vanished. '+money(lost)+' gone'+(back?', '+money(back)+' recovered.':'.'),feedback:fb('risky','Guaranteed high returns are the classic sign of a Ponzi scheme. If it sounds too good to be true, it is.')};}
+   return{text:c==='check'?'Not registered anywhere. You reported the ad.':'Scrolled past.',feedback:fb('great',c==='check'?'A 5-minute check just saved you '+money(e.amount)+'. Always check SEBI or RBI registration before investing.':'Ignoring “guaranteed returns” is the best return of the day.')};}},
+ adCar:{kicker:AD_KICKER,art:'🚙',ad:true,weight:1,
+  eligible:s=>s.employment==='employed'&&s.vehicle!=='car'&&!s.vehicleLoan&&preciseAge(s)>=25,
+  create:s=>{const v=rideVariants('car',s).find(x=>x.id==='suv');return{emi:v.emi,title:adPick(s,['“Zero down payment! Drive home a big SUV for just '+money(v.emi)+'/month.”','“Your neighbour got one. Why not you?” A shiny SUV ad.']),
+   description:'The ad shows the SUV on an empty mountain road. It does not show the fuel bill or the parking fight.',foot:'Ads make big EMIs look small. Ask what it costs every month, all-in.'};},
+  choices:(e,s)=>{const v=rideVariants('car',s).find(x=>x.id==='suv');return[{id:'book',emoji:'🚙',title:'Book the SUV',detail:v.block?'The bank will probably say no: '+v.block.replace(/^The bank says no: /,''):OPTIONAL.buyCar.describe(s,'suv')},{id:'test',emoji:'🔑',title:'Just a test drive',detail:'Free. The salesperson calls you nine times.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
+  resolve:(e,c)=>{const s=state;
+   if(c==='book'){const v=rideVariants('car',s).find(x=>x.id==='suv');if(v.block)return{text:'Loan declined. '+v.block,feedback:fb('solid','The bank’s 50% rule just saved you from an EMI you could not afford.')};
+    OPTIONAL.buyCar.apply(s,'suv');s.whatIf.adBuys.push('Big SUV');const b=monthlyBudget(s);
+    return{text:'You booked the SUV. EMI '+money(s.vehicleLoan.emi)+'/month for 3 years, plus fuel and upkeep.',feedback:fb(b.leftover<b.income*0.15?'risky':'solid','The ad worked. A car loses value every year, and EMI, fuel and upkeep now take a big slice of every month.')};}
+   return{text:c==='test'?'Great test drive. You walked away. 😎':'Scrolled past.',feedback:fb('great','Buying a car because an ad said so is how EMIs pile up. Buy one when your plan says so.')};}},
+ adHome:{kicker:AD_KICKER,art:'🏰',ad:true,weight:0.9,
+  eligible:s=>s.employment==='employed'&&!s.ownsHome&&preciseAge(s)>=28,
+  create:s=>({title:adPick(s,['“Pre-launch offer! Luxury villas, only 3 left!”','“Why pay rent? Own a villa with a private pool.” says the hoarding.']),
+   description:'Independent villa for '+compact(housePrice(s,'villa'))+'. Booking needs '+compact(houseUpfront(s,'villa'))+' upfront, then a 20-year loan.',foot:'“Only 3 left” is a sales trick. Buy a home when the EMI fits, not when the hoarding says so.'}),
+  choices:(e,s)=>{const block=bankCheck(s,houseLoanEmi(s,'villa'))||(houseUpfront(s,'villa')>s.cash?'Needs '+money(houseUpfront(s,'villa'))+' in savings for the down payment.':null);
+   return[{id:'book',emoji:'🏰',title:'Book the villa',detail:block?'You cannot afford it: '+block.replace(/^The bank says no: /,''):'EMI '+money(houseLoanEmi(s,'villa'))+'/month for 20 years. Rent stops.'},{id:'visit',emoji:'🥟',title:'Visit the site for free samosas',detail:'Free. Very good samosas.'},{id:'skip',emoji:'🙅',title:'Scroll past',detail:'Nothing changes.'}];},
+  resolve:(e,c)=>{const s=state;
+   if(c==='book'){const block=bankCheck(s,houseLoanEmi(s,'villa'))||(houseUpfront(s,'villa')>s.cash?'Not enough savings for the down payment.':null);if(block)return{text:'Booking failed. '+block,feedback:fb('solid','You could not afford it this time. That is what the down payment and the bank’s 50% rule are for.')};
+    s.cash-=houseUpfront(s,'villa');const r=OPTIONAL.buyHouse.apply(s,'villa');s.whatIf.adBuys.push('Villa');return{text:r.text,feedback:Object.assign(r.feedback,{why:'The ad worked. '+r.feedback.why})};}
+   return{text:c==='visit'?'Samosas: excellent. Villa: politely declined.':'Scrolled past.',feedback:fb('great','A home is the biggest buy of your life. It deserves a plan, not a pre-launch countdown.')};}},
+ adPhone:{kicker:AD_KICKER,art:'📱',ad:true,weight:1,
+  eligible:s=>s.employment==='employed'&&s.cash>=priced(20000,s),
+  create:s=>{const price=priced(adInt(s,7,12)*10000,s);return{price,title:adPick(s,['“New flagship! No-cost EMI. Your old phone is SO last year.”','“3 cameras. 1 TB. Your phone is embarrassing you.”']),
+   description:'Your current phone works fine. The new one costs '+money(price)+'.',foot:'A phone loses half its value in a year.'};},
+  choices:(e,s)=>[{id:'buy',emoji:'📱',title:'Upgrade now',detail:spendDetail(e.price)+adNoteFV(s,e.price)},{id:'skip',emoji:'👍',title:'My phone works fine',detail:'Nothing changes.'}],
+  resolve:(e,c)=>{const s=state;
+   if(c==='buy'){const r=fundExpense(e.price,'savings',true);s.whatIf.adLoss+=e.price/inflationFactor(s);s.whatIf.adBuys.push('Flagship phone');return{text:'New phone! '+r.text,feedback:fb(r.borrowed?'risky':'missed','Shiny for a month, half its value in a year.'+adNoteFV(s,e.price))};}
+   return{text:'Kept your phone.',feedback:fb('great','The best phone is the one that already works.'+adNoteFV(s,e.price))};}}
+});
 // Small surprises become cards on the track. The value is the default applied
 // when you don't choose in time: usually the cautious or do-nothing option.
 const CARD_DEFAULTS={laptop:'savings',phone:'savings',tooth:'savings',ac:'savings',scam:'report',
  goa:'skip',weddings:'shagun',concert:'skip',festival:'skip',friendloan:'no',sibling:'part',parentstrip:'later',
  kidparty:'cake',school:'savings',bonus:'save',taxrefund:'save',sidegig:'rest',promotion:'no',course:'skip',
  crypto:'pass',boom:'stay',market:'stay',landlord:'accept',leak:'savings',vehiclebill:'savings',challan:'pay',
- pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories',insureoffer:'yes'};
+ pet:'foster',midlife:'ride',festivalTime:'quiet',grandkid:'stories',insureoffer:'yes',
+ adSip:'skip',adScheme:'skip',adCar:'skip',adHome:'skip',adPhone:'skip'};
 function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',detail:'Savings '+money(s.cash)+' → '+money(s.cash+e.amount)+'.'},{id:'invest',emoji:'🌱',title:'Invest it',detail:'Investments '+money(s.invested)+' → '+money(s.invested+e.amount)+'. The value can rise or fall.'}];
  if(s.unsecuredDebt>0)c.push({id:'debt',emoji:'✂️',title:'Pay down debt',detail:'Debt '+money(s.unsecuredDebt)+' → '+money(Math.max(0,s.unsecuredDebt-e.amount))+'. Any remainder goes to savings.'});
  c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Spend it all on something nice. Gone by next week.'});return c;}
@@ -1403,7 +1495,7 @@ function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
 // family while work is in Hustle mode) happen when the situation calls for them. Never two severe shocks in a row, never
 // the same type twice in a row.
 const CONTEXT_EVENTS=['retire','burnout','squeeze'];
-const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life);
+const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life&&!EVENTS[t].ad);
 const OPENERS={shock:RANDOM_POOL.filter(t=>EVENTS[t].group==='shock'),social:RANDOM_POOL.filter(t=>EVENTS[t].group==='social')};
 function eligibleEvent(t,s){const d=EVENTS[t];return !d.eligible||d.eligible(s);}
 function eventWeight(t,s){const d=EVENTS[t];const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*(s.seen[t]||0));}
@@ -1416,6 +1508,17 @@ function pickRandomEvent(s,pool=RANDOM_POOL){
  return list[list.length-1];
 }
 function ageAtMonth(m){return A.startAge+(m-1)/12;}
+// Ads use their own generator stored in the state, so adding them never changes the rest of a seeded life.
+function adRand(s=state){let a=(s.adRng+0x6D2B79F5)|0;s.adRng=a;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+function adInt(s,lo,hi){return lo+Math.floor(adRand(s)*(hi-lo+1));}
+function adPick(s,arr){return arr[Math.floor(adRand(s)*arr.length)];}
+const AD_POOL=()=>Object.keys(EVENTS).filter(t=>EVENTS[t].ad);
+function pickAd(s){
+ const list=AD_POOL().filter(t=>eligibleEvent(t,s)&&t!==s.lastAdType);if(!list.length)return null;
+ const weights=list.map(t=>eventWeight(t,s));let r=adRand(s)*sum(weights);
+ for(let i=0;i<list.length;i++){r-=weights[i];if(r<=0)return list[i];}
+ return list[list.length-1];
+}
 // Births are only scheduled up to age 40; a plan that runs past it quietly ends.
 function scheduleBirth(s,inMonths){const m=s.month+inMonths;if(ageAtMonth(m)<=A.life.maxBirthAge)s.life.nextBirthMonth=m;else{s.life.nextBirthMonth=0;record('The baby plan ran past 40 and quietly closed.',{kind:'family'});}}
 function lifeEventDue(s){
@@ -1446,7 +1549,7 @@ function startEvent(type,opts){
  if(dflt){const ids=def.choices(s.event,s).map(c=>c.id);s.event.tier='card';s.event.defaultChoice=ids.includes(dflt)?dflt:ids[0];}
  else s.event.tier='stop';
  s.seen[type]=(s.seen[type]||0)+1;
- if(!CONTEXT_EVENTS.includes(type)&&!def.life){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
+ if(!CONTEXT_EVENTS.includes(type)&&!def.life&&!def.ad){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
  return true;
 }
 // Only "stop" events pause the race and lock the panels; a card waits on the track.
@@ -1462,9 +1565,10 @@ function maybeStartEvent(){
  if(!op.shock&&m>=3){op.shock=1;if(m<12){const t=pickRandomEvent(s,OPENERS.shock);if(t){startEvent(t);return;}}}
  if(!op.bonus&&m>=12){op.bonus=1;if(m<24&&s.employment==='employed'){startEvent('bonus',{first:true});return;}}
  if(!op.social&&m>=24){op.social=1;if(m<36){const t=pickRandomEvent(s,OPENERS.social);if(t){startEvent(t,{first:true});return;}}}
- if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
+if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
  const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
+ if(s.adNext&&m>=s.adNext){s.adNext=m+adInt(s,A.ads.gap[0],A.ads.gap[1]);const t=pickAd(s);if(t){s.lastAdType=t;startEvent(t);return;}}
  if(m>=s.nextEventMonth&&m>24){s.nextEventMonth=m+randInt(A.eventGap[0],A.eventGap[1]);const t=pickRandomEvent(s);if(t)startEvent(t);}
 }
 
@@ -1474,7 +1578,7 @@ function maybeStartEvent(){
 function newRun(seed){
  state=createState();
  state.seed=(seed>>>0)||((Math.random()*2**32)>>>0);
- rng=mulberry32(state.seed);
+ rng=mulberry32(state.seed);state.adRng=(state.seed^0x5EED0AD)|0;
  return state;
 }
 function beginLife(profile){
@@ -1491,6 +1595,7 @@ function beginLife(profile){
  s.life.parentsMonth=monthAtAge(L.parentsAge[0])+randInt(0,(L.parentsAge[1]-L.parentsAge[0])*12);
  s.nextEventMonth=24+randInt(A.eventGap[0],A.eventGap[1]);
  s.nextPitMonth=monthAtAge(A.pit.firstAge);s.lastPit=lapSnapshot(s);
+ s.adNext=adInt(s,A.ads.first[0],A.ads.first[1]);
  record('Started at 23 on '+money(s.salary)+'/month'+(edu?' (a better college, thanks to an education loan)':'')+': '+BASE_PRICES.home[p.home].label+', '+ride.label.toLowerCase()+(ride.loan?' with a '+money(ride.loan)+' loan':'')+(s.insured?', with health cover':'')+'.',{major:true,kind:'start'});
  const o=settleMonth(s);
  s.message='First payday. '+settlementMessage(o);s.story=edu?'Fancy degree, fancy first paycheck. The education loan EMI starts now.':'A new job in a new city. Your first paycheck is in!';
@@ -1744,6 +1849,7 @@ function pitTip(s){
   if(s.pace==='hustle')return 'Work is eating your happiness. Saying no to the next big project would help.';
   return {me:'You need some time for yourself. A savings cushion and a little comfort help.',fam:'Your people miss you. A day with them or a livelier social life helps.',com:'You feel disconnected. Volunteering is free, and festivals count.'}[low];}
  if(s.employment==='employed'&&!s.sip&&b.leftover>b.income*0.1)return 'Money is left over every month. A SIP would put it to work.';
+ if(idleCash(s)>=Math.max(priced(50000,s),b.total*2))return compact(idleCash(s))+' is idle in savings beyond a 6-month cushion. Inflation eats about '+compact(Math.round(idleCash(s)*A.annualInflation))+' of it a year: invest it.';
  if(monthsOfCushion(s)<3)return 'Build a 3-month savings cushion before upgrading anything.';
  if(!s.insured)return 'No health cover: one hospital stay could wipe out your savings.';
  if((s.married||s.children.length)&&!s.termCover&&preciseAge(s)<A.term.maxAge)return 'Your family relies on your pay. Term cover is cheapest the younger you buy it.';
@@ -1872,9 +1978,22 @@ function endSummary(){
  const weak=RING_KEYS.filter(k=>avg[k]<A.rings.low).map(k=>WEAK_AREA[k]);
  if(weak.length)reasons.unshift('Your happiness was held back by too little '+weak.join(' and ')+'.');
  const decisions=s.history.filter(h=>h.major).map(h=>h.text);
- return{completed,reasons,decisions,budget:b,ending,score:Math.round(s.score),happy:lifeHappiness(s),realWorth:realNetWorth(s)};
+ const lessons=whatIfLessons(s);
+ return{completed,reasons,decisions,budget:b,ending,score:Math.round(s.score),happy:lifeHappiness(s),realWorth:realNetWorth(s),lessons,couldBe:realNetWorth(s)+(lessons.length?lessons[0].gain:0)};
 }
 
+// "Your wealth could have been": one change at a time, with this life's own luck, in today's money.
+function whatIfLessons(s=state){
+ const w=s.whatIf,f=inflationFactor(s),real=v=>Math.round(v/f),out=[];
+ const age0=w.sipStart?Math.floor(ageAtMonth(w.sipStart)):0;
+ if(w.idle>0)out.push({key:'idle',emoji:'💤',gain:real(w.idle),title:'Cash above a 6-month cushion, invested',take:'Keep about 6 months of expenses in savings and invest the rest. Idle cash loses about 6% a year to inflation.'});
+ if(w.sipStart&&w.noSipUnits>0)out.push({key:'sip',emoji:'⏰',gain:real(w.sipBase*w.noSipUnits*w.g),title:'Your SIP from your first salary, not from '+age0,take:'Start investing with your first salary, even a small amount. Time does the heavy lifting.'});
+ if(!w.sipStart&&w.ten>s.invested)out.push({key:'ten',emoji:'🌱',gain:real(w.ten-s.invested),title:'10% of your pay invested every month',take:'Invest a fixed share of every salary, automatically, before you spend it.'});
+ if(w.sold>s.stats.investmentsSold)out.push({key:'sold',emoji:'🔨',gain:real(w.sold-s.stats.investmentsSold),title:'Not selling investments to pay bills',take:'A cash cushion means a surprise never forces you to sell investments.'});
+ if(w.interest>0)out.push({key:'debt',emoji:'💳',gain:Math.round(w.interest),title:'No card debt (interest you paid)',take:'Card debt costs 12% a year. Clear it before anything else.'});
+ if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
+ return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
+}
 window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
@@ -1882,7 +2001,7 @@ window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,c
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
  RINGS,RING_FX,PACES,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
- happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis};
+ happiness,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd};
 })();
 </script>
 <script>
@@ -2200,7 +2319,6 @@ function startClock(){
  ui.timer=setInterval(()=>{
   if(S().runId!==runId||S().status!=='playing'){stopClock();return;}  // stale timer from an old run: shut it down
   const now=performance.now(),dt=Math.min(250,now-ui.lastTick);ui.lastTick=now;  // cap dt so a throttled tab can't jump ahead
-  tickPit(dt);
   if(!clockRunning())return;
   if(tickCard(dt))return;
   ui.elapsed+=dt;
@@ -2214,14 +2332,6 @@ function tickCard(dt){
  ui.card.elapsed+=dt;const bar=$('cardTimer');if(bar)bar.style.width=Math.max(0,100-ui.card.elapsed/ui.card.ms*100)+'%';
  if(ui.card.elapsed<ui.card.ms)return false;
  const r=M.resolveEvent(e.id,e.defaultChoice,{auto:true});if(r)sfx('tap');render();return true;
-}
-// A pit stop restarts the race by itself once its bar runs out (unless paused or a panel is open).
-const PIT_MS=5000;
-function tickPit(dt){
- const e=S().event;if(!e||e.type!=='pitstop'||!ui.pit||ui.pit.id!==e.id||ui.shownEventId!==e.id||ui.paused||ui.hidden||ui.modal)return;
- ui.pit.elapsed+=dt;const bar=$('pitTimer'),n=$('pitCount'),left=Math.max(0,ui.pit.ms-ui.pit.elapsed);
- if(bar)bar.style.width=(left/ui.pit.ms*100)+'%';if(n)n.textContent=Math.ceil(left/1000)+'s';
- if(left<=0){ui.pit=null;const r=M.resolveEvent(e.id,'go',{pit:Object.assign({},ui.pitPick)});if(r){ui.elapsed=0;ui.lastTick=performance.now();sfx('go');}render();}
 }
 function stopClock(){if(ui.timer){clearInterval(ui.timer);ui.timer=null;}}
 function stepMonth(){
@@ -2349,7 +2459,10 @@ function renderPlay(){
  const loans=M.totalDebt()-s.unsecuredDebt;
  const show=(id,key,v,label)=>{const el=$(id);el.textContent=ui.financeDetail[key]?money(v):compact(v);el.parentElement.setAttribute('aria-label',label+': '+money(v)+'. Tap to switch between compact and exact.');};
  show('cashValue','cash',s.cash,'Savings');show('investValue','invested',s.invested,'Invested');show('loanValue','loans',loans,'Loans');show('debtValue','debt',s.unsecuredDebt,'Card debt');
- const cushion=M.monthsOfCushion();$('cashNote').textContent=s.cash<=0?'Empty!':cushion>=1?Math.floor(cushion)+' mo of bills':'Under a month';
+ const cushion=M.monthsOfCushion();const idle=M.idleCash(),idleBig=idle>=M.priced(50000);
+ $('cashNote').textContent=s.cash<=0?'Empty!':idleBig?'💤 '+compact(idle)+' idle':cushion>=1?Math.floor(cushion)+' mo of bills':'Under a month';
+ document.querySelector('.wallet-card.cash').classList.toggle('idle',idleBig);
+ if(idleBig)$('cashNote').title=compact(idle)+' above a 6-month cushion loses about '+compact(Math.round(idle*A.annualInflation))+' a year to inflation.';
  $('investNote').textContent=s.sip>0&&s.employment==='employed'?'SIP '+compact(s.sip)+'/mo':s.invested>0?'Can rise or fall':'Nothing yet';
  $('loanNote').textContent=loans>0?'EMI '+compact(M.allEmis())+'/mo':'None';
  $('debtNote').textContent=s.unsecuredDebt>0?'1% a month!':'None 🎉';
@@ -2438,7 +2551,7 @@ function renderEvent(){
  $('eventKicker').textContent=e.kicker;$('eventAge').textContent='Age '+M.ageLabel();$('eventTitle').textContent=e.title;$('eventDescription').textContent=e.description;
  $('eventSnapshot').innerHTML=snapshotHTML();$('eventSnapshot').classList.toggle('hidden',!def.snapshot);
  $('eventChoices').dataset.eventId=String(e.id);
- if(def.pit){ui.pitPick={life:0,sip:'keep'};ui.pit={id:e.id,elapsed:0,ms:PIT_MS};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent='';}
+ if(def.pit){ui.pitPick={life:0,sip:'keep'};ui.pit={id:e.id};$('eventChoices').innerHTML=pitBody();$('eventFoot').textContent='';}
  else $('eventChoices').innerHTML=def.choices(e,s).map(c=>'<button type="button" class="event-choice" data-choice="'+c.id+'">'+em(c.emoji||'👉')+'<span><strong>'+esc(c.title)+'</strong><small>'+esc(c.detail)+'</small>'+(()=>{const ch=heartChip(M.ringEffect(e.type,c.id));return ch?'<span class="rchips">'+ch+'</span>':'';})()+'</span></button>').join('');
  if(!def.pit)$('eventFoot').textContent=(e.foot||'')+' The race is paused until you choose.';
  // The runner bumps a "?" block first, then the pop-up opens.
@@ -2447,13 +2560,13 @@ function renderEvent(){
  if(TEST_MODE||REDUCED||$('playScreen').classList.contains('hidden')){ui.shownEventId=id;showOverlay('eventOverlay');}
  else setTimeout(()=>{const cur=S().event;if(cur&&cur.id===id&&ui.renderedEventId===id){ui.shownEventId=id;showOverlay('eventOverlay');}},650);
 }
-/* ---------- Pit stop (every 5 years): a short lap report that restarts by itself ---------- */
+/* ---------- Pit stop (every 5 years): a short lap report; the race waits for Continue ---------- */
 function pitBody(){
  const s=S(),e=s.event,pk=ui.pitPick,arrow=(d,f)=>d>0?'<small class="up">▲ '+f(d)+'</small>':d<0?'<small class="down">▼ '+f(-d)+'</small>':'<small>steady</small>';
  let h='<div class="pit-stats"><div><span>❤️ HAPPINESS</span><b>'+e.happy+'</b>'+arrow(e.happyDelta,v=>v)+'</div><div><span>💎 NET WORTH</span><b>'+compact(e.netWorth)+'</b>'+arrow(Math.round(e.worthDelta),compact)+'</div></div>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
  if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong><small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small></span></button>';}
- return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Keep racing<b id="pitCount" aria-hidden="true"></b></button><div class="tc-timer" aria-hidden="true"><i id="pitTimer"></i></div>';
+ return h+'<button type="button" class="primary pit-go" data-choice="go">🏎️ Continue</button>';
 }
 /* ---------- Track cards: small surprises that don't stop the race ---------- */
 function renderTrackCard(){
@@ -2461,7 +2574,7 @@ function renderTrackCard(){
  if(!e||e.tier!=='card'||s.status!=='playing'){if(!el.classList.contains('hidden')){el.classList.add('hidden');el.innerHTML='';}ui.card=null;return;}
  if(ui.card&&ui.card.id===e.id)return;
  ui.cardsSeen+=1;const first=ui.cardsSeen<=2,def=M.EVENTS[e.type],choices=def.choices(e,s),dflt=choices.find(c=>c.id===e.defaultChoice);
- ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};
+ ui.card={id:e.id,elapsed:0,ms:first?CARD_FIRST_MS:CARD_MS};el.classList.toggle('ad',!!def.ad);
  el.innerHTML='<div class="tc-head">'+em(e.art||'❓','tc-art')+'<div><small>'+esc(e.kicker)+' · AGE '+esc(M.ageLabel())+'</small><b>'+esc(e.title)+'</b></div></div>'
   +(e.description?'<p class="tc-desc">'+esc(e.description)+'</p>':'')
   +(first?'<p class="tc-note">The race slows down while you choose. Tap a choice, or “'+esc(dflt?dflt.title:'')+'” happens when the bar runs out.</p>':'')
@@ -2488,11 +2601,21 @@ function renderEnd(){
  const stat=(l,v)=>'<div><span>'+l+'</span><strong>'+v+'</strong></div>';
  $('endBody').innerHTML='<div class="end-score"><div><span>❤️ LIFETIME HAPPINESS</span><strong>'+sum.happy+'</strong></div><div><span>💎 NET WORTH</span><strong>'+compact(M.netWorth())+'</strong></div></div>'
   +'<p class="res-note" style="text-align:center">'+(sum.happy>=best?'🎉 Your happiest life so far! ':'Your best: ❤️ '+best+'. ')+'In today’s money your net worth is '+compact(sum.realWorth)+'.</p>'
+  +couldBeHtml(sum)
   +'<h3>Your money at '+esc(age)+'</h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('📈 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('🏦 LOANS & 💳 DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
   +(sum.reasons.length?'<h3>What shaped this race</h3><ul class="end-list">'+sum.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>':'')
   +'<h3>Big moments</h3><ul class="end-list">'+sum.decisions.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul>'
   +'<p class="res-note">Illustrative game outcome, not a forecast. Run code: '+s.seed+'.</p>';
  showOverlay('endOverlay');
+}
+// "Your wealth could have been": the biggest one-change what-ifs, then the take-home lessons.
+function couldBeHtml(sum){
+ const L=sum.lessons;
+ if(!L.length)return '<div class="could-be good"><h3>🏅 Nothing big to fix</h3><p>You invested early, kept a cushion and avoided costly debt. That is the whole playbook.</p></div>';
+ return '<div class="could-be"><h3>Your wealth could have been</h3><p class="cb-big">'+compact(sum.couldBe)+'<small> instead of '+compact(sum.realWorth)+' (today’s money)</small></p>'
+  +'<ul class="cb-list">'+L.map(l=>'<li>'+em(l.emoji)+'<span class="cb-t">'+esc(l.title)+'</span><b>'+(l.gain>0?'+'+compact(l.gain):'')+'</b></li>').join('')+'</ul>'
+  +'<p class="cb-note">Each line is one change on its own, with the same market luck as your life.</p>'
+  +'<h3>📝 Take home</h3><ol class="cb-take">'+L.map(l=>'<li>'+esc(l.take)+'</li>').join('')+'</ol></div>';
 }
 function updateBest(happy){let best=happy;try{const prior=Number(localStorage.getItem('lifeHappensBestHappy')||0);best=Math.max(happy,prior);localStorage.setItem('lifeHappensBestHappy',String(best));}catch(e){}return best;}
 
@@ -2576,7 +2699,10 @@ function renderAbout(){
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled'],
   ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
   ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards and the race slows down: about 6 seconds to tap (9 for your first two). If you don’t, the cautious default marked on the card happens'],
-  ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race restarts by itself after 5 seconds'],
+  ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. It may offer to start or raise your SIP. The race waits until you tap Continue'],
+  ['Idle cash','Savings earn nothing while prices rise 6% a year. About 6 months of expenses is a healthy cushion; anything above it shows as 💤 idle on the Savings tile.'],
+  ['Ad breaks','About once every 5–7 years an ad slides onto the track. Some are good advice (invest idle cash, start a SIP), some are traps (guaranteed returns) and some sell big buys on easy EMIs. The default is always to scroll past.'],
+  ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
   ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
   ['Health cover','Offered as a card in your second month (and now and then later while you have none), or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone covered'],
@@ -2623,7 +2749,7 @@ $('moreOverlay').addEventListener('click',e=>{if(e.target===$('moreOverlay'))clo
 $('sheetSound').addEventListener('click',()=>{$('soundBtn').click();renderMore();});
 $('sheetAbout').addEventListener('click',()=>{renderAbout();openModal('about','aboutOverlay');});
 $('sheetRestart').addEventListener('click',requestRestart);
-$('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;if(ui.pit)ui.pit.elapsed=0;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+$('eventChoices').addEventListener('click',e=>{const pb=e.target.closest('[data-pit-key]');if(pb&&!pb.disabled&&ui.pitPick){const k=pb.dataset.pitKey,v=pb.dataset.pitValue;ui.pitPick[k]=k==='life'?Number(v):v;e.currentTarget.innerHTML=pitBody();const again=e.currentTarget.querySelector('[data-pit-key="'+k+'"][data-pit-value="'+v+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
  const b=e.target.closest('button[data-choice]');if(!b)return;const id=Number(e.currentTarget.dataset.eventId),cur=S().event,isPit=!!(cur&&M.EVENTS[cur.type].pit);e.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);if(isPit)ui.pit=null;const r=M.resolveEvent(id,b.dataset.choice,isPit?{pit:Object.assign({},ui.pitPick)}:undefined);if(!r){ui.renderedEventId=null;render();return;}ui.elapsed=0;ui.lastTick=performance.now();sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
 $('trackCard').addEventListener('click',ev=>{const b=ev.target.closest('[data-card-choice]');if(!b||b.disabled)return;const e=S().event;if(!e||e.tier!=='card'||String(e.id)!==b.dataset.eventId)return;
  ev.currentTarget.querySelectorAll('button').forEach(x=>x.disabled=true);const r=M.resolveEvent(e.id,b.dataset.cardChoice);if(r)sfx(r.feedback&&r.feedback.label==='risky'?'risky':'good');render();});
