@@ -717,13 +717,15 @@ const A=Object.freeze({
  // yourself at a pit stop every 5 years or so (or it lapses). It covers only you until you
  // renew it as family cover (spouse, children); parents are an optional, expensive add-on.
  // The premium is set at each renewal from your age and who is on the policy.
- healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:3000,ageLoading:0.015,renewMonths:36},  // renewal: at the first pit stop at least 3 years after buying
+ healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:5000,ageLoading:0.015,renewMonths:36},  // renewal: at the first pit stop at least 3 years after buying
  // Term cover with a disability rider: level premium (locked at purchase, so buying young
  // is cheap), ₹1 crore cover in today's money, until 65. Pays out if an accident or
  // illness stops you working. The player never dies in this game.
  term:{premiumAt23:800,ageLoading:0.045,cover:10000000,untilAge:65,minAge:23,maxAge:55,disabilityShare:0.2},
  recoveryMonths:12,            // months without salary after a serious accident
  householdMonthly:9000,        // a non-earning spouse's share of living costs
+ weddingCost:{modest:1000000,big:2000000,lavish:4000000},   // 2026 prices: ₹10L simple, ₹20L good, ₹40L lavish
+ birthCost:{private:150000,gov:20000},                      // hospital bill for a delivery, before health cover
  // Life stages follow believable windows: marriage asked at 23–24, weddings from 25,
  // never after 38; kids 0–2, none after 40; school chosen at 4; parents need support in your 40s.
  life:{marriageAsk:[4,19],weddingAge:[25,33],reaskAge:[28,30],maxMarriageAge:38,kidsAskAfter:[12,24],firstBirthAfter:[9,15],secondGap:[24,48],maxBirthAge:40,parentsAge:[44,50]},
@@ -755,7 +757,7 @@ const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years ela
  other:{none:{label:'None',emoji:'➖',cost:0},small:{label:'Small extra',emoji:'🎧',cost:2000},regular:{label:'Regular extra',emoji:'🏋️',cost:5000},big:{label:'Big extra',emoji:'🎮',cost:10000}},
  // running = passes, fares or upkeep (service, insurance); fuel is its own line for your own vehicle.
  commute:{public:{label:'Bus / Metro',emoji:'🚇',running:1500,fuel:0,loan:0},bike:{label:'Two-wheeler',emoji:'🛵',running:800,fuel:2500,loan:100000},car:{label:'Car',emoji:'🚗',running:3000,fuel:8000,loan:600000},cabs:{label:'Cabs',emoji:'🚕',running:7000,fuel:0,loan:0}},
- school:{gov:{label:'Government school',emoji:'🏫',monthly:1000,admission:2000},private:{label:'Private school',emoji:'🎒',monthly:6000,admission:30000},intl:{label:'International school',emoji:'🌍',monthly:20000,admission:150000}},
+ school:{gov:{label:'Government school',emoji:'🏫',monthly:1500,admission:5000},budget:{label:'Budget private school',emoji:'📘',monthly:10000,admission:25000},private:{label:'Private school',emoji:'🎒',monthly:29000,admission:75000},intl:{label:'International school',emoji:'🌍',monthly:75000,admission:300000}},  // ≈ ₹18K, ₹1.2L, ₹3.5L and ₹9L a year in 2026
  // Big buys trade comfort against people. rings = lasting [Me, Family & Friends, Community]
  // effect on ring targets while you own it; brag = show-off value (worth 0 points).
  house:{society:{label:'Society flat',emoji:'🏢',price:1,maintenance:3000,brag:1,rings:[8,2,12],blurb:'Clubhouse, festivals, neighbours who know your name. Nothing to show off.'},
@@ -1050,9 +1052,9 @@ const RING_FX={
  pet:{adopt:[6,6,0],foster:[2,0,3]},
  midlife:{buy:[10,-2,0],cycle:[6,0,2],ride:[2,0,0]},
  medical:{'*':[-5,0,0]},parentmedical:{'*':[0,6,0],part:[0,3,0]},
- wedding:{big:[6,12,8],modest:[6,12,3],wait:[0,-2,0]},
+ wedding:{modest:[6,12,3],big:[6,12,6],lavish:[6,12,6],wait:[0,-2,0]},
  birth:{'*':[4,12,0]},
- schoolQ:{gov:[0,2,4],private:[0,4,1],intl:[0,6,-1]},
+ schoolQ:{gov:[0,2,4],budget:[0,3,3],private:[0,4,1],intl:[0,6,-1]},
  parentsCare:{support:[0,6,0],movein:[-3,14,2],share:[0,3,0]},
  divorce:{mediate:[-12,-15,0],court:[-18,-22,-3]},
  festivalTime:{host:[4,6,16],join:[2,4,10],quiet:[1,0,-4]},
@@ -1296,7 +1298,7 @@ const EVENTS={
   choices:e=>spendChoices(e.options),resolve:(e,c)=>spendResolve(e,c,{cheap:'Happy kid, happy wallet. A great trade.',fine:'A fun party you could afford.',debt:'A party on credit keeps costing 1% a month.',skip:''})},
  school:{kicker:'SCHOOL NOTICE',art:'🎒',titles:['The school fees just went up. Again.','School announces a “mandatory” trip and new uniforms.'],snapshot:true,
   eligible:s=>s.children.some(c=>inSchool(c,s)),
-  create:s=>{const tier=s.children.some(c=>inSchool(c,s)&&c.school==='intl')?2.5:s.children.some(c=>inSchool(c,s)&&c.school==='private')?1:0.35,amount=priced(Math.round(randInt(25,60)*1000*tier));return{amount,description:'Annual fees, books and a smart-board “development charge”: '+money(amount)+' due this month.',foot:'Education costs rise faster than you expect. Plan for them.'};},
+  create:s=>{const tier=s.children.some(c=>inSchool(c,s)&&c.school==='intl')?2.5:s.children.some(c=>inSchool(c,s)&&c.school==='private')?1:s.children.some(c=>inSchool(c,s)&&c.school==='budget')?0.6:0.35,amount=priced(Math.round(randInt(25,60)*1000*tier));return{amount,description:'Annual fees, books and a smart-board “development charge”: '+money(amount)+' due this month.',foot:'Education costs rise faster than you expect. Plan for them.'};},
   choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
 
  /* ---- money & career ---- */
@@ -1388,19 +1390,19 @@ const EVENTS={
  /* ---- health & family ---- */
  medical:{kicker:'HEALTH SCARE',art:'🤒',snapshot:true,severe:true,
   create:s=>{const kids=activeChildren(s).length,r=rand(),who=s.married&&r<0.35?'spouse':kids&&r>=0.35&&r<0.6?'child':'you';
-   const total=priced(randInt(18,60)*1000),cov=s.insured&&(who==='you'||s.coverFamily),amount=cov?Math.round(total*(1-A.healthCover.coveredShare)):total;
+   const total=priced(randInt(25,100)*1000),cov=s.insured&&(who==='you'||s.coverFamily),amount=cov?Math.round(total*(1-A.healthCover.coveredShare)):total;
    const title={you:pick(['An unexpected medical bill.','Dengue season got you.','Your back gave up mid-sneeze.']),spouse:pick(['Your spouse needs surgery.','Your spouse is in hospital.']),child:pick(['Your kid broke an arm at the playground.','Your child has a high fever: hospital time.'])}[who];
    return{who,title,art:{you:'🤒',spouse:'🏥',child:'🩹'}[who],amount,total,description:'A hospital bill of '+money(total)+' arrived.'+(cov?' Your health cover pays 65%, so your share is '+money(amount)+'.':s.insured?' Your cover is for you only (never renewed as family cover), so you pay all of it.':' Without health cover, you pay all of it.'),foot:'Health cover lowers eligible bills; it never removes every cost.'};},
   choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
  parentmedical:{kicker:'FAMILY HEALTH',art:'🏥',titles:['Your parent needs medical care.','A call from home: your parent is in hospital.'],snapshot:true,severe:true,
   eligible:s=>preciseAge(s)>=30&&preciseAge(s)<65,
-  create:s=>{const total=priced(randInt(80,300)*1000),amount=s.parentsCovered?Math.round(total*(1-A.healthCover.coveredShare)):total;return{amount,total,description:'A hospital bill of '+money(total)+' has arrived for a parent.'+(s.parentsCovered?' Their health cover add-on pays 65%, so the remaining bill is '+money(amount)+'.':' Your parents are not on your health cover, so the whole bill is yours to deal with.'),foot:'Choose how much you take on and how to fund it.'};},
+  create:s=>{const total=priced(randInt(15,50)*10000),amount=s.parentsCovered?Math.round(total*(1-A.healthCover.coveredShare)):total;return{amount,total,description:'A hospital bill of '+money(total)+' has arrived for a parent.'+(s.parentsCovered?' Their health cover add-on pays 65%, so the remaining bill is '+money(amount)+'.':' Your parents are not on your health cover, so the whole bill is yours to deal with.'),foot:'Choose how much you take on and how to fund it.'};},
   choices:(e)=>{const c=fundingChoices(e.amount);c.push({id:'part',emoji:'👨‍👩‍👧',title:'Share it: pay 40%',detail:'Contribute '+money(Math.round(e.amount*0.4))+' from savings; siblings and relatives cover the rest.'});return c;},
   resolve:(e,c)=>{if(c==='part'){const amt=Math.round(e.amount*0.4),r=fundExpense(amt,'savings');return{text:r.text,feedback:r.borrowed>0?fb('risky','Sharing the cost helped, but '+money(r.borrowed)+' still became debt.'):fb('solid','Sharing the bill kept your own finances steady while still helping.')};}return fundExpense(e.amount,c);}},
  /* ---- life stages: scheduled by lifeEventDue(), never drawn at random ---- */
  marriageQ:{kicker:'LIFE PLANS',art:'💭',life:true,titles:['Marriage: someday, or never?','Your aunt at a wedding: “Beta, when is yours?”','The family WhatsApp group wants to know your “plans”.'],
   create:s=>{const second=s.life.marriagePlan==='unsure';return{second,description:second?'You said “not sure” a few years ago. The relatives have not forgotten. Do you see a wedding in your future?':'No pressure (okay, some pressure). Your answer shapes how life unfolds; the costs come only if and when it happens.',foot:'A personal choice. The game models costs, not what is right for you.'};},
-  choices:e=>{const c=[{id:'yes',emoji:'💍',title:'Yes, someday',detail:e.second?'A wedding in the next 1 to 3 years. Wedding costs and a spouse’s living costs come then.':'A wedding happens somewhere between 25 and 33. Costs come then.'}];
+  choices:e=>{const c=[{id:'yes',emoji:'💍',title:'Yes, someday',detail:e.second?'A wedding in the next 1 to 3 years. Wedding costs and a spouse’s living costs come then.':'A wedding happens somewhere between 25 and 33. Even a simple one costs about '+money(priced(A.weddingCost.modest))+' in today’s money.'}];
    if(!e.second)c.push({id:'unsure',emoji:'🤷',title:'Not sure yet',detail:'Nothing changes now. You will be asked again around 28 to 30.'});
    c.push({id:'no',emoji:'🧘',title:'Happily single',detail:'No wedding costs. Single life has its own costs and freedoms.'});return c;},
   resolve:(e,c)=>{const s=state,L=A.life;
@@ -1408,20 +1410,21 @@ const EVENTS={
    if(c==='unsure'){s.life.marriagePlan='unsure';s.life.reaskMonth=monthAtAge(L.reaskAge[0])+randInt(0,(L.reaskAge[1]-L.reaskAge[0])*12);return{text:'You said “let’s see”. The relatives will ask again.',feedback:fb('solid','Keeping your options open is fine. Big life choices deserve time.')};}
    s.life.marriagePlan='yes';const lo=e.second?s.month+12:Math.max(s.month+6,monthAtAge(L.weddingAge[0])),hi=e.second?s.month+36:monthAtAge(L.weddingAge[1]);
    s.life.weddingMonth=Math.min(randInt(lo,Math.max(lo,hi)),monthAtAge(L.maxMarriageAge));
-   return{text:'Wedding plans: someday. A wedding fund might be a good idea.',feedback:fb('solid','Knowing a big expense is coming is the best time to start saving for it.')};}},
+   return{text:'Wedding plans: someday. Even a simple wedding costs about '+money(priced(A.weddingCost.modest))+' today. Start a wedding fund.',feedback:fb('solid','Knowing a big expense is coming is the best time to start saving for it.')};}},
  wedding:{kicker:'SHAADI TIME',art:'💞',life:true,titles:['You found your person. Wedding time!','The families have met. The caterer is (almost) booked.'],snapshot:true,
-  create:s=>({big:Math.max(priced(60000),Math.round(s.salary*3)),modest:Math.max(priced(30000),Math.round(s.salary*1.25)),monthly:priced(A.householdMonthly),canWait:s.month+12<=monthAtAge(A.life.maxMarriageAge),
+  create:s=>({modest:priced(A.weddingCost.modest),big:priced(A.weddingCost.big),lavish:priced(A.weddingCost.lavish),monthly:priced(A.householdMonthly),canWait:s.month+12<=monthAtAge(A.life.maxMarriageAge),
    description:'A wedding costs money up front. Your spouse does not earn in this game, so their living costs join your budget and your health cover becomes a family policy.',foot:'The game models costs, not whether this is right for you.'}),
-  choices:(e,s)=>{const c=[{id:'big',emoji:'🎊',title:'Big fat wedding',detail:money(e.big)+' once + '+money(e.monthly)+'/month for your spouse’s living costs.'+(s.cash<e.big?' Savings fall short; the rest becomes debt.':'')},{id:'modest',emoji:'💐',title:'Keep it intimate',detail:money(e.modest)+' once + '+money(e.monthly)+'/month for your spouse’s living costs.'+(s.cash<e.modest?' Savings fall short; the rest becomes debt.':'')}];
+  choices:(e,s)=>{const d=a=>money(a)+' once + '+money(e.monthly)+'/month for your spouse’s living costs.'+(s.cash+s.invested<a?' Savings fall short; the rest becomes debt.':'');
+   const c=[{id:'modest',emoji:'💐',title:'Simple wedding',detail:d(e.modest)},{id:'big',emoji:'🎊',title:'Proper big wedding',detail:d(e.big)},{id:'lavish',emoji:'👑',title:'Lavish, destination wedding',detail:d(e.lavish)}];
    if(e.canWait)c.push({id:'wait',emoji:'⏳',title:'Push it by a year',detail:'No new costs now. The wedding moves a year later.'});return c;},
   resolve:(e,c)=>{const s=state;if(c==='wait'){s.life.weddingMonth=s.month+12;return{text:'Wedding postponed by a year. The caterer is not thrilled.',feedback:fb('solid','More time to save for it. Waiting keeps your current budget unchanged.')};}
-   const cost=c==='big'?e.big:e.modest,r=fundExpense(cost,'savings',true);
+   const cost=e[c],r=fundExpense(cost,'savings',true);
    s.married=true;s.marriageMonth=s.month;s.costs.household=A.householdMonthly;s.life.kidsAskMonth=s.month+randInt(A.life.kidsAskAfter[0],A.life.kidsAskAfter[1]);
-   record('Married at '+ageLabel()+' ('+(c==='big'?'big fat wedding':'intimate wedding')+').',{major:true,kind:'family'});
+   record('Married at '+ageLabel()+' ('+({modest:'simple wedding',big:'big wedding',lavish:'lavish wedding'}[c])+').',{major:true,kind:'family'});
    celebrate('wedding','💞','Just married!','Family costs start next month');
    const left=monthlyBudget(s).leftover;
    return{text:'You got married! The wedding cost '+money(cost)+(r.borrowed?', '+money(r.borrowed)+' of it as debt':'')+'; your spouse’s living costs add '+money(e.monthly)+' a month.'+(s.insured?' Your health cover still covers only you: renew it as family cover.':''),
-    feedback:r.borrowed>0?fb('risky','Part of the wedding became debt at 1% a month, which follows you into married life.'):left<monthlyIncome(s)*0.1?fb('risky','Your new monthly costs leave very little left over, so surprises will be harder to absorb.'):c==='big'?fb('solid','A memorable start you could afford. It used savings that could otherwise have kept growing.'):fb('great','An intimate celebration kept more of your savings for the life you are building together.')};}},
+    feedback:r.borrowed>0?fb('risky','Part of the wedding became debt at 1% a month, which follows you into married life.'):left<monthlyIncome(s)*0.1?fb('risky','Your new monthly costs leave very little left over, so surprises will be harder to absorb.'):c!=='modest'?fb('solid','A memorable start you could afford. It used savings that could otherwise have kept growing.'):fb('great','An intimate celebration kept more of your savings for the life you are building together.')};}},
  kidsQ:{kicker:'BABY TALK',art:'🍼',life:true,titles:['Kids: how many?','Your parents keep dropping “grandchild” hints.','Your friends’ babies are all over your feed.'],snapshot:true,
   create:()=>({monthly:priced(9000),description:'Each child costs about '+money(priced(9000))+' a month (rising with inflation) until 21, plus a hospital bill at birth and school fees from age 4.',foot:'A personal choice. Costs are illustrative.'}),
   choices:(e,s)=>{const left=monthlyBudget(s).leftover;return[{id:'k0',emoji:'🛋️',title:'No kids',detail:'More freedom, fewer school runs.'},{id:'k1',emoji:'👶',title:'One child',detail:'About '+money(e.monthly)+'/month after the birth. Left over: '+money(left)+' → about '+money(left-e.monthly)+'.'},{id:'k2',emoji:'👨‍👩‍👧‍👦',title:'Two children',detail:'The second arrives 2 to 4 years after the first. Births happen only up to age 40.'}];},
@@ -1429,7 +1432,7 @@ const EVENTS={
    record(n?'Planned '+(n===1?'one child':'two children')+' at '+ageLabel()+'.':'Decided on no kids at '+ageLabel()+'.',{kind:'family'});
    return{text:n?'Baby plans: '+n+'. The countdown begins.':'No kids. More naps.',feedback:fb('solid',n?'Kids are a long, joyful commitment. Building a cushion before they arrive helps a lot.':'A personal choice. Fewer recurring costs leave more room to save and to live.')};}},
  birth:{kicker:'IT’S TIME!',art:'👶',life:true,titles:['The baby is coming! Hospital, now!','Bag packed? Almost. The baby is on the way!'],snapshot:true,
-  create:s=>{const n=s.children.length,cov=s.insured&&s.coverFamily?1-A.healthCover.coveredShare:1,bigTotal=priced(90000),smallTotal=priced(15000);
+  create:s=>{const n=s.children.length,cov=s.insured&&s.coverFamily?1-A.healthCover.coveredShare:1,bigTotal=priced(A.birthCost.private),smallTotal=priced(A.birthCost.gov);
    return{n,big:Math.round(bigTotal*cov),small:Math.round(smallTotal*cov),description:(n?'Baby number two is on the way!':'Your first baby is on the way!')+(s.insured&&s.coverFamily?' Your family health cover pays 65% of the hospital bill.':' Without health cover, the hospital bill is all yours.')+' Then about '+money(priced(n?7000:9000))+' a month until they turn 21.',foot:'A new life, a new budget line.'};},
   choices:e=>[{id:'bigHospital',emoji:'🏥',title:'Private hospital, private room',detail:'Your share: '+spendDetail(e.big)},{id:'govHospital',emoji:'🩺',title:'Government hospital',detail:'Your share: '+spendDetail(e.small)}],
   resolve:(e,c)=>{const s=state,amt=c==='bigHospital'?e.big:e.small,r=fundExpense(amt,'savings');
@@ -1678,7 +1681,7 @@ Object.assign(EVENTS,{
  /* ---- big shocks: only through the two-per-life schedule (A.bigShocks) ---- */
  illness:{kicker:'BIG SHOCK',art:'🏥',titles:['A serious illness. Surgery and weeks in hospital.','The doctor’s report is not good news. Treatment starts now.'],snapshot:true,severe:true,forced:true,
   eligible:s=>preciseAge(s)<60,
-  create:s=>{const total=priced(randInt(3,8)*100000),amount=s.insured?Math.round(total*(1-A.healthCover.coveredShare)):total,off=s.employment==='employed'?3:0;
+  create:s=>{const total=priced(randInt(5,15)*100000),amount=s.insured?Math.round(total*(1-A.healthCover.coveredShare)):total,off=s.employment==='employed'?3:0;
    return{total,amount,off,description:'Treatment costs '+money(total)+(s.insured?'. Health cover pays 65%: your share is '+money(amount)+'.':'. With no health cover, all of it is yours.')+(off?' No salary for 3 months.':''),foot:'Rare, huge and unplanned: what health cover and a cushion are for.'};},
   choices:e=>fundingChoices(e.amount),
   resolve:(e,c)=>{const s=state;if(s.insured)s.stats.claims+=e.total-e.amount;const r=fundExpense(e.amount,c);
@@ -2994,7 +2997,7 @@ function renderAbout(){
   ['Happiness','Built from three parts of life: 🧍 time for yourself, 👨‍👩‍👧 family and friends, and 🏘️ community. Each part drifts 4% a month toward a level set by how you live: lifestyle, savings cushion, debt, home, ride, marriage, kids, pets, parents, work pace and life stage. The mix is 60% the weakest part plus 40% the average, stretched onto 0 to 100: a typical start shows about 50, a well-balanced life 75 or more. Tap ❤️ to see each part and what moves the weakest one. Choices add bumps that fade over time. Choices don’t show their effect up front; after you pick, you see it (❤️+ to ❤️+++ up, 💔− to 💔−−− down)'],
   ['Money check','If expenses are above take-home pay for 2 months in a row, the race stops: trim, cut to basics, choose in More → Monthly plan, or keep going (at most once a year)'],
   ['Job loss','Severance, then a job search of 6 to 18 months (a little longer after 45), or a lower-paid role at once (−25%). With no salary you choose how to live: cut to basics, trim, or keep going. Back at work, you choose whether to return to your old lifestyle. A 2-starter flat is too small once you have two kids'],
-  ['Big shocks','Every life gets at least two big money shocks before 60, years apart: a long layoff, an accident, a serious illness, a flood or a parent’s hospital stay. They test your cushion, health cover and term cover'],
+  ['Big shocks','Every life gets at least two big money shocks before 60, years apart: a long layoff, an accident, a serious illness (₹5–15 lakh), a flood (₹2–5 lakh) or a parent’s hospital stay (₹1.5–5 lakh). They test your cushion, health cover and term cover'],
   ['Lifestyle creep','When your take-home pay is 1.8 times what it was when you last set your lifestyle, friends expect you to upgrade (at most every 3 years)'],
   ['Good surprises','Windfalls, awards, and tough calls: a big weekend gig on the same day as your child’s annual day or a friend’s wedding'],
   ['Lifetime happiness','Your happiness averaged over every month from 23 to 80. Months you never reach count as zero. Your ending combines it with your net worth in today’s money (₹1 crore or more counts as rich). Your best lifetime happiness is saved in this browser'],
@@ -3025,8 +3028,8 @@ function renderAbout(){
   ['Lessons','A mistake shows as 📘 Lesson learnt, with one line to remember. The first time a SIP is offered, a short “What’s a SIP?” tip explains it once.'],
   ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s. Divorce is rare'],
-  ['Family','Your spouse does not earn: their living costs are ₹9,000/month. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,000, private ₹6,000, international ₹20,000 a month. A pet adds ₹2,500/month. All at age-23 prices'],
-  ['Health cover','Chosen at the start, offered as a card in month 2, in ads, or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone on the policy. It never renews by itself: at a pit stop about every 5 years you renew it or let it lapse. After you marry or have a child, you are asked once to renew it as family cover; until then your spouse and kids are not covered. More → Monthly power-ups shows what you have'],
+  ['Family','A wedding costs ₹10 lakh (simple), ₹20 lakh (big) or ₹40 lakh (lavish). Your spouse does not earn: their living costs are ₹9,000/month. A birth costs ₹1.5 lakh in a private hospital or ₹20,000 in a government one. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,500, budget private ₹10,000 (about ₹1.2 lakh a year), private ₹29,000 (about ₹3.5 lakh a year), international ₹75,000 a month, plus admission. A pet adds ₹2,500/month. All at age-23 prices that rise 6% a year'],
+  ['Health cover','Chosen at the start, offered as a card in month 2, in ads, or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹5,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone on the policy. It never renews by itself: at a pit stop about every 5 years you renew it or let it lapse. After you marry or have a child, you are asked once to renew it as family cover; until then your spouse and kids are not covered. More → Monthly power-ups shows what you have'],
   ['Insurance ads','Some insurance ads offer what you are missing (health, term or parents’ cover). Others sell a “3-in-1” plan: about 4.5% a year, 10 years of premiums, paid out after 15; surrendering early returns 30%'],
   ['Lump sum','More → One-time: invest your idle cash (above 6 months), a quarter, half or all of your savings at once'],
   ['Term cover','₹1 crore cover (today’s money) until 65 with a disability benefit of 20% if an accident stops you working. ₹800/month at 23, about 4.5% more for every year older you buy it; the premium is locked when bought. You never die in this game'],['Home upgrade','Unlocks at age 26 with 2 Career XP: ₹18,000 once + ₹8,000/month'],
