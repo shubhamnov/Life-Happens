@@ -698,7 +698,7 @@ const A=Object.freeze({
  debtMinRate:0.03,debtMinFloor:2000,             // minimum repayment: the larger of 3% of balance or ₹2,000 (inflation-indexed)
  vehicleLoanMonthlyRate:0.01,vehicleLoanTerm:36,
  vehicleResaleShare:0.8,       // selling a financed vehicle: resale repays 80% of the outstanding loan, the rest becomes unsecured debt
- house:{basePrice:3500000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,appreciation:0.05,sellCostShare:0.03},  // price and upkeep per home type: BASE_PRICES.house
+ house:{basePrice:6000000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,appreciation:0.05,sellCostShare:0.03},  // price and upkeep per home type: BASE_PRICES.house
  maxEmiShare:0.5,              // a bank approves a new loan only if all EMIs stay within 50% of take-home pay
  sipOptions:[0,2000,5000,10000,25000,50000],sipMin:500,sipMax:1000000,
  failureMonths:6,              // six consecutive strained months end the run (see settleMonth)
@@ -754,6 +754,8 @@ const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years ela
  home:{starter:{label:'Starter Nest',emoji:'🛏️',cost:8000},comfort:{label:'Comfort Zone',emoji:'🛋️',cost:14000},premium:{label:'Main Character',emoji:'🏙️',cost:22000}},
  food:{home:{label:'Mostly home',emoji:'🍲',cost:3500},balanced:{label:'A bit of both',emoji:'🍱',cost:6000},foodie:{label:'Foodie life',emoji:'🍕',cost:10000}},
  social:{quiet:{label:'Quiet weekends',emoji:'📚',cost:1500},regular:{label:'Regular outings',emoji:'🎳',cost:4000},big:{label:'Big weekends',emoji:'🪩',cost:8000}},
+ // Holidays: a monthly travel fund per traveller (you, a spouse, each child at 60%); a trip happens every year.
+ travel:{none:{label:'Stay home',emoji:'🛋️',cost:0},weekend:{label:'Weekend getaways',emoji:'🏞️',cost:3000},india:{label:'A big India trip a year',emoji:'🚆',cost:6000},abroad:{label:'Abroad every year',emoji:'✈️',cost:15000}},
  other:{none:{label:'None',emoji:'➖',cost:0},small:{label:'Small extra',emoji:'🎧',cost:2000},regular:{label:'Regular extra',emoji:'🏋️',cost:5000},big:{label:'Big extra',emoji:'🎮',cost:10000}},
  // running = passes, fares or upkeep (service, insurance); fuel is its own line for your own vehicle.
  commute:{public:{label:'Bus / Metro',emoji:'🚇',running:1500,fuel:0,loan:0},bike:{label:'Two-wheeler',emoji:'🛵',running:800,fuel:2500,loan:100000},car:{label:'Car',emoji:'🚗',running:3000,fuel:8000,loan:600000},cabs:{label:'Cabs',emoji:'🚕',running:7000,fuel:0,loan:0}},
@@ -800,14 +802,14 @@ let runCounter=0;
 function createState(){
  return {
   runId:++runCounter,status:'intro',seed:0,month:0,
-  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes',name:'',city:'',cityArt:'',job:''},
+  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',travel:'none',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes',name:'',city:'',cityArt:'',job:''},
   salary:45000,career:0,jobStartMonth:1,lastPromotionYear:0,promotions:0,
   employment:'employed',           // employed | laidoff | retired ("laidoff" also covers accident recovery; see breakReason)
   laidOffMonthsLeft:0,breakReason:'',lastLayoffMonth:-999,retiredAtAge:null,retirePromptShown:false,startupUntil:0,
   cash:0,invested:0,unsecuredDebt:0,sip:0,
   vehicle:'public',transit:'bus',vehicleLoan:null,eduLoan:null,   // loans: {kind,principal,balance,emi,monthsLeft,rate}
   ownsHome:false,homeValue:0,homeLoan:null,
-  costs:{housing:0,food:0,social:0,other:0,commute:0,fuel:0,household:0,homeUpgrade:0,pet:0,parents:0}, // base-year (age-23) rupees
+  costs:{housing:0,food:0,social:0,travel:0,other:0,commute:0,fuel:0,household:0,homeUpgrade:0,pet:0,parents:0}, // base-year (age-23) rupees
   children:[],married:false,marriageMonth:0,
   // Life-stage plan: marriage question → wedding → kids question → births → school → parents.
   life:{marriagePlan:'unasked',askMonth:0,reaskMonth:0,weddingMonth:0,kidsPlan:-1,kidsAskMonth:0,nextBirthMonth:0,parentsMonth:0,parentsDone:false,divorced:false},
@@ -817,7 +819,7 @@ function createState(){
   event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,seen:{},
   feedback:null,message:'',story:'',milestone:'',celebration:null,celebSeq:0,
   history:[],
-  stats:{savingsInterest:0,shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,taxPaid:0,insurancePaid:0,claims:0,lessons:0,listened:0},
+  stats:{savingsInterest:0,shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,trips:0,taxPaid:0,insurancePaid:0,claims:0,lessons:0,listened:0},
   lastSettlement:null,finalReason:'',
   // Life rings and score (section 5b). homeType/carModel pick the big-buy variant.
   rings:Object.assign({},A.rings.start),ringSum:{me:0,fam:0,com:0},ringMonths:0,score:0,pace:'balanced',
@@ -880,6 +882,9 @@ function totalDebt(s=state){return s.unsecuredDebt+sum(LOANS.map(([k])=>s[k]?s[k
 function netWorth(s=state){return s.cash+s.invested+(s.ownsHome?s.homeValue:0)+(s.policy?s.policy.value:0)-totalDebt(s);}
 function activeSip(s=state){return s.employment==='employed'?s.sip:0;}
 function severanceMonths(s=state){const yrs=Math.max(0,Math.floor((s.month-s.jobStartMonth)/12));return {years:yrs,months:Math.min(A.severanceCapMonths,A.noticeMonths+A.severancePerYear*yrs)};}
+// People who travel with you: a spouse counts fully, each child at home 60%.
+function travellers(s=state){return 1+(s.married?1:0)+0.6*activeChildren(s).length;}
+function travellerLabel(s=state){const k=activeChildren(s).length;return ['you',s.married?'spouse':'',k?k+(k>1?' kids':' kid'):''].filter(Boolean).join(' + ');}
 function houseSpec(type){return BASE_PRICES.house[type]||BASE_PRICES.house.society;}
 function housePrice(s=state,type='society'){return priced(A.house.basePrice*houseSpec(type).price,s);}
 function houseUpfront(s=state,type='society'){return Math.round(housePrice(s,type)*(A.house.downShare+A.house.feesShare));}
@@ -898,6 +903,7 @@ function monthlyBudget(s=state){
  else add('housing','Rent',priced(s.costs.housing,s),'living');
  add('food','Groceries & food',priced(s.costs.food,s),'living');
  add('social','Social & lifestyle',priced(s.costs.social,s),'living');
+ add('travel','Holiday fund'+(travellers(s)>1?' ('+travellerLabel(s)+')':''),Math.round(priced(s.costs.travel||0,s)*travellers(s)),'living');
  add('commute',s.vehicle==='public'?(s.transit==='metro'?'Metro':'Bus')+' pass':s.vehicle==='cabs'?'Cab fares':vehicleLabel(s)+' upkeep',priced(s.costs.commute,s),'living');
  add('fuel','Fuel',priced(s.costs.fuel,s),'living');
  add('other','Other recurring',priced(s.costs.other,s),'living');
@@ -976,6 +982,7 @@ const LIFESTYLE_RINGS={
  food:{home:[0,0,0],balanced:[5,0,0],foodie:[8,0,0]},
  other:{none:[0,0,0],small:[3,0,0],regular:[5,0,0],big:[7,0,0]},
  social:{quiet:[0,0,0],regular:[2,10,4],big:[4,14,6]},
+ travel:{none:[0,0,0],weekend:[4,4,1],india:[6,6,2],abroad:[8,6,0]},
  home:{starter:[0,0,3],comfort:[5,0,2],premium:[9,0,0]},
  ride:{public:[0,0,2],bike:[2,0,0],cabs:[5,0,0]},
  pace:{hustle:[-8,-12,-6],balanced:[0,0,0],chill:[6,8,5]},
@@ -987,6 +994,7 @@ function ringDrivers(s=state){
  add('Food: '+BASE_PRICES.food[s.profile.food].label.toLowerCase(),L.food[s.profile.food]);
  add('Extras: '+BASE_PRICES.other[s.profile.other||'none'].label.toLowerCase(),L.other[s.profile.other||'none']);
  add('Social life: '+BASE_PRICES.social[s.profile.social].label.toLowerCase(),L.social[s.profile.social]);
+ add('Holidays: '+BASE_PRICES.travel[s.profile.travel||'none'].label.toLowerCase(),L.travel[s.profile.travel||'none']);
  if(s.ownsHome)add('Your '+houseSpec(s.homeType).label.toLowerCase(),houseSpec(s.homeType).rings);
  else{add('Renting: '+BASE_PRICES.home[s.profile.home].label,L.home[s.profile.home]);if(s.homeUpgraded)add('Home upgrade',[4,0,0]);}
  add(s.vehicle==='public'?'Bus and Metro rides':vehicleLabel(s),s.vehicle==='car'?rideSpec('car',s.carModel).rings:L.ride[s.vehicle]);
@@ -1635,18 +1643,18 @@ Object.assign(EVENTS,{
    return{text:'Scrolled past.',feedback:fb('great','Keeping insurance and investing separate is the cheaper, better deal.')};}}
 });
 /* ---------- Lifestyle decisions: cut back when money is short, go back when it returns ---------- */
-const STEP_DOWN={food:{foodie:'balanced',balanced:'home',home:'home'},social:{big:'regular',regular:'quiet',quiet:'quiet'},home:{premium:'comfort',comfort:'starter',starter:'starter'}};
+const STEP_DOWN={food:{foodie:'balanced',balanced:'home',home:'home'},social:{big:'regular',regular:'quiet',quiet:'quiet'},travel:{abroad:'india',india:'weekend',weekend:'none',none:'none'},home:{premium:'comfort',comfort:'starter',starter:'starter'}};
 // level 'basics': the cheapest life that fits your family; 'trim': one step down on food and weekends, no extras.
 function cutPlan(s,level){
  const p=s.profile,kids=activeChildren(s).length,want={other:'none'};
- if(level==='basics'){want.food='home';want.social='quiet';if(!s.ownsHome)want.home=kids>=2?(p.home==='premium'?'comfort':p.home):'starter';}
- else{want.food=STEP_DOWN.food[p.food];want.social=STEP_DOWN.social[p.social];}
- const changes=['home','food','social','other'].filter(k=>want[k]&&want[k]!==(p[k]||'none')).map(k=>[k,want[k]]);
+ if(level==='basics'){want.food='home';want.social='quiet';want.travel='none';if(!s.ownsHome)want.home=kids>=2?(p.home==='premium'?'comfort':p.home):'starter';}
+ else{want.food=STEP_DOWN.food[p.food];want.social=STEP_DOWN.social[p.social];want.travel=STEP_DOWN.travel[p.travel||'none'];}
+ const changes=['home','food','social','travel','other'].filter(k=>want[k]&&want[k]!==(p[k]||'none')).map(k=>[k,want[k]]);
  const copy=JSON.parse(JSON.stringify(s));changes.forEach(([k,v])=>applyExpenseTo(copy,k,v));
- const P=BASE_PRICES,names={home:v=>P.home[v].label,food:v=>P.food[v].label.toLowerCase(),social:v=>P.social[v].label.toLowerCase(),other:()=>'no extras'};
+ const P=BASE_PRICES,names={home:v=>P.home[v].label,food:v=>P.food[v].label.toLowerCase(),social:v=>P.social[v].label.toLowerCase(),travel:v=>v==='none'?'no holidays':P.travel[v].label.toLowerCase(),other:()=>'no extras'};
  return{changes,saving:monthlyBudget(s).total-monthlyBudget(copy).total,label:changes.map(([k,v])=>names[k](v)).join(', ')};
 }
-function applyCut(s,plan){if(!s.lifestyleSaved)s.lifestyleSaved={home:s.profile.home,food:s.profile.food,social:s.profile.social,other:s.profile.other||'none'};plan.changes.forEach(([k,v])=>applyExpenseTo(s,k,v));record('Cut back at '+ageLabel()+': '+plan.label+' (saves '+money(plan.saving)+'/month).',{major:true,kind:'budget'});}
+function applyCut(s,plan){if(!s.lifestyleSaved)s.lifestyleSaved={home:s.profile.home,food:s.profile.food,social:s.profile.social,travel:s.profile.travel||'none',other:s.profile.other||'none'};plan.changes.forEach(([k,v])=>applyExpenseTo(s,k,v));record('Cut back at '+ageLabel()+': '+plan.label+' (saves '+money(plan.saving)+'/month).',{major:true,kind:'budget'});}
 function cutChoices(e,keepDetail){const c=[];
  if(e.trim.changes.length)c.push({id:'trim',emoji:'✂️',title:'Trim: '+e.trim.label,detail:'Saves '+money(e.trim.saving)+' a month.'});
  if(e.basics.changes.length&&e.basics.saving>e.trim.saving)c.push({id:'basics',emoji:'🧺',title:'Cut to basics: '+e.basics.label,detail:'Saves '+money(e.basics.saving)+' a month.'});
@@ -1841,7 +1849,7 @@ function beginLife(profile){
  Object.assign(s.profile,profile||{});
  const p=s.profile,ride=BASE_PRICES.commute[p.commute],edu=p.eduLoan==='yes';
  s.status='playing';s.month=1;s.salary=Math.round(Number(p.salary)*(edu?1+A.eduLoan.salaryBoost:1));s.jobStartMonth=1;
- s.costs.housing=BASE_PRICES.home[p.home].cost;s.costs.food=BASE_PRICES.food[p.food].cost;s.costs.social=BASE_PRICES.social[p.social].cost;s.costs.other=BASE_PRICES.other[p.other||'none'].cost;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;
+ s.costs.housing=BASE_PRICES.home[p.home].cost;s.costs.food=BASE_PRICES.food[p.food].cost;s.costs.social=BASE_PRICES.social[p.social].cost;s.costs.other=BASE_PRICES.other[p.other||'none'].cost;s.costs.travel=BASE_PRICES.travel[p.travel||'none'].cost;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;
  s.vehicle=p.commute;s.transit=s.seed%2?'metro':'bus';
  if(ride.loan)s.vehicleLoan=makeLoan(p.commute,ride.loan);
  if(edu)s.eduLoan=makeLoan('edu',A.eduLoan.principal);
@@ -1887,6 +1895,16 @@ function yearlyRaise(s){
  if(tax>0&&!s.taxpayer){s.taxpayer=true;record('Started paying income tax at '+ageLabel(s)+' ('+money(tax)+'/month).',{kind:'tax'});if(!promoted)celebrate('tax','🧾','Taxpayer unlocked!','Income tax: '+compact(tax)+'/month');}
 }
 // One simulated month. Order: year rollover → review → IOUs → settle → layoff countdown → end checks → events.
+// The holiday fund pays for a trip once a year (month 6 of each game year), unless bills are going unpaid.
+const TRIPS={weekend:[['🏞️','Weekend trips: Lonavala, Coorg and Pondicherry'],['⛰️','Long weekends in Rishikesh and Mussoorie'],['🏖️','Weekend escapes to Gokarna and Alibaug'],['🏰','Road trips to Jaipur and Udaipur']],
+ india:[['🛶','Two weeks in the Kerala backwaters'],['🏔️','A Ladakh road trip'],['🐠','Island hopping in the Andamans'],['🐪','A Rajasthan circuit'],['🍵','Sikkim and Darjeeling']],
+ abroad:[['🌴','A week in Bali'],['🏙️','Dubai and Abu Dhabi'],['🛕','Thailand and Vietnam'],['🗼','A Europe tour'],['🗾','Cherry blossoms in Japan'],['🦘','Australia']]};
+function yearlyTrip(s){
+ const kind=s.profile.travel||'none';if(kind==='none'||s.month%12!==6||s.distressMonths>0)return;
+ const [emoji,where]=pick(TRIPS[kind]),who=activeChildren(s).length?' with the family':s.married?' with your spouse':'';
+ s.stats.trips+=1;record(emoji+' '+where+who+' at '+ageLabel(s)+'.',{kind:'travel'});celebrate('trip',emoji,'Holiday time!',where);
+ applyRingFx(s,{me:3,fam:travellers(s)>1?3:1,com:0});
+}
 function advanceMonth(){
  const s=state;if(s.status!=='playing'||blockingEvent(s))return false;
  s.month+=1;s.milestone='';s.story='';
@@ -1910,6 +1928,7 @@ function advanceMonth(){
  settlePace(s);
  tickRings(s);
  s.message=settlementMessage(o);
+ yearlyTrip(s);
  if(o.loanPaidOff)celebrate('loan','🎉',o.loanPaidOff+' loan cleared!','No more '+o.loanPaidOff.toLowerCase()+' EMI');
  if(s.employment==='laidoff'){s.laidOffMonthsLeft-=1;if(s.laidOffMonthsLeft<=0){const reason=s.breakReason,healed=reason==='recovery';s.employment='employed';s.laidOffMonthsLeft=0;s.breakReason='';if(!healed&&reason!=='break')s.jobStartMonth=s.month+1;s.pendingTighten=false;if(s.lifestyleSaved)s.pendingRestore=true;
   if(reason==='break'){s.story='Recharged and back at work. Salary of '+money(s.salary)+' resumes next month.';celebrate('job','🔋','Recharged!','Salary resumes next month');}
@@ -2011,6 +2030,17 @@ const OPTIONAL={
  familyDay:ringAction({id:'familyDay',name:'A day with your people',emoji:'🧺',color:'c-mint',price:6000,rings:[2,8,0],
   describe:s=>'A picnic, a movie or a long lunch with '+(s.married||activeChildren(s).length?'your family':'friends')+'. Once a year. Family & Friends +8, Me +2.',
   done:s=>({text:'A lovely day out with '+(s.married||activeChildren(s).length?'the family':'friends')+'.',feedback:fb('great','Showing up beats sending gifts. Small, regular time together keeps the ring full.')})}),
+ dreamTrip:{tab:'one-time',name:'Plan a dream trip',emoji:'🧳',color:'c-blue',kicker:'TRAVEL',okLabel:'Book it',
+  lead:'A big trip paid from savings, priced for everyone who comes along. Once a year. Booking on credit is not an option: save up first.',
+  variants:s=>[['hills','🏞️','A week in the hills',20000,'Shimla, Munnar or Coorg.'],['india','🚆','Two weeks across India',60000,'Kerala, Ladakh or the Andamans.'],['abroad','🌴','Abroad: Bali, Dubai or Thailand',150000,'Flights, hotels and a lot of photos.'],['bucket','🗼','Bucket list: Europe or Japan',350000,'The trip you will talk about for years.']]
+   .map(([id,emoji,label,base,blurb])=>{const price=Math.round(priced(base,s)*travellers(s));return{id,emoji,label,blurb,price,note:money(price)+(travellers(s)>1?' for '+travellerLabel(s):''),block:price>s.cash?'Needs '+money(price)+' in savings.':null};}),
+  cost:(s,v)=>{const x=v&&OPTIONAL.dreamTrip.variants(s).find(y=>y.id===v);return x?x.price:0;},monthly:()=>0,
+  available:s=>{const used=s.lastUsed.dreamTrip;return used&&s.month-used<12?'Back from your last trip. Again in '+(12-(s.month-used))+' month'+(12-(s.month-used)===1?'':'s')+'.':null;},
+  describe:(s,v)=>{const x=OPTIONAL.dreamTrip.variants(s).find(y=>y.id===v);return x?x.label+': '+money(x.price)+' from savings.':'Pick a trip.';},
+  apply:(s,v,amount)=>{const x=OPTIONAL.dreamTrip.variants(s).find(y=>y.id===v),big={hills:[3,4,0],india:[5,7,1],abroad:[7,7,0],bucket:[9,8,0]}[v];s.lastUsed.dreamTrip=s.month;s.stats.fun+=amount;s.stats.trips+=1;
+   record(x.emoji+' '+x.label+' at '+ageLabel(s)+' ('+money(amount)+').',{major:v==='bucket',kind:'travel'});celebrate('trip',x.emoji,'Bon voyage!',x.label);
+   const fx=applyRingFx(s,{me:big[0],fam:travellers(s)>1?big[1]:Math.round(big[1]/2),com:big[2]});
+   return{text:'Trip booked: '+x.label.toLowerCase()+' for '+money(amount)+'.',rings:fx,feedback:monthsOfCushion(s)<3?fb('risky','Great memories, but your savings cushion is now under three months.'):fb('great','Paid from savings, with your cushion intact. Experiences tend to make people happier than things.')};}},
  volunteer:ringAction({id:'volunteer',name:'Volunteer for a weekend',emoji:'🙋',color:'c-sage',price:0,rings:[2,-1,8],
   describe:()=>'Teach at a shelter, clean a lake, run the colony sports day. Costs a weekend, not money. Once a year. Community +8.',
   done:()=>({text:'You gave a weekend to your community.',feedback:fb('great','Free, and it fills the Community ring. Time can be worth more than money.')})}),
@@ -2194,6 +2224,7 @@ function applyExpenseTo(s,key,value,model){
  if(key==='home'){s.profile.home=value;s.costs.housing=BASE_PRICES.home[value].cost;}
  else if(key==='food'){s.profile.food=value;s.costs.food=BASE_PRICES.food[value].cost;}
  else if(key==='social'){s.profile.social=value;s.costs.social=BASE_PRICES.social[value].cost;}
+ else if(key==='travel'){s.profile.travel=value;s.costs.travel=BASE_PRICES.travel[value].cost;}
  else if(key==='other'){s.profile.other=value;s.costs.other=BASE_PRICES.other[value].cost;}
  else if(key==='commute'){const ride=rideSpec(value,model);if(s.vehicleLoan){s.unsecuredDebt+=Math.round(s.vehicleLoan.balance*(1-A.vehicleResaleShare));s.vehicleLoan=null;}s.vehicle=value;s.carModel=value==='car'?(model||'hatch'):'hatch';s.profile.commute=value;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;if(ride.loan)s.vehicleLoan=makeLoan(value,priced(ride.loan,s));}
  else if(key==='homeUpgrade'){s.homeUpgraded=false;s.costs.homeUpgrade=0;}
@@ -2205,7 +2236,7 @@ function applyExpenseTo(s,key,value,model){
 function applyExpenseChange(key,value){
  const s=state;if(expenseChangeBlocker(key,value))return null;
  const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldLabel=vehicleLabel(s),surrender=key==='policy'?Math.round(s.policy.value*0.3):0;applyExpenseTo(s,key,value);const after=monthlyBudget(s);
- const labels={home:'Rent',food:'Food',social:'Social life',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover',policy:'3-in-1 plan'};
+ const labels={home:'Rent',food:'Food',social:'Social life',travel:'Holidays',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover',policy:'3-in-1 plan'};
  let text=labels[key]+' updated. Monthly expenses '+money(before.total)+' → '+money(after.total)+'.';
  if(key==='commute'&&hadLoan&&!s.vehicleLoan){const left=Math.round(hadLoan*(1-A.vehicleResaleShare));text+=' Sold the '+oldLabel.toLowerCase()+': resale repaid '+money(hadLoan-left)+' of the loan; the remaining '+money(left)+' became unsecured debt.';record('Sold the '+oldLabel.toLowerCase()+' at '+ageLabel()+'; '+money(left)+' of the loan became debt.',{major:true,kind:'vehicle'});}
  if(key==='homeUpgrade')record('Moved out of the upgraded home at '+ageLabel()+'.',{kind:'home'});
@@ -2263,7 +2294,7 @@ function whatIfLessons(s=state){
  if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
  return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
 }
-window.__LH_MODEL={A,BASE_PRICES,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
+window.__LH_MODEL={A,BASE_PRICES,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
@@ -2668,11 +2699,12 @@ const WIZ=[
  {key:'home',emoji:'🏠',title:'Where do you live?',why:'Rent is your biggest monthly cost. A nicer place makes everyday life comfier (🧍 Me).',opts:()=>Object.entries(P.home).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.home[id]},
  {key:'food',emoji:'🍲',title:'How do you eat?',why:'Eating out is fun, and it costs more every single month.',opts:()=>Object.entries(P.food).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.food[id]},
  {key:'social',emoji:'🎳',title:'Your weekends?',why:'Going out with people fills 👨‍👩‍👧 Family & Friends and 🏘️ Community, the parts of happiness that drop first.',opts:()=>Object.entries(P.social).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.social[id]},
+ {key:'travel',emoji:'✈️',title:'Holidays?',why:'Trips fill 🧍 Me and 👨‍👩‍👧 Family & Friends. A holiday fund saves a little every month and pays for a trip each year. Family trips cost more: everyone needs a ticket.',opts:()=>Object.entries(P.travel).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:Math.round(o.cost*M.travellers())})),rings:id=>M.LIFESTYLE_RINGS.travel[id]},
  {key:'other',emoji:'🎧',title:'Anything extra?',why:'A gym, a hobby, subscriptions: small treats for 🧍 Me that add up.',opts:()=>Object.entries(P.other).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.other[id]},
  {key:'health',emoji:'🛡️',title:'Health cover?',why:'Pays 65% of hospital bills. You renew it yourself at pit stops; it never renews on its own.',opts:()=>[{id:'yes',emoji:'🛡️',label:'Yes, cover me',cost:A.healthCover.premium},{id:'no',emoji:'🎲',label:'Not now',cost:0}],rings:id=>id==='yes'?[2,0,0]:null}
 ];
 function wizBudget(p){const edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),take=salary-Math.round(M.annualTax(salary*12)/12);
- const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
+ const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.travel[p.travel||'none'].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
 // The same steps plan retirement spending (no health step; home only while renting), with how long the money lasts.
 function wizSteps(){return ui.wiz.mode==='retire'?WIZ.filter(w=>w.key!=='health'&&!(w.key==='home'&&S().ownsHome)):WIZ;}
 function retireBudget(){const s=S(),b=M.monthlyBudget(),assets=Math.max(0,s.cash+s.invested),yrs=assets/Math.max(1,b.total*12);return{cost:b.total,assets,yrs};}
@@ -2821,7 +2853,7 @@ function animateBalances(){
  Object.keys(vals).forEach(k=>{const card=document.querySelector('[data-finance-detail="'+k+'"]');card.querySelectorAll('.money-delta').forEach(n=>n.remove());const d=Math.round(vals[k]-prev[k]);if(!d)return;const tag=document.createElement('span');tag.className='money-delta '+((k==='debt'||k==='loans'?d<0:d>0)?'up':'down');tag.textContent=(d>0?'+':'−')+compact(Math.abs(d));tag.setAttribute('aria-hidden','true');card.appendChild(tag);});
 }
 function signed(v){return (v<0?'−':'+')+compact(Math.abs(v));}
-function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(o.lead)return 'Pick an amount';if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
+function optionalCost(id,o,s){const c=o.cost(s),m=o.monthly(s);if(id==='dreamTrip')return 'From '+compact(Math.min(...o.variants(s).map(v=>v.price)));if(o.lead)return 'Pick an amount';if(o.variants){const vs=o.variants(s),lo=vs.reduce((a,v)=>v.emi<a.emi?v:a,vs[0]);return id==='buyHouse'?'From '+compact(lo.upfront)+' down · EMI '+compact(lo.emi):'₹0 down · EMI from '+compact(lo.emi);}if(id==='buyBike'||id==='buyCar')return '₹0 down · '+signed(m)+'/mo';return (c?compact(c)+' once':'')+(c&&m?' + ':'')+(m?signed(m)+'/mo':'')||'Free';}
 const TAB_HINTS={'one-time':'Spend once. One power-up per month.','recurring':'Adds to every month’s costs. One power-up per month.','big':'Bought on a loan. Banks approve if all EMIs stay under 50% of your pay. One power-up per month.'};
 function renderOptional(){
  const s=S(),tab=ui.optionalTab;
@@ -2944,6 +2976,7 @@ function renderExpenses(){
  h+=group('home',s.ownsHome?'🏡 Home (you own it)':'🏠 Rent',s.ownsHome?'':s.profile.home,simple(P.home,s.ownsHome),s.ownsHome?'You own your home, so there is no rent. Sell it in Big buys to rent again.':'');
  h+=group('food','🍲 Groceries & food',s.profile.food,simple(P.food));
  h+=group('social','🎳 Social & lifestyle',s.profile.social,simple(P.social));
+ h+=group('travel','✈️ Holidays',s.profile.travel||'none',Object.entries(P.travel).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:o.cost?money(Math.round(o.cost*f*M.travellers()))+'/mo':'Free'})),'A monthly holiday fund that pays for a trip each year'+(M.travellers()>1?', for '+M.travellerLabel()+'.':'.')+' Big one-off trips are in Power-ups.');
  h+=group('other','🎧 Other recurring',s.profile.other||'none',simple(P.other),'A subscription, hobby, gym or another regular cost.');
  const loanNote=s.vehicleLoan?'Vehicle loan: '+money(s.vehicleLoan.balance)+' left, '+s.vehicleLoan.monthsLeft+' EMIs of '+money(s.vehicleLoan.emi)+'. Switching to transit or cabs sells the vehicle: resale repays 80% of the loan and the rest becomes debt.':'Two-wheelers and cars are bought on a loan in Power-ups → Big buys.';
  h+=group('commute','🚦 Commute',s.vehicle,Object.entries(P.commute).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:money(Math.round((o.running+o.fuel)*f))+'/mo'+(o.loan?' · Big buys':''),disabled:!!o.loan&&id!==s.vehicle})),loanNote);
@@ -3004,6 +3037,7 @@ function renderAbout(){
   ['Work pace','Set by your choices, never by a dial. A stretch project (2 years), weekend gigs (6 months), a startup (2 years) or weekend classes (1 year) put you in 🚀 Hustle mode: +1% on yearly raises and 1.5× promotion odds, but less happiness. Slowing down after burnout means 2 years of 🌿 Taking it easy: −1% raises, 0.6× promotion odds, more happiness. Then work settles back to normal. Slowing down for family when asked lowers promotion odds to 0.6× for 2 years'],
   ['Burnout','If your time for yourself stays very low (under 35) for 9 months while working, burnout hits: take a 2-month unpaid break, slow down for 2 years, or push through with a doctor’s bill'],
   ['Happiness power-ups','A day with your people (₹6,000), volunteering (free) and donating (₹10,000), at age-23 prices, in More → Power-ups. Each can be used once a year'],
+  ['Travel','Holidays are part of your Monthly Plan: stay home, weekend getaways (₹3,000/month), a big India trip a year (₹6,000) or abroad every year (₹15,000), per traveller (a spouse counts fully, each child 60%). The fund pays for a trip every year, shown on the race and in your journal. More → Power-ups → Plan a dream trip books a one-off trip from savings, once a year: hills ₹20K, India ₹60K, abroad ₹1.5L or a bucket-list trip ₹3.5L per person'],
   ['Start / finish','You start at 23 with a random life: name, city, job, salary (₹35K to ₹60K a month), maybe an education loan, a rented home and the bus or Metro. 🎲 New life rolls another. The race runs from age 23.0 to 80.0 (month 685), one month at a time'],['Pacing','About 0.45 seconds per month at 1× (1 year ≈ 5.4 s), so a whole life takes about 7 minutes with stops. Speeds 1×, 2× and 4×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
   ['Salary','Monthly pay before tax. First review at month 7 (+5%, +1% per Career XP). Then a yearly appraisal of 11% to 28, 8.5% to 35, 6.5% to 45 and 4.5% after that'],
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
@@ -3014,7 +3048,7 @@ function renderAbout(){
   ['Retirement plan','When you retire you set how you will live (rent, food, weekends, extras) and see how many years your savings and investments last'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
   ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; good for family time) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
-  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹35 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹63 lakh (₹6,000/month; comfy for you, lonelier, most show-off value) or a flat near family at ₹29.75 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
+  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹60 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹1.08 crore (₹6,000/month; comfy for you, lonelier, most show-off value) or a flat near family at ₹51 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
   ['Bank check','New loans need a salary, and all EMIs together (including an education loan) must stay within 50% of take-home pay'],
   ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
