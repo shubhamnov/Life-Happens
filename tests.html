@@ -427,6 +427,38 @@ await test('Retirement: you set a spending plan; overspending comes with a warni
 await test('Running out of money: every failure is a lesson',async()=>{const {L,win}=await game(314);const d=win.document;const s=L.state;s.whatIf.idle=5e5;L.endRun('insolvent');L.render();
  assert(/Every failure is a lesson/.test(d.getElementById('endBody').textContent),'failure framed as a lesson');});
 
+const quiet=s=>{s.nextEventMonth=99999;s.nextPitMonth=99999;s.adNext=99999;s.bigShock.due=[];s.event=null;};
+await test('Power-ups: a yearly day out or weekend of service lifts happiness for a few months, not for good',async()=>{const a=await game(401),b=await game(401);
+ for(const g of [a,b]){quiet(g.L.state);g.L.state.life.askMonth=99999;}
+ const s=a.L.state;assert(!/\+\d/.test(a.L.OPTIONAL.familyDay.describe(s)+a.L.OPTIONAL.volunteer.describe(s)+a.L.OPTIONAL.donate.describe(s)),'no ring numbers up front');
+ const f0=s.rings.fam;a.L.chooseOptional('familyDay');near(s.rings.fam-f0,8,0.01,'the day out lifts Family & Friends at once');eq(s.glow.fam,8,'as a glow');
+ for(let i=0;i<12;i++){s.event=null;a.L.advanceMonth();}assert(Math.abs(s.glow.fam)<0.6,'the glow is nearly gone after a year: '+s.glow.fam);
+ for(let y=0;y<20;y++)for(let i=0;i<12;i++){for(const g of [a,b]){const t=g.L.state;t.event=null;t.cash=Math.max(t.cash,5e5);}
+  if(i===0)for(const k of ['familyDay','volunteer','donate']){a.L.state.optionalUsedMonth=-1;a.L.chooseOptional(k);}
+  a.L.advanceMonth();b.L.advanceMonth();}
+ const gain=a.L.lifeHappiness()-b.L.lifeHappiness();assert(gain>0&&gain<8,'21 years of all three power-ups add a little lifetime happiness, not a win: +'+gain);});
+await test('Happiness: a life full of people scores far above a life alone',async()=>{const {L}=await game(402);const s=L.state;quiet(s);s.cash=1e6;
+ Object.assign(s.profile,{social:'quiet',travel:'none',home:'starter',food:'home',other:'none'});s.married=false;s.children=[];const alone=L.happiness({rings:L.ringTargets(s)});
+ Object.assign(s.profile,{social:'regular',travel:'weekend',home:'comfort',food:'balanced'});s.married=true;s.children=[{birthMonth:s.month,base:9000,school:null},{birthMonth:s.month,base:7000,school:null}];
+ const full=L.happiness({rings:L.ringTargets(s)});assert(alone<=40,'alone and frugal heads to 40 or less: '+alone);assert(full-alone>=25,'married, two kids, friends and trips: '+full+' vs '+alone);});
+await test('Parents: support ends when they pass away, in your 60s',async()=>{const {L}=await game(403);const s=L.state;quiet(s);s.life.askMonth=99999;
+ s.parentsMode='support';s.costs.parents=8000;s.insured=true;s.parentsCovered=true;s.life.parentsDone=true;s.life.parentsMonth=300;s.month=300+12*16-1;s.cash=1e7;
+ L.advanceMonth();eq(s.parentsMode,'','no more care');eq(s.costs.parents,0,'support costs end');eq(s.parentsCovered,false,'their health add-on ends');assert(s.life.parentsGone,'remembered');
+ assert(!L.EVENTS.parentmedical.eligible(Object.assign({},s,{month:L.monthAtAge(62)})),'no more parents’ hospital bills');assert(s.history.some(h=>/parents passed away/.test(h.text)),'in the journal');});
+await test('Retirement check: pit stops from 40 say whether the money lasts to 80',async()=>{const {L}=await game(404);const s=L.state;quiet(s);
+ s.month=L.monthAtAge(35);L.startEvent('pitstop');eq(s.event.outlook,null,'not before 40');s.event=null;
+ s.month=L.monthAtAge(45);s.invested=1e9;L.startEvent('pitstop');assert(s.event.outlook&&s.event.outlook.lastsTo===null,'plenty lasts past 80');assert(/past 80/.test(s.event.outlook.text),s.event.outlook.text);s.event=null;
+ s.invested=0;s.cash=0;s.sip=0;s.employment='retired';const o=L.retireOutlook(s);assert(o.lastsTo!==null&&o.lastsTo<=46,'nothing saved runs out at once: '+o.lastsTo);});
+await test('Old age, money running low: sell the home, move in with the kids or cut back, once',async()=>{const {L}=await game(405);const s=L.state;quiet(s);
+ assert(!L.RANDOM_POOL.includes('lastResort'),'never a random event');
+ s.employment='retired';s.retirePromptShown=true;s.month=L.monthAtAge(70);s.cash=100000;s.invested=0;s.ownsHome=true;s.homeType='near';s.homeValue=1e7;s.homeLoan=null;s.children=[{birthMonth:1,base:9000,school:'gov'}];
+ L.advanceMonth();eq(s.event&&s.event.type,'lastResort','the warning stops the race');const ids=L.EVENTS.lastResort.choices(s.event,s).map(c=>c.id);
+ assert(ids.includes('downsize')&&ids.includes('kids')&&ids.includes('keep'),'choices: '+ids);const c0=s.cash;L.resolveEvent(s.event.id,'kids');
+ assert(s.withKids&&!s.ownsHome,'moved in with the children, home sold');assert(s.cash>c0+9e6,'home money in savings');
+ const keys=L.monthlyBudget().lines.map(l=>l.key);assert(!keys.includes('housing')&&!keys.includes('food'),'the children cover home and food');
+ for(let i=0;i<3;i++){s.event=null;s.cash=1000;L.advanceMonth();}assert(!s.event||s.event.type!=='lastResort','only once');
+ s.event=null;s.distressMonths=0;L.endRun('insolvent');eq(L.lifeEnding().key,'outlived','running out after 65 is its own ending');});
+
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
 document.getElementById('results').innerHTML=results.map(r=>'<div class="t '+(r.ok?'pass':'fail')+'"><b>'+(r.ok?'PASS':'FAIL')+'</b> '+r.name.replace(/</g,'&lt;')+(r.ok?'':'<pre>'+r.err.replace(/</g,'&lt;')+'</pre>')+'</div>').join('');
