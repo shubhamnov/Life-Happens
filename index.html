@@ -107,7 +107,7 @@ body.playing .topbar{display:none}
 body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
 .screen.play{flex:1;min-height:0;gap:8px}
 .play .race-wrap{flex:0 0 auto}
-.play .race-canvas{height:clamp(150px,30dvh,240px)}
+.play .race-canvas{height:clamp(120px,21dvh,175px)}
 .stage{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding:9px 2px 4px;margin:0 -2px}
 .controls{display:flex;gap:8px;align-items:center}
 .controls button{min-height:50px;min-width:54px;border-radius:16px;border:2px solid #fff;background:var(--paper);box-shadow:0 3px 0 #2E3A3322;font:700 17px var(--display);color:var(--ink);padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
@@ -491,7 +491,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
 }
 /* Short phones: keep the race, money, the card's choices and the controls on one screen. */
 @media(max-height:740px){
- .play .race-canvas{height:clamp(128px,25dvh,190px)}
+ .play .race-canvas{height:clamp(134px,19dvh,150px)}
  .hud-age{padding:3px 8px 4px;min-width:70px}.hud-age b{font-size:21px}.hud-age small{font-size:9px}
  .hud-happy{font-size:18px;padding:3px 10px 3px 6px}.hud-happy .emoji{font-size:16px}.hud-pace{top:42px}
  .stage{padding-top:7px;gap:6px}
@@ -689,7 +689,7 @@ const A=Object.freeze({
  promoBaseChance:0.12,promoChancePerXp:0.06,promoMinGapYears:2,
  maxXp:5,trainingCost:4000,
  cushionMonths:6,              // savings beyond 6 months of expenses count as idle cash
- ads:{first:[30,54],gap:[54,90]},   // an ad card roughly every 4½–7½ years
+ ads:{first:[30,54],gap:[66,102]},  // an ad card roughly every 5½–8½ years
  // Markets: an index that grows 12.5% a year on trend, plus a swing that wanders but stays within ±10%
  // of the trend (log terms). So over ANY 10 years invested money grows about 10.3–14.8% a year,
  // while single years can still be anywhere from a loss to a big gain. Dips and booms move the swing.
@@ -711,7 +711,8 @@ const A=Object.freeze({
  // Every life gets at least two big money shocks before 60: the first between 29 and 40, the next 8+ years later.
  bigShocks:{first:[29,40],gap:8,last:57},
  // Lifestyle creep: when take-home pay is 1.8× what it was when you last set your lifestyle, peers expect more.
- creep:{ratio:1.8,cooldown:36},
+ creep:{ratio:1.8,cooldown:72},
+ repeat:{max:2,gap:180},     // a surprise or ad at most twice a life, 15+ years apart
  retireMinAge:40,retirePromptAge:60,
  homeUpgrade:{minAge:26,minXp:2,upfront:18000,monthly:8000},
  // Health cover pays 65% of eligible bills for everyone on the policy. You renew it
@@ -733,7 +734,7 @@ const A=Object.freeze({
  childIndependentYears:21,     // child costs stop when the child turns 21
  schoolYears:[4,18],
  petMonthly:2500,
- eventGap:[12,20],             // months between random life events after the first two years
+ eventGap:[20,32],             // months between random life events after the first two years
  // Life rings (0–100). Each month a ring moves 4% of the way toward the target your
  // current life sets (see ringDrivers); event choices add one-off bumps that fade.
  rings:{start:{me:60,fam:60,com:45},base:{me:40,fam:30,com:25},pull:0.04,glowFade:0.2,healthy:55,low:40},
@@ -817,7 +818,7 @@ function createState(){
   homeUpgraded:false,insured:false,parentsCovered:false,termCover:null,taxpayer:false,pet:false,receivables:[],
   optionalUsedMonth:0,optionalUsedName:'',
   distressMonths:0,lastSettledMonth:0,lastRaiseYear:0,
-  event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,seen:{},
+  event:null,eventSeq:0,nextEventMonth:0,lastEventType:'',lastEventSevere:false,seen:{},seenAt:{},
   feedback:null,message:'',story:'',milestone:'',celebration:null,celebSeq:0,
   history:[],
   stats:{savingsInterest:0,shocks:0,fun:0,investmentsSold:0,strainedMonths:0,recoveries:0,interestPaid:0,maxDistress:0,peakNetWorth:0,sipInvested:0,sipSkipped:0,trips:0,taxPaid:0,insurancePaid:0,claims:0,lessons:0,listened:0},
@@ -1096,7 +1097,7 @@ const RING_FX={
  lastResort:{downsize:[-3,0,-3],kids:[-6,8,-4],basics:[-6,-2,-1]},
  burnout:{break:[25,4,0],slow:[10,4,2],push:[-5,-2,0]},
  squeeze:{slow:[2,15,0],push:[0,-5,0]},
- overspend:{basics:[-6,-2,-1],trim:[-2,0,0]},tighten:{basics:[-6,-2,-1],trim:[-2,0,0]},restore:{back:[4,2,0]},
+ overspend:{basics:[-6,-2,-1],trim:[-2,0,0],school:[0,-3,-1]},tighten:{basics:[-6,-2,-1],trim:[-2,0,0],school:[0,-3,-1]},restore:{back:[4,2,0]},
  creep:{up:[5,3,0],same:[0,-3,0]},illness:{'*':[-8,3,0]},flood:{'*':[-5,0,4]},
  clash:{gig:[-2,-10,0],family:[3,8,0]},windfall:{treat:[5,0,0]},award:{'*':[4,0,0]}
 };
@@ -1597,7 +1598,7 @@ EVENTS.pitstop={kicker:'PIT STOP',art:'🏁',life:true,pit:true,
  choices:()=>[{id:'go',emoji:'🏎️',title:'Back on track',detail:'Apply any changes and keep racing.'}],
  resolve:(e,c,opts)=>finishPit(e,(opts&&opts.pit)||{})};
 
-/* ---------- Ad breaks (about once every 4½–7½ years, see A.ads) ----------
+/* ---------- Ad breaks (about once every 5½–8½ years, see A.ads) ----------
    Some ads are good advice (invest idle cash, start a SIP), some are traps
    (guaranteed returns), and some sell big buys on easy EMIs. Every choice says
    what it costs. The default is always to scroll past. */
@@ -1688,6 +1689,15 @@ Object.assign(EVENTS,{
    return{text:'Scrolled past.',feedback:fb('great','Keeping insurance and investing separate is the cheaper, better deal.')};}}
 });
 /* ---------- Lifestyle decisions: cut back when money is short, go back when it returns ---------- */
+// Kids' school can change any time: a cheaper school saves the fees; a pricier one charges its admission again.
+const SCHOOL_ORDER=['gov','budget','private','intl'];
+function kidsInSchool(s=state){return activeChildren(s).filter(c=>inSchool(c,s));}
+function schoolAdmission(s,value){return sum(kidsInSchool(s).filter(c=>SCHOOL_ORDER.indexOf(value)>SCHOOL_ORDER.indexOf(c.school)).map(()=>priced(BASE_PRICES.school[value].admission,s)));}
+function schoolStepDown(s=state){
+ const moves=kidsInSchool(s).filter(c=>c.school!=='gov').map(c=>[s.children.indexOf(c),c.school,SCHOOL_ORDER[SCHOOL_ORDER.indexOf(c.school)-1]]);if(!moves.length)return null;
+ const saving=sum(moves.map(([,from,to])=>priced(BASE_PRICES.school[from].monthly-BASE_PRICES.school[to].monthly,s)));
+ return{moves,saving,label:[...new Set(moves.map(m=>BASE_PRICES.school[m[2]].label.toLowerCase()))].join(' and ')};}
+function applySchoolStep(s,step){step.moves.forEach(([i,,to])=>{s.children[i].school=to;});record('Moved the kids to a '+step.label+' at '+ageLabel(s)+' (saves '+money(step.saving)+'/month).',{major:true,kind:'family'});}
 const STEP_DOWN={food:{foodie:'balanced',balanced:'home',home:'home'},social:{big:'regular',regular:'quiet',quiet:'quiet'},travel:{abroad:'india',india:'weekend',weekend:'none',none:'none'},home:{premium:'comfort',comfort:'starter',starter:'starter'}};
 // level 'basics': the cheapest life that fits your family; 'trim': one step down on food and weekends, no extras.
 function cutPlan(s,level){
@@ -1703,22 +1713,25 @@ function applyCut(s,plan){if(!s.lifestyleSaved)s.lifestyleSaved={home:s.profile.
 function cutChoices(e,keepDetail){const c=[];
  if(e.trim.changes.length)c.push({id:'trim',emoji:'✂️',title:'Trim: '+e.trim.label,detail:'Saves '+money(e.trim.saving)+' a month.'});
  if(e.basics.changes.length&&e.basics.saving>e.trim.saving)c.push({id:'basics',emoji:'🧺',title:'Cut to basics: '+e.basics.label,detail:'Saves '+money(e.basics.saving)+' a month.'});
+ if(e.school)c.push({id:'school',emoji:'🎒',title:'Cheaper school: '+e.school.label,detail:'Saves '+money(e.school.saving)+' a month.'});
  return c.concat(keepDetail);}
 Object.assign(EVENTS,{
  overspend:{kicker:'⚠️ MONEY WARNING',art:'⚠️',warn:true,title:'⚠️ You spent more than you earned, two months running.',
-  create:s=>{const b=monthlyBudget(s);s.lastOverspendMonth=s.month;s.overspendMonths=0;return{basics:cutPlan(s,'basics'),trim:cutPlan(s,'trim'),description:'Expenses '+money(b.total)+', take-home '+money(b.income)+': '+money(b.total-b.income)+' short every month. Savings are filling the gap.',foot:'You can change rent, food, weekends, extras and commute any time in More → Monthly plan.'};},
+  create:s=>{const b=monthlyBudget(s);s.lastOverspendMonth=s.month;s.overspendMonths=0;return{basics:cutPlan(s,'basics'),trim:cutPlan(s,'trim'),school:schoolStepDown(s),description:'Expenses '+money(b.total)+', take-home '+money(b.income)+': '+money(b.total-b.income)+' short every month. Savings are filling the gap.',foot:'You can change rent, food, weekends, extras and commute any time in More → Monthly plan.'};},
   choices:e=>cutChoices(e,[{id:'more',emoji:'🧾',title:'Let me choose in More',detail:'Opens your monthly plan.'},{id:'keep',emoji:'🫠',title:'Keep living as I do',detail:'The gap keeps coming out of savings.'}]),
   resolve:(e,c)=>{const s=state;
-   if(c==='trim'||c==='basics'){applyCut(s,e[c]);const b=monthlyBudget(s);return{text:'New monthly expenses: '+money(b.total)+'.',feedback:b.leftover>=0?fb('great','Back within your pay. Spending less than you earn is the whole game.'):fb('solid','Better, but still short each month. Look at EMIs and fixed costs in More too.')};}
+   if(c==='school')applySchoolStep(s,e.school);
+   if(c==='trim'||c==='basics'||c==='school'){if(c!=='school')applyCut(s,e[c]);const b=monthlyBudget(s);return{text:'New monthly expenses: '+money(b.total)+'.',feedback:b.leftover>=0?fb('great','Back within your pay. Spending less than you earn is the whole game.'):fb('solid','Better, but still short each month. Look at EMIs and fixed costs in More too.')};}
    if(c==='more'){return{openPlan:true,text:'Your monthly plan is open: pick what to change.',feedback:fb('solid','Rent, food, weekends, extras and commute are all yours to change.')};}
    return{text:'Nothing changed. The gap comes out of savings again next month.',feedback:fb('risky','Spending more than you earn drains savings, then investments, then becomes debt.')};}},
  tighten:{kicker:'NO SALARY',art:'🧮',
   create:s=>{s.pendingTighten=false;const b=monthlyBudget(s),assets=Math.max(0,s.cash+s.invested),run=m=>Math.floor(assets/Math.max(1,m));const basics=cutPlan(s,'basics'),trim=cutPlan(s,'trim');
-   return{basics,trim,runNow:run(b.total),runTrim:run(b.total-trim.saving),runBasics:run(b.total-basics.saving),title:s.breakReason==='recovery'?'No salary while you recover. Change how you live?':'No salary until a new job. Change how you live?',
+   return{basics,trim,school:schoolStepDown(s),runNow:run(b.total),runTrim:run(b.total-trim.saving),runBasics:run(b.total-basics.saving),title:s.breakReason==='recovery'?'No salary while you recover. Change how you live?':'No salary until a new job. Change how you live?',
     description:'Expenses '+money(b.total)+' a month. Savings and investments last about '+run(b.total)+' months.',foot:'You can go back to your old lifestyle once the salary returns.'};},
   choices:e=>{const c=cutChoices(e,[{id:'keep',emoji:'🫡',title:'Keep living as I do',detail:'Lasts about '+e.runNow+' months.'}]);c.forEach(x=>{if(x.id==='trim')x.detail+=' Lasts about '+e.runTrim+' months.';if(x.id==='basics')x.detail+=' Lasts about '+e.runBasics+' months.';});return c;},
   resolve:(e,c)=>{const s=state;
-   if(c==='trim'||c==='basics'){applyCut(s,e[c]);return{text:'New monthly expenses: '+money(monthlyBudget(s).total)+'.',feedback:fb('great','Cutting back early makes your savings last much longer while there is no salary.')};}
+   if(c==='school')applySchoolStep(s,e.school);
+   if(c==='trim'||c==='basics'||c==='school'){if(c!=='school')applyCut(s,e[c]);return{text:'New monthly expenses: '+money(monthlyBudget(s).total)+'.',feedback:fb('great','Cutting back early makes your savings last much longer while there is no salary.')};}
    return{text:'Same lifestyle, no salary.',feedback:e.runNow>=18?fb('solid','Your reserves can carry this for a while. Watch them.'):fb('risky','Your reserves last about '+e.runNow+' months. A long search could turn into debt.')};}},
  restore:{kicker:'BACK AT WORK',art:'💼',title:'Salary is back. Go back to your old lifestyle?',
   create:s=>{s.pendingRestore=false;const saved=s.lifestyleSaved||{},copy=JSON.parse(JSON.stringify(s));Object.entries(saved).forEach(([k,v])=>{if(!(k==='home'&&s.ownsHome))applyExpenseTo(copy,k,v);});return{extra:monthlyBudget(copy).total-monthlyBudget(s).total,description:'The way you lived before costs more each month.'};},
@@ -1782,7 +1795,7 @@ function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
 // random social event (month 24), so no two lives start the same way.
 // Life stages (marriage, kids, school, parents) follow their own schedule in
 // lifeEventDue(), inside believable age windows.
-// After that, a random event every 12–20 months, weighted away from events you
+// After that, a random event every 20–32 months, weighted away from events you
 // have already seen. Contextual events (retirement at 60, burnout, missing your
 // family while work is in Hustle mode) happen when the situation calls for them. Never two severe shocks in a row, never
 // the same type twice in a row.
@@ -1792,10 +1805,12 @@ const BIG_SHOCKS=['layoff','accident','divorce','illness','flood','parentmedical
 const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EVENTS[t].life&&!EVENTS[t].ad&&!EVENTS[t].forced);
 const OPENERS={shock:RANDOM_POOL.filter(t=>EVENTS[t].group==='shock'),social:RANDOM_POOL.filter(t=>EVENTS[t].group==='social')};
 function eligibleEvent(t,s){const d=EVENTS[t];return !d.eligible||d.eligible(s);}
-function eventWeight(t,s){const d=EVENTS[t];const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*(s.seen[t]||0));}
+// A surprise comes at most twice a life, and never again within 15 years: a second time should feel like news.
+function eventWeight(t,s){const d=EVENTS[t],n=s.seen[t]||0;if(n>=A.repeat.max||(n&&s.month-(s.seenAt[t]||0)<A.repeat.gap))return 0;const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*n);}
 function pickRandomEvent(s,pool=RANDOM_POOL){
- let list=pool.filter(t=>eligibleEvent(t,s)&&t!==s.lastEventType&&!(s.lastEventSevere&&EVENTS[t].severe));
- if(!list.length)list=pool.filter(t=>eligibleEvent(t,s));
+ const ok=t=>eligibleEvent(t,s)&&eventWeight(t,s)>0;
+ let list=pool.filter(t=>ok(t)&&t!==s.lastEventType&&!(s.lastEventSevere&&EVENTS[t].severe));
+ if(!list.length)list=pool.filter(ok);
  if(!list.length)return null;
  const weights=list.map(t=>eventWeight(t,s)),total=sum(weights);let r=rand()*total;
  for(let i=0;i<list.length;i++){r-=weights[i];if(r<=0)return list[i];}
@@ -1811,7 +1826,7 @@ function xInt(s,lo,hi){return lo+Math.floor(xRand(s)*(hi-lo+1));}
 function adPick(s,arr){return arr[Math.floor(adRand(s)*arr.length)];}
 const AD_POOL=()=>Object.keys(EVENTS).filter(t=>EVENTS[t].ad);
 function pickAd(s){
- const list=AD_POOL().filter(t=>eligibleEvent(t,s)&&t!==s.lastAdType);if(!list.length)return null;
+ const list=AD_POOL().filter(t=>eligibleEvent(t,s)&&eventWeight(t,s)>0&&t!==s.lastAdType);if(!list.length)return null;
  const weights=list.map(t=>eventWeight(t,s));let r=adRand(s)*sum(weights);
  for(let i=0;i<list.length;i++){r-=weights[i];if(r<=0)return list[i];}
  return list[list.length-1];
@@ -1838,7 +1853,7 @@ function contextEventDue(s){
  if(s.overspendMonths>=A.overspend.months&&s.month-s.lastOverspendMonth>=A.overspend.cooldown)return 'overspend';
  if(s.lowMeMonths>=A.burnout.months&&s.month-s.lastBurnoutMonth>=A.burnout.cooldown)return 'burnout';
  if(s.pace==='hustle'&&s.rings.fam<A.squeeze.lowFam&&s.month-s.lastSqueezeMonth>=A.squeeze.cooldown)return 'squeeze';
- if(s.creepIncome&&monthlyIncome(s)>=s.creepIncome*A.creep.ratio&&s.month-s.lastCreepMonth>=A.creep.cooldown&&lifestyleShift(s,1))return 'creep';
+ if(s.creepIncome&&(s.seen.creep||0)<A.repeat.max&&monthlyIncome(s)>=s.creepIncome*A.creep.ratio&&s.month-s.lastCreepMonth>=A.creep.cooldown&&lifestyleShift(s,1))return 'creep';
  return null;
 }
 // Health cover is never renewed automatically: the pit stop asks when it is due, and a stop asks once after you marry or have a child while it covers only you.
@@ -1854,7 +1869,7 @@ function startEvent(type,opts){
  const dflt=CARD_DEFAULTS[type];
  if(dflt){const ids=def.choices(s.event,s).map(c=>c.id);s.event.tier='card';s.event.defaultChoice=ids.includes(dflt)?dflt:ids[0];}
  else s.event.tier='stop';
- s.seen[type]=(s.seen[type]||0)+1;if(BIG_SHOCKS.includes(type))s.bigShock.count+=1;
+ s.seen[type]=(s.seen[type]||0)+1;s.seenAt[type]=s.month;if(BIG_SHOCKS.includes(type))s.bigShock.count+=1;
  if(!CONTEXT_EVENTS.includes(type)&&!def.life&&!def.ad){s.lastEventType=type;s.lastEventSevere=!!def.severe;}
  return true;
 }
@@ -2261,6 +2276,9 @@ function expenseChangeBlocker(key,value){
   if(value===s.vehicle)return 'Already selected.';
   if(BASE_PRICES.commute[value].loan)return 'Vehicles are bought on a loan in Big buys.';
  }
+ if(key==='school'){const kids=kidsInSchool(s),fee=BASE_PRICES.school[value]?schoolAdmission(s,value):0;
+  if(!BASE_PRICES.school[value])return 'Unknown option.';if(!kids.length)return 'No child is in school right now.';if(kids.every(c=>c.school===value))return 'Already selected.';
+  if(fee>s.cash)return 'Admission needs '+money(fee)+' in savings.';}
  if(key==='home'&&s.ownsHome)return 'You own your home. Sell it in Big buys to rent again.';
  if(key==='homeUpgrade'&&!s.homeUpgraded)return 'No home upgrade to remove.';
  if(key==='insurance'&&!s.insured)return 'No health cover to cancel.';
@@ -2287,14 +2305,16 @@ function applyExpenseTo(s,key,value,model){
  else if(key==='parentsCover'){s.parentsCovered=false;if(s.insured)s.coverBase=healthQuoteBase(s,s.coverFamily,false);}
  else if(key==='policy'&&s.policy){s.cash+=Math.round(s.policy.value*0.3);s.policy=null;}
  else if(key==='term'){s.termCover=null;}
+ else if(key==='school'){s.cash-=schoolAdmission(s,value);kidsInSchool(s).forEach(c=>{c.school=value;});}
 }
 function applyExpenseChange(key,value){
  const s=state;if(expenseChangeBlocker(key,value))return null;
  const before=monthlyBudget(s),hadLoan=s.vehicleLoan?s.vehicleLoan.balance:0,oldLabel=vehicleLabel(s),surrender=key==='policy'?Math.round(s.policy.value*0.3):0;applyExpenseTo(s,key,value);const after=monthlyBudget(s);
- const labels={home:'Rent',food:'Food',social:'Social life',travel:'Holidays',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover',policy:'3-in-1 plan'};
+ const labels={home:'Rent',food:'Food',social:'Social life',travel:'Holidays',other:'Other recurring',commute:'Commute',homeUpgrade:'Home upgrade',insurance:'Health cover',parentsCover:'Parents’ health cover',term:'Term cover',policy:'3-in-1 plan',school:'School'};
  let text=labels[key]+' updated. Monthly expenses '+money(before.total)+' → '+money(after.total)+'.';
  if(key==='commute'&&hadLoan&&!s.vehicleLoan){const left=Math.round(hadLoan*(1-A.vehicleResaleShare));text+=' Sold the '+oldLabel.toLowerCase()+': resale repaid '+money(hadLoan-left)+' of the loan; the remaining '+money(left)+' became unsecured debt.';record('Sold the '+oldLabel.toLowerCase()+' at '+ageLabel()+'; '+money(left)+' of the loan became debt.',{major:true,kind:'vehicle'});}
  if(key==='homeUpgrade')record('Moved out of the upgraded home at '+ageLabel()+'.',{kind:'home'});
+ if(key==='school'){record('Changed the kids’ school to '+BASE_PRICES.school[value].label.toLowerCase()+' at '+ageLabel()+'.',{major:true,kind:'family'});}
  if(key==='insurance'||key==='parentsCover'||key==='term')record('Cancelled '+labels[key].toLowerCase()+' at '+ageLabel()+'.',{kind:'cover'});
  if(key==='policy'){text+=' Surrendered early: only '+money(surrender)+' paid back.';record('Surrendered the 3-in-1 plan at '+ageLabel()+' for '+money(surrender)+'.',{kind:'cover'});}
  let feedback;
@@ -2349,7 +2369,7 @@ function whatIfLessons(s=state){
  if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
  return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
 }
-window.__LH_MODEL={A,BASE_PRICES,retireOutlook,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
+window.__LH_MODEL={A,BASE_PRICES,retireOutlook,kidsInSchool,schoolAdmission,schoolStepDown,SCHOOL_ORDER,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
@@ -3034,6 +3054,8 @@ function renderExpenses(){
  h+=group('social','🎳 Social & lifestyle',s.profile.social,simple(P.social));
  h+=group('travel','✈️ Holidays',s.profile.travel||'none',Object.entries(P.travel).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:o.cost?money(Math.round(o.cost*f*M.travellers()))+'/mo':'Free'})),'A monthly holiday fund that pays for a trip each year'+(M.travellers()>1?', for '+M.travellerLabel()+'.':'.')+' Big one-off trips are in Power-ups.');
  h+=group('other','🎧 Other recurring',s.profile.other||'none',simple(P.other),'A subscription, hobby, gym or another regular cost.');
+ const kids=M.kidsInSchool();if(kids.length){const cur=kids.every(c=>c.school===kids[0].school)?kids[0].school:'';
+  h+=group('school','🎒 Kids’ school',cur,Object.entries(P.school).map(([id,o])=>{const adm=M.schoolAdmission(s,id);return{id,emoji:o.emoji,label:o.label,price:money(Math.round(o.monthly*f*kids.length))+'/mo'+(adm?' + '+money(adm)+' admission':'')};}),(kids.length>1?'For both children. ':'')+'A cheaper school saves the fees at once; a pricier one charges admission again.');}
  const loanNote=s.vehicleLoan?'Vehicle loan: '+money(s.vehicleLoan.balance)+' left, '+s.vehicleLoan.monthsLeft+' EMIs of '+money(s.vehicleLoan.emi)+'. Switching to transit or cabs sells the vehicle: resale repays 80% of the loan and the rest becomes debt.':'Two-wheelers and cars are bought on a loan in Power-ups → Big buys.';
  h+=group('commute','🚦 Commute',s.vehicle,Object.entries(P.commute).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:money(Math.round((o.running+o.fuel)*f))+'/mo'+(o.loan?' · Big buys':''),disabled:!!o.loan&&id!==s.vehicle})),loanNote);
  if(s.homeUpgraded||s.insured||s.termCover||s.policy){h+='<section class="edit-group"><h3>Recurring commitments</h3><div class="edit-options">';
@@ -3043,7 +3065,7 @@ function renderExpenses(){
   if(s.termCover)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='term'?' pending':'')+'" data-expense-key="term" data-expense-value="cancel"><strong>Cancel term cover</strong><span>−'+money(M.termPremium())+'/mo · a new one costs more later</span></button>';
   if(s.policy)h+='<button type="button" class="edit-choice'+(pend&&pend.key==='policy'?' pending':'')+'" data-expense-key="policy" data-expense-value="surrender"><strong>Surrender the 3-in-1 plan</strong><span>get back '+money(Math.round(s.policy.value*0.3))+' of '+money(s.policy.value)+'</span></button>';
   h+='</div></section>';}
- if(M.activeChildren().length||s.married||s.pet)h+='<p class="plan-note">Family costs (your spouse, children, school fees, parents, pet) come from life events and are not changed here. School fees stop at 18, other child costs at 21.</p>';
+ if(M.activeChildren().length||s.married||s.pet)h+='<p class="plan-note">Family costs (your spouse, children, parents, pet) come from life events; only the school can be changed here. School fees stop at 18, other child costs at 21.</p>';
  $('expenseBody').innerHTML=h;
  let st='';
  if(pend){const blocker=M.expenseChangeBlocker(pend.key,pend.value),pv=M.previewExpenseChange(pend.key,pend.value);
@@ -3087,7 +3109,7 @@ function renderAbout(){
   ['Money check','If expenses are above take-home pay for 2 months in a row, the race stops: trim, cut to basics, choose in More → Monthly plan, or keep going (at most once a year)'],
   ['Job loss','Severance, then a job search of 6 to 18 months (a little longer after 45), or a lower-paid role at once (−25%). With no salary you choose how to live: cut to basics, trim, or keep going. Back at work, you choose whether to return to your old lifestyle. A 2-starter flat is too small once you have two kids'],
   ['Big shocks','Every life gets at least two big money shocks before 60, years apart: a long layoff, an accident, a serious illness (₹5–15 lakh), a flood (₹2–5 lakh) or a parent’s hospital stay (₹1.5–5 lakh). They test your cushion, health cover and term cover'],
-  ['Lifestyle creep','When your take-home pay is 1.8 times what it was when you last set your lifestyle, friends expect you to upgrade (at most every 3 years)'],
+  ['Lifestyle creep','When your take-home pay is 1.8 times what it was when you last set your lifestyle, friends expect you to upgrade (at most twice a life, 6+ years apart)'],
   ['Good surprises','Windfalls, awards, and tough calls: a big weekend gig on the same day as your child’s annual day or a friend’s wedding'],
   ['Lifetime happiness','Your happiness averaged over every month from 23 to 80. Months you never reach count as zero. Your ending combines it with your net worth in today’s money (₹1 crore or more counts as rich). Your best lifetime happiness is saved in this browser'],
   ['Work pace','Set by your choices, never by a dial. A stretch project (2 years), weekend gigs (6 months), a startup (2 years) or weekend classes (1 year) put you in 🚀 Hustle mode: +1% on yearly raises and 1.5× promotion odds, but less happiness. Slowing down after burnout means 2 years of 🌿 Taking it easy: −1% raises, 0.6× promotion odds, more happiness. Then work settles back to normal. Slowing down for family when asked lowers promotion odds to 0.6× for 2 years'],
@@ -3109,11 +3131,11 @@ function renderAbout(){
   ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
   ['Retirement','Available from 40; prompted at 60. Salary and SIP stop, costs continue. Investments are sold as needed. No pension is modelled. From 40, pit stops check whether your money would last to 80. Once retired, if it covers under two years of costs, you can sell your home, move in with your children or cut back, once'],
-  ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 12–20 months, drawn at random and weighted away from ones you have already seen'],
+  ['Life events','A random small surprise around month 3, a first bonus at month 12, a random social event at month 24, then one every 20–32 months, drawn at random and weighted away from ones you have already seen'],
   ['Big moments vs cards','Big life moments (marriage, kids, school, parents, health scares, accidents, layoffs, divorce, a startup offer, burnout, retirement) pause the race. Small surprises (repairs, trips, sales, bonuses, market moves…) slide in as cards below the race, and the race waits until you tap a choice'],
   ['Pit stops','Every 5 years (ages 28, 33 … 78) a short lap report: how your happiness and net worth moved, one line about those five years and one tip. From 40 it adds a retirement check. It may offer to start or raise your SIP. The race waits until you tap Continue'],
   ['Idle cash','Savings earn 2.5% while prices rise 6% a year. About 6 months of expenses is a healthy cushion; anything above it shows as 💤 idle on the Savings tile.'],
-  ['Ad breaks','About once every 5–7 years an ad slides onto the track. Ads know your savings and your wealth class, and use both to tempt you: an SUV, a villa, a new phone, a “must-have” for your class, a “guaranteed” scheme. A few are good advice (invest idle cash, start a SIP). Not tapping scrolls past.'],
+  ['Ad breaks','About once every 5½–8½ years an ad slides onto the track. Ads know your savings and your wealth class, and use both to tempt you: an SUV, a villa, a new phone, a “must-have” for your class, a “guaranteed” scheme. A few are good advice (invest idle cash, start a SIP). Not tapping scrolls past.'],
   ['Wealth class','What advertisers think you are, from your net worth in today’s money: 🌱 Just starting, 🏠 Middle class (₹5L), 🚗 Upper middle class (₹25L), 💼 Affluent (₹1Cr), 💎 Rich (₹5Cr). It shows on every ad.'],
   ['Lessons','A mistake shows as 📘 Lesson learnt, with one line to remember. The first time a SIP is offered, a short “What’s a SIP?” tip explains it once.'],
   ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],

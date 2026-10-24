@@ -459,6 +459,22 @@ await test('Old age, money running low: sell the home, move in with the kids or 
  for(let i=0;i<3;i++){s.event=null;s.cash=1000;L.advanceMonth();}assert(!s.event||s.event.type!=='lastResort','only once');
  s.event=null;s.distressMonths=0;L.endRun('insolvent');eq(L.lifeEnding().key,'outlived','running out after 65 is its own ending');});
 
+await test('School: switch the kids’ school in Monthly plan or when money is short',async()=>{const {L,win}=await game(406);const s=L.state;quiet(s);s.life.askMonth=99999;s.cash=1e6;
+ s.married=true;s.children=[{birthMonth:s.month-12*8,base:9000,school:'private'},{birthMonth:s.month-12*6,base:7000,school:'private'}];
+ const fees=()=>L.monthlyBudget().lines.filter(l=>/^school/.test(l.key)).map(l=>l.amount).reduce((a,b)=>a+b,0);const f0=fees();
+ eq(L.expenseChangeBlocker('school','private'),'Already selected.','already there');assert(L.applyExpenseChange('school','budget'),'switched');
+ assert(s.children.every(c=>c.school==='budget'),'both kids moved');near(f0-fees(),2*L.priced(29000-10000),2,'fees drop at once');
+ const c0=s.cash;L.applyExpenseChange('school','private');near(c0-s.cash,2*L.priced(75000),2,'a pricier school charges admission again');
+ s.cash=0;eq(L.expenseChangeBlocker('school','intl').slice(0,9),'Admission','no admission money, no upgrade');
+ s.event=null;L.render();win.document.getElementById('editExpensesBtn').click();await new Promise(r=>setTimeout(r,300));assert(win.document.querySelectorAll('#expenseBody [data-expense-key="school"]').length===4,'Monthly plan lists the four schools');win.document.getElementById('expenseDone').click();
+ s.event=null;L.startEvent('overspend');const ids=L.EVENTS.overspend.choices(s.event,s).map(c=>c.id);assert(ids.includes('school'),'the money warning offers a cheaper school: '+ids);
+ L.resolveEvent(s.event.id,'school');assert(s.children.every(c=>c.school==='budget'),'one step down');assert(s.history.some(h=>/budget private school/.test(h.text)),'in the journal');});
+await test('Surprises: a card comes at most twice a life, 15+ years apart; peer pressure at most twice',async()=>{const {L}=await game(407);const s=L.state;const at={};
+ for(let i=0;i<700&&s.status==='playing';i++){if(s.event&&s.event.type!=='pitstop'&&!L.EVENTS[s.event.type].life){(at[s.event.type]=at[s.event.type]||[]).push(s.month);}autoResolve(L);s.cash=Math.max(s.cash,L.monthlyBudget().total*6);L.advanceMonth();}
+ const ctx=['overspend','tighten','restore','renewCover','retire','burnout','squeeze','lastResort'];
+ Object.entries(at).filter(([t])=>!ctx.includes(t)).forEach(([t,m])=>{assert(m.length<=2,t+' came '+m.length+' times');if(m.length===2)assert(m[1]-m[0]>=180,t+' repeated after '+(m[1]-m[0])+' months');});
+ const n=Object.entries(at).filter(([t])=>!ctx.includes(t)).reduce((a,[,m])=>a+m.length,0);assert(n>=25&&n<=45,'surprises and ads in a life: '+n);});
+
 const pass=results.filter(r=>r.ok).length;
 document.getElementById('summary').textContent=pass+' of '+results.length+' tests passed';
 document.getElementById('results').innerHTML=results.map(r=>'<div class="t '+(r.ok?'pass':'fail')+'"><b>'+(r.ok?'PASS':'FAIL')+'</b> '+r.name.replace(/</g,'&lt;')+(r.ok?'':'<pre>'+r.err.replace(/</g,'&lt;')+'</pre>')+'</div>').join('');
