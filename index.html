@@ -733,7 +733,10 @@ const A=Object.freeze({
  // yourself at a pit stop every 5 years or so (or it lapses). It covers only you until you
  // renew it as family cover (spouse, children); parents are an optional, expensive add-on.
  // The premium is set at each renewal from your age and who is on the policy.
- healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:5000,ageLoading:0.015,renewMonths:36},  // renewal: at the first pit stop at least 3 years after buying
+ healthCover:{premium:1000,coveredShare:0.65,spouse:600,child:400,parents:3000,ageLoading:0.015,renewMonths:36,maxNewAge:65,calmAge:55},  // from 55, cover means peace of mind (+6 Me); none means worry (−5)
+ // Health later in life: from 60–63, a hospital stay every 3–5 years for you or your spouse, ₹1–4L (today's money),
+ // about 5% bigger for every year past 60. This is where health cover earns its premiums.
+ oldHealth:{first:[60,63],gap:[3,5],bill:[10,40],perYear:0.05},  // renewal: at the first pit stop at least 3 years after buying
  // Term cover with a disability rider: level premium (locked at purchase, so buying young
  // is cheap), ₹1 crore cover in today's money, until 65. Pays out if an accident or
  // illness stops you working. The player never dies in this game.
@@ -843,7 +846,7 @@ function createState(){
   nextPitMonth:0,pitCount:0,lastPit:null,paceUntil:0,openers:{shock:0,bonus:0,social:0},
   // Ads (own seeded generator, so they never shift the main random stream) and the end-screen what-ifs.
   overspendMonths:0,lastOverspendMonth:-999,lifestyleSaved:null,pendingTighten:false,pendingRestore:false,
-  bigShock:{due:[],count:0},coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
+  bigShock:{due:[],count:0},oldHealthNext:0,coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
   mkt:{x:0,rng:0,c:0,cr:null,rest:A.market.crash.quiet,news:0,low:0},
   adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,soldBase:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
@@ -1038,7 +1041,7 @@ function ringDrivers(s=state){
  if(s.distressMonths>0)add('Bills going unpaid',[-15,-3,0]);
  else if(cushion>=6)add('Six months of savings',[10,0,0]);else if(cushion>=3)add('A savings cushion',[7,0,0]);else if(cushion>=1)add('A thin savings cushion',[3,0,0]);
  if(s.unsecuredDebt>b.total*6)add('Heavy card debt',[-10,0,0]);else if(s.unsecuredDebt>0)add('Card debt',[-4,0,0]);
- if(s.insured)add('Health cover',[2,0,0]);
+ {const age=preciseAge(s);if(s.insured)add(age>=A.healthCover.calmAge?'Health cover, as health worries grow':'Health cover',[age>=A.healthCover.calmAge?6:2,0,0]);else if(age>=A.healthCover.calmAge)add('No health cover at your age',[-5,0,0]);}
  {const cs=crashStress(s);if(cs)add(s.employment==='retired'?'Watching a crash eat your retirement money':'Watching a market crash',[cs,0,0]);}
  if(s.employment==='retired'&&safeYears(s)>=A.safeYears)add('Five years of bills in safe money',[6,0,0]);
  if(s.employment==='laidoff')add(s.breakReason==='recovery'?'Recovering from an accident':s.breakReason==='break'?'A break to recharge':'Between jobs',s.breakReason==='break'?[8,4,0]:[-8,0,0]);
@@ -1100,7 +1103,7 @@ const RING_FX={
  landlord:{accept:[-2,0,0],move:[-2,0,-6]},
  pet:{adopt:[6,6,0],foster:[2,0,3]},
  midlife:{buy:[10,-2,0],cycle:[6,0,2],ride:[2,0,0]},
- medical:{'*':[-5,0,0]},parentmedical:{'*':[0,6,0],part:[0,3,0]},
+ medical:{'*':[-5,0,0]},oldhealth:{'*':[-4,2,0]},parentmedical:{'*':[0,6,0],part:[0,3,0]},
  wedding:{modest:[6,12,3],big:[6,12,6],lavish:[6,12,6],wait:[0,-2,0]},
  birth:{'*':[4,12,0]},
  schoolQ:{gov:[0,2,4],budget:[0,3,3],private:[0,4,1],intl:[0,6,-1]},
@@ -1474,17 +1477,17 @@ const EVENTS={
   choices:e=>spendChoices(e.options),resolve:(e,c)=>spendResolve(e,c,{skip:'All of the thrill, none of the bill.',cheap:'Healthier, cheaper, still fun.',fine:'A big treat you could afford from savings. Ride safe.',debt:'A superbike on credit is a fast way to slow down your savings.'})},
 
  /* ---- health & family ---- */
- medical:{kicker:'HEALTH SCARE',art:'🤒',snapshot:true,severe:true,
+ medical:{kicker:'HEALTH SCARE',art:'🤒',snapshot:true,severe:true,repeat:{max:3,gap:96},
   create:s=>{const kids=activeChildren(s).length,r=rand(),who=s.married&&r<0.35?'spouse':kids&&r>=0.35&&r<0.6?'child':'you';
    const total=priced(randInt(25,100)*1000),cov=s.insured&&(who==='you'||s.coverFamily),amount=cov?Math.round(total*(1-A.healthCover.coveredShare)):total;
    const title={you:pick(['An unexpected medical bill.','Dengue season got you.','Your back gave up mid-sneeze.']),spouse:pick(['Your spouse needs surgery.','Your spouse is in hospital.']),child:pick(['Your kid broke an arm at the playground.','Your child has a high fever: hospital time.'])}[who];
    return{who,title,art:{you:'🤒',spouse:'🏥',child:'🩹'}[who],amount,total,description:'A hospital bill of '+money(total)+' arrived.'+(cov?' Your health cover pays 65%, so your share is '+money(amount)+'.':s.insured?' Your cover is for you only (never renewed as family cover), so you pay all of it.':' Without health cover, you pay all of it.'),foot:'Health cover lowers eligible bills; it never removes every cost.'};},
-  choices:e=>fundingChoices(e.amount),resolve:(e,c)=>fundExpense(e.amount,c)},
- parentmedical:{kicker:'FAMILY HEALTH',art:'🏥',titles:['Your parent needs medical care.','A call from home: your parent is in hospital.'],snapshot:true,severe:true,
+  choices:e=>fundingChoices(e.amount),resolve:(e,c)=>{state.stats.claims+=e.total-e.amount;return fundExpense(e.amount,c);}},
+ parentmedical:{kicker:'FAMILY HEALTH',art:'🏥',titles:['Your parent needs medical care.','A call from home: your parent is in hospital.'],snapshot:true,severe:true,repeat:{max:3,gap:72},weight:s=>s.parentsMode||preciseAge(s)>=45?1.6:1,
   eligible:s=>preciseAge(s)>=30&&preciseAge(s)<65&&!s.life.parentsGone,
   create:s=>{const total=priced(randInt(15,50)*10000),amount=s.parentsCovered?Math.round(total*(1-A.healthCover.coveredShare)):total;return{amount,total,description:'A hospital bill of '+money(total)+' has arrived for a parent.'+(s.parentsCovered?' Their health cover add-on pays 65%, so the remaining bill is '+money(amount)+'.':' Your parents are not on your health cover, so the whole bill is yours to deal with.'),foot:'Choose how much you take on and how to fund it.'};},
   choices:(e)=>{const c=fundingChoices(e.amount);c.push({id:'part',emoji:'👨‍👩‍👧',title:'Share it: pay 40%',detail:'Contribute '+money(Math.round(e.amount*0.4))+' from savings; siblings and relatives cover the rest.'});return c;},
-  resolve:(e,c)=>{if(c==='part'){const amt=Math.round(e.amount*0.4),r=fundExpense(amt,'savings');return{text:r.text,feedback:r.borrowed>0?fb('risky','Sharing the cost helped, but '+money(r.borrowed)+' still became debt.'):fb('solid','Sharing the bill kept your own finances steady while still helping.')};}return fundExpense(e.amount,c);}},
+  resolve:(e,c)=>{state.stats.claims+=e.total-e.amount;if(c==='part'){const amt=Math.round(e.amount*0.4),r=fundExpense(amt,'savings');return{text:r.text,feedback:r.borrowed>0?fb('risky','Sharing the cost helped, but '+money(r.borrowed)+' still became debt.'):fb('solid','Sharing the bill kept your own finances steady while still helping.')};}return fundExpense(e.amount,c);}},
  /* ---- life stages: scheduled by lifeEventDue(), never drawn at random ---- */
  marriageQ:{kicker:'LIFE PLANS',art:'💭',life:true,titles:['Marriage: someday, or never?','Your aunt at a wedding: “Beta, when is yours?”','The family WhatsApp group wants to know your “plans”.'],
   create:s=>{const second=s.life.marriagePlan==='unsure';return{second,description:second?'You said “not sure” a few years ago. The relatives have not forgotten. Do you see a wedding in your future?':'No pressure (okay, some pressure). Your answer shapes how life unfolds; the costs come only if and when it happens.',foot:'A personal choice. The game models costs, not what is right for you.'};},
@@ -1586,6 +1589,13 @@ const EVENTS={
    s.employment='retired';s.laidOffMonthsLeft=0;s.retiredAtAge=ageLabel();record('Retired at '+s.retiredAtAge+'.',{major:true,kind:'retire'});celebrate('retire','🌅','Retired!','Your savings and investments take over from here.');
    return{retirePlan:true,text:'You retired at '+s.retiredAtAge+'. Salary stops; costs continue.',feedback:e.years>=25?fb('solid','Your assets are large relative to your costs. Inflation and market swings still matter over a long retirement.'):fb('risky','Your assets cover about '+e.years.toFixed(1)+' years of today’s costs, and costs keep rising. This may not last to 80.')};}},
  // Old age, money running low: once, when savings and investments cover under two years of costs.
+ oldhealth:{kicker:'HEALTH, LATER IN LIFE',art:'🩺',warn:true,forced:true,snapshot:true,
+  create:s=>{const H=A.oldHealth,age=preciseAge(s),who=s.married&&rand()<0.45?'spouse':'you',cov=s.insured&&(who==='you'||s.coverFamily);
+   const total=priced(Math.round(randInt(H.bill[0],H.bill[1])*10000*(1+H.perYear*Math.max(0,age-60)))),amount=cov?Math.round(total*(1-A.healthCover.coveredShare)):total;
+   return{who,total,amount,cov,title:who==='you'?pick(['A week in hospital for your heart.','Knee replacement surgery.','A stay in hospital after a bad fall.']):pick(['Your spouse needs heart surgery.','Your spouse is in hospital for a while.']),
+    description:'A hospital bill of '+money(total)+'. Past 60, bills like this come every few years.'+(cov?' Your health cover pays 65%, so your share is '+money(amount)+'.':s.insured?' Your cover is for you only, so you pay all of it.':' With no health cover, all of it is yours.'),foot:cov?'This is what the premiums were for.':'Insurers rarely take new customers past 65. Cover bought young and kept renewing is what pays here.'};},
+  choices:e=>fundingChoices(e.amount),
+  resolve:(e,c)=>{const s=state;s.stats.claims+=e.total-e.amount;s.oldHealthNext=s.month+12*xInt(s,A.oldHealth.gap[0],A.oldHealth.gap[1])+xInt(s,0,11);record('Hospital at '+ageLabel()+': '+money(e.total)+(e.cov?', 65% paid by health cover':', no cover')+'.',{major:true,kind:'health'});return fundExpense(e.amount,c);}},
  lastResort:{kicker:'⚠️ MONEY WARNING',art:'🧓',warn:true,forced:true,title:'⚠️ Your money may not last to 80.',snapshot:true,
   create:s=>{const b=monthlyBudget(s),assets=Math.max(0,s.cash+s.invested),months=Math.floor(assets/Math.max(1,b.total));
    return{months,kids:s.children.length>0,home:s.ownsHome,equity:s.ownsHome?Math.round(s.homeValue*(1-A.house.sellCostShare))-(s.homeLoan?s.homeLoan.balance:0):0,basics:cutPlan(s,'basics'),
@@ -1716,7 +1726,7 @@ Object.assign(EVENTS,{
    return{text:'Scrolled past.',feedback:fb('great','Your class is your net worth, not your stuff.'+adNoteFV(s,e.price))};}}
 });
 /* ---------- Insurance ads: a genuine one (what you are missing) and a misleading 3-in-1 plan ---------- */
-function coverAdKind(s){const a=preciseAge(s);if(!s.insured)return 'insure';if(!s.termCover&&(s.married||activeChildren(s).length)&&a<=A.term.maxAge)return 'term';if(!s.parentsCovered&&a>=30&&a<60)return 'parentsCover';return null;}
+function coverAdKind(s){const a=preciseAge(s);if(!s.insured)return a<A.healthCover.maxNewAge?'insure':null;if(!s.termCover&&(s.married||activeChildren(s).length)&&a<=A.term.maxAge)return 'term';if(!s.parentsCovered&&a>=30&&a<60)return 'parentsCover';return null;}
 Object.assign(EVENTS,{
  adCover:{kicker:AD_KICKER,art:'🛡️',ad:true,weight:1.3,
   eligible:s=>s.employment==='employed'&&!!coverAdKind(s),
@@ -1855,7 +1865,7 @@ const RANDOM_POOL=Object.keys(EVENTS).filter(t=>!CONTEXT_EVENTS.includes(t)&&!EV
 const OPENERS={shock:RANDOM_POOL.filter(t=>EVENTS[t].group==='shock'),social:RANDOM_POOL.filter(t=>EVENTS[t].group==='social')};
 function eligibleEvent(t,s){const d=EVENTS[t];return !d.eligible||d.eligible(s);}
 // A surprise comes at most twice a life, and never again within 15 years: a second time should feel like news.
-function eventWeight(t,s){const d=EVENTS[t],n=s.seen[t]||0;if(n>=A.repeat.max||(n&&s.month-(s.seenAt[t]||0)<A.repeat.gap))return 0;const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*n);}
+function eventWeight(t,s){const d=EVENTS[t],n=s.seen[t]||0,R=d.repeat||A.repeat;if(n>=R.max||(n&&s.month-(s.seenAt[t]||0)<R.gap))return 0;const w=typeof d.weight==='function'?d.weight(s):(d.weight||1);return w/(1+1.5*n);}
 function pickRandomEvent(s,pool=RANDOM_POOL){
  const ok=t=>eligibleEvent(t,s)&&eventWeight(t,s)>0;
  let list=pool.filter(t=>ok(t)&&t!==s.lastEventType&&!(s.lastEventSevere&&EVENTS[t].severe));
@@ -1938,6 +1948,7 @@ function maybeStartEvent(){
 if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  if(!s.life.lastResort&&s.employment==='retired'&&preciseAge(s)<A.endAge-1&&s.cash+s.invested<monthlyBudget(s).total*24){s.life.lastResort=true;startEvent('lastResort');return;}
  if(s.mkt.news===1){s.mkt.news=0;if(growthPart(s)>=10000){startEvent('crash');return;}}
+ if(s.oldHealthNext>0&&m>=s.oldHealthNext&&preciseAge(s)<A.endAge-0.5){s.oldHealthNext=0;startEvent('oldhealth');return;}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
  if(coverDue(s)){startEvent('renewCover');return;}
  const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
@@ -1971,7 +1982,7 @@ function beginLife(profile){
  s.nextPitMonth=monthAtAge(A.pit.firstAge);s.lastPit=lapSnapshot(s);
  s.adNext=adInt(s,A.ads.first[0],A.ads.first[1]);
  const B=A.bigShocks,a1=xInt(s,B.first[0],B.first[1]),a2=Math.min(B.last,Math.max(a1+B.gap,xInt(s,a1+B.gap,B.last)));
- s.bigShock={due:[monthAtAge(a1)+xInt(s,0,11),monthAtAge(a2)+xInt(s,0,11)],count:0};
+ s.bigShock={due:[monthAtAge(a1)+xInt(s,0,11),monthAtAge(a2)+xInt(s,0,11)],count:0};s.oldHealthNext=monthAtAge(xInt(s,A.oldHealth.first[0],A.oldHealth.first[1]))+xInt(s,0,11);
  s.creepIncome=monthlyIncome(s);
  record('Started at 23 on '+money(s.salary)+'/month'+(edu?' (a better college, thanks to an education loan)':'')+': '+BASE_PRICES.home[p.home].label+', '+ride.label.toLowerCase()+(ride.loan?' with a '+money(ride.loan)+' loan':'')+(s.insured?', with health cover':'')+'.',{major:true,kind:'start'});
  const o=settleMonth(s);
@@ -2132,7 +2143,7 @@ const OPTIONAL={
   apply:s=>{s.homeUpgraded=true;s.costs.homeUpgrade=A.homeUpgrade.monthly;record('Upgraded home at '+ageLabel()+'.',{major:true,kind:'home'});const b=monthlyBudget(s);return{text:'Home upgraded. Monthly expenses are now '+money(b.total)+'.',feedback:b.leftover<b.income*0.15?fb('risky','A comfortable home, but your monthly surplus is now thin. Fixed costs are hard to undo.'):fb('solid','A comfort upgrade you can afford. It is a fixed cost every month, and it rises with inflation.')};}},
  insure:{tab:'recurring',name:'Get health cover',emoji:'🛡️',color:'c-mint',
   cost:()=>0,monthly:s=>priced(healthQuoteBase(s,true,false),s),
-  available:s=>s.insured?'Health cover is already active.':null,
+  available:s=>s.insured?'Health cover is already active.':preciseAge(s)>=A.healthCover.maxNewAge?'Insurers rarely take new customers past '+A.healthCover.maxNewAge+'.':null,
   describe:s=>'Pay '+money(priced(healthQuoteBase(s,true,false),s))+' a month'+(s.married||activeChildren(s).length?' for a family policy':'')+'. Covers 65% of eligible medical bills for you'+(s.married||activeChildren(s).length?' and your family':'')+'. A 3-year policy: you renew it yourself, at a new premium for your age and family.',
   apply:s=>{startCover(s,true);record('Started health cover at '+ageLabel()+'.',{major:true,kind:'cover'});return{text:'Health cover active: '+money(healthPremium(s))+' a month for 3 years.',feedback:fb('solid','A small fixed cost that reduces large medical shocks. It may or may not pay back in money terms; it lowers risk.')};}},
  parentsCover:{tab:'recurring',name:'Add parents to health cover',emoji:'👵',color:'c-sand',
@@ -3065,7 +3076,7 @@ function pitBody(){
  if(e.outlook)h+='<p class="pit-tip pit-retire'+(e.outlook.lastsTo?' warn':'')+'">'+em('🏖️')+'<span><b>Retirement check:</b> '+esc(e.outlook.text)+'</span></p>';
  h+='<p class="pit-tip">'+em('🔧')+'<span><b>Pit crew:</b> '+esc(e.tip)+'</span></p>';
  const rn=e.renewal;if(rn){const opt=(v,t,d)=>'<button type="button" class="pit-opt" data-pit-key="cover" data-pit-value="'+v+'" aria-pressed="'+(pk.cover===v)+'"><strong>'+t+'</strong><small>'+d+'</small></button>';
-  h+='<div class="pit-cover"><b>'+em('🛡️')+' Health cover renewal due</b><small>It does not renew by itself. You pay '+money(rn.old)+'/month now.</small><div class="pit-opts">'+opt('renew','Renew',money(rn.same)+'/mo')+(rn.canFam?opt('family','Renew as family',money(rn.fam)+'/mo'):'')+opt('lapse','Let it lapse','₹0, no cover')+'</div></div>';}
+  h+='<div class="pit-cover"><b>'+em('🛡️')+' Health cover renewal due</b><small>It does not renew by itself. You pay '+money(rn.old)+'/month now.</small><div class="pit-opts">'+opt('renew','Renew',money(rn.same)+'/mo')+(rn.canFam?opt('family','Renew as family',money(rn.fam)+'/mo'):'')+opt('lapse','Let it lapse',M.preciseAge()>=A.healthCover.maxNewAge-5?'₹0. Past '+A.healthCover.maxNewAge+' you cannot buy it again':'₹0, no cover')+'</div></div>';}
  if(e.sipBoost&&s.employment==='employed'){const on=pk.sip==='boost';h+='<button type="button" class="pit-sip" data-pit-key="sip" data-pit-value="'+(on?'keep':'boost')+'" aria-pressed="'+on+'">'+em('🌱')+'<span><strong>'+(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.sipBoost)+'/month</strong><small>'+(on?'✓ Added. Tap again to undo.':'Optional: puts spare money to work.')+'</small></span></button>';}
  const wait=e.renewal&&!pk.cover;return h+'<button type="button" class="primary pit-go" data-choice="go"'+(wait?' disabled':'')+'>🏎️ Continue</button>'+(wait?'<p class="pit-wait">Choose what to do with your health cover first.</p>':'');
 }
@@ -3237,7 +3248,7 @@ function renderAbout(){
   ['Could have been','At the end, up to three what-ifs, each one change on its own with the same market luck as your life (idle cash invested, an earlier SIP, no investments sold, no card debt, no ads), in today’s money, with a take-home lesson for each.'],
   ['Life stages','Asked about marriage at 23–24 (yes, not sure, no). Weddings happen from 25, never after 38. Kids (0, 1 or 2) are discussed 1–2 years after the wedding; the second arrives 2–4 years after the first; no births after 40. School is chosen at 4. Parents need support from your mid-40s and pass away when you are about 60–68. Divorce is rare'],
   ['Family','A wedding costs ₹10 lakh (simple), ₹20 lakh (big) or ₹40 lakh (lavish). Your spouse does not earn: their living costs are ₹9,000/month. A birth costs ₹1.5 lakh in a private hospital or ₹20,000 in a government one. Each child costs ₹9,000 (first) or ₹7,000 (second) a month until 21, plus school fees until 18: government ₹1,500, budget private ₹10,000 (about ₹1.2 lakh a year), private ₹29,000 (about ₹3.5 lakh a year), international ₹75,000 a month, plus admission. A pet adds ₹2,500/month. All at age-23 prices that rise 6% a year'],
-  ['Health cover','Chosen at the start, offered as a card in month 2, in ads, or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹5,000 for parents (optional add-on), rising 1.5% per year of age. Pays 65% of eligible bills for everyone on the policy. It never renews by itself: at a pit stop about every 5 years you renew it or let it lapse. After you marry or have a child, you are asked once to renew it as family cover; until then your spouse and kids are not covered. More → Monthly power-ups shows what you have'],
+  ['Health cover','Chosen at the start, offered as a card in month 2, in ads, or in More → Power-ups. ₹1,000/month for you, +₹600 for a spouse, +₹400 per child, +₹3,000 for parents (optional add-on, ends when they pass away), rising 1.5% per year of age. Pays 65% of eligible bills for everyone on the policy. From 60 a hospital stay comes every 3–5 years (₹1–4L in today’s money, bigger with age), and insurers do not take new customers past 65. From 55, cover brings peace of mind (+6 Me) and going without brings worry (−5). It never renews by itself: at a pit stop about every 5 years you renew it or let it lapse. After you marry or have a child, you are asked once to renew it as family cover; until then your spouse and kids are not covered. More → Monthly power-ups shows what you have'],
   ['Insurance ads','Some insurance ads offer what you are missing (health, term or parents’ cover). Others sell a “3-in-1” plan: about 4.5% a year, 10 years of premiums, paid out after 15; surrendering early returns 30%'],
   ['Lump sum','More → One-time: invest your idle cash (above 6 months), a quarter, half or all of your savings at once'],
   ['Term cover','₹1 crore cover (today’s money) until 65 with a disability benefit of 20% if an accident stops you working. ₹800/month at 23, about 4.5% more for every year older you buy it; the premium is locked when bought. You never die in this game'],['Home upgrade','Unlocks at age 26 with 2 Career XP: ₹18,000 once + ₹8,000/month'],

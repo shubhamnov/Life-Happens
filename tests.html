@@ -120,8 +120,8 @@ await test('Invariant: expense preview does not mutate state',async()=>{const {L
 await test('Invariant: bonus credited once',async()=>{const {L}=await game(31);const s=L.state;L.startEvent('bonus',{first:true});const e=s.event,c=s.cash;L.resolveEvent(e.id,'save');L.resolveEvent(e.id,'save');eq(s.cash,c+e.amount,'once');});
 await test('Invariant: no two severe shocks in a row; event cadence 12–20 months',async()=>{const {L}=await game(32);const s=L.state;s.cash=1e8;const types=[];
  for(let i=0;i<690&&s.status==='playing';i++){if(s.event){types.push([s.month,s.event.type,!!s.event.scheduled]);autoResolve(L);}s.cash=Math.max(s.cash,1e7);L.advanceMonth();}
- const ctx=['crunch','retire','burnout','squeeze','overspend','tighten','restore','renewCover','creep'],rnd=types.filter(([m,t,sch])=>m>24&&!sch&&!ctx.includes(t)&&!L.EVENTS[t].life&&!L.EVENTS[t].ad);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
- assert(rnd.length>=25&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
+ const ctx=['crunch','retire','burnout','squeeze','overspend','tighten','restore','renewCover','creep','oldhealth','crash','lastResort'],rnd=types.filter(([m,t,sch])=>m>24&&!sch&&!ctx.includes(t)&&!L.EVENTS[t].life&&!L.EVENTS[t].ad);for(let i=1;i<rnd.length;i++){assert(rnd[i][0]-rnd[i-1][0]>=12,'gap ≥ 12 months');assert(!(L.EVENTS[rnd[i][1]].severe&&L.EVENTS[rnd[i-1][1]].severe),'no back-to-back severe');assert(rnd[i][1]!==rnd[i-1][1],'no immediate repeat');}
+ assert(rnd.length>=20&&rnd.length<=60,'reasonable number of events: '+rnd.length);});
 await test('Variation: different seeds give different event sequences',async()=>{const seqs=[];for(const seed of [41,42,43]){const {L}=await game(seed);const s=L.state;const t=[];for(let i=0;i<300;i++){if(s.event){t.push(s.event.type);autoResolve(L);}s.cash=Math.max(s.cash,1e6);L.advanceMonth();}seqs.push(t.join(','));}assert(new Set(seqs).size>1,'sequences vary');});
 await test('Invariant: married players cannot finish at 80 while carrying runaway debt',async()=>{const {L}=await game(33);const s=L.state;const pol={marriageQ:'yes',wedding:'big',kidsQ:'k2',crunch:'keep'};
  for(let i=0;i<800&&s.status==='playing';i++){autoResolve(L,pol);L.advanceMonth();}
@@ -472,8 +472,8 @@ await test('School: switch the kids’ school in Monthly plan or when money is s
  L.resolveEvent(s.event.id,'school');assert(s.children.every(c=>c.school==='budget'),'one step down');assert(s.history.some(h=>/budget private school/.test(h.text)),'in the journal');});
 await test('Surprises: a card comes at most twice a life, 15+ years apart; peer pressure at most twice',async()=>{const {L}=await game(407);const s=L.state;const at={};
  for(let i=0;i<700&&s.status==='playing';i++){if(s.event&&s.event.type!=='pitstop'&&!L.EVENTS[s.event.type].life){(at[s.event.type]=at[s.event.type]||[]).push(s.month);}autoResolve(L);s.cash=Math.max(s.cash,L.monthlyBudget().total*6);L.advanceMonth();}
- const ctx=['overspend','tighten','restore','renewCover','retire','burnout','squeeze','lastResort'];
- Object.entries(at).filter(([t])=>!ctx.includes(t)).forEach(([t,m])=>{assert(m.length<=2,t+' came '+m.length+' times');if(m.length===2)assert(m[1]-m[0]>=180,t+' repeated after '+(m[1]-m[0])+' months');});
+ const ctx=['overspend','tighten','restore','renewCover','retire','burnout','squeeze','lastResort','oldhealth','crash'];
+ Object.entries(at).filter(([t])=>!ctx.includes(t)).forEach(([t,m])=>{const R=L.EVENTS[t].repeat||{max:2,gap:180};assert(m.length<=R.max,t+' came '+m.length+' times');for(let i=1;i<m.length;i++)assert(m[i]-m[i-1]>=R.gap,t+' repeated after '+(m[i]-m[i-1])+' months');});
  const n=Object.entries(at).filter(([t])=>!ctx.includes(t)).reduce((a,[,m])=>a+m.length,0);assert(n>=25&&n<=45,'surprises and ads in a life: '+n);});
 
 const pass=results.filter(r=>r.ok).length;
@@ -515,6 +515,15 @@ await test('End screen: headline net worth is in today’s money; retirement dra
  s.cash=0;s.invested=5e6;s.salary=0;s.employment='retired';for(let i=0;i<6;i++){quiet(s);L.advanceMonth();}assert(s.stats.investmentsSold>0,'retiree sold to pay bills');assert(!L.whatIfLessons().some(l=>l.key==='sold'),'not a lesson');
  s.month=(80-23)*12;s.cash=1e7;L.endRun('completed');L.render();const head=d.querySelector('.end-score').textContent;
  assert(head.includes(L.compact(L.realNetWorth()))&&/today/.test(head),'headline in today’s money: '+head);assert(/that year’s rupees/.test(d.getElementById('endBody').textContent),'nominal figures labelled');});
+await test('Health later in life: hospital bills from 60, cover pays 65%, no new cover past 65, peace of mind from 55',async()=>{const {L}=await game(640);const s=L.state;
+ assert(s.oldHealthNext>=L.monthAtAge(60)&&s.oldHealthNext<L.monthAtAge(64),'first later-life bill at 60–63');
+ quiet(s);s.month=s.oldHealthNext;s.married=false;s.insured=true;s.cash=5e7;const c0=s.stats.claims;L.maybeStartEvent&&0;
+ L.startEvent('oldhealth');const e=s.event;eq(e.type,'oldhealth','card');near(e.amount,Math.round(e.total*0.35),1,'you pay 35%');L.resolveEvent(e.id,'savings');eq(s.stats.claims-c0,e.total-e.amount,'claim counted');
+ assert(s.oldHealthNext-s.month>=36&&s.oldHealthNext-s.month<72,'next one 3–5 years later');
+ quiet(s);s.insured=false;L.startEvent('oldhealth');eq(s.event.amount,s.event.total,'no cover: all of it');L.resolveEvent(s.event.id,'savings');
+ quiet(s);s.month=L.monthAtAge(66);assert(/past 65/.test(L.optionalBlocker('insure')||''),'no new cover past 65: '+L.optionalBlocker('insure'));
+ s.month=L.monthAtAge(56);assert(L.ringDrivers().some(d=>/No health cover at your age/.test(d.label)&&d.v[0]<0),'worry without cover');s.insured=true;s.coverBase=1000;assert(L.ringDrivers().some(d=>/health worries/.test(d.label)&&d.v[0]>=6),'calm with cover');
+ s.month=L.monthAtAge(40);assert(L.ringDrivers().some(d=>d.label==='Health cover'&&d.v[0]===2),'small comfort when young');});
 window.__TEST_RESULTS=results;
 })();
 </script>

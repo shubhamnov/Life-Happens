@@ -17,6 +17,8 @@ const out=await p.evaluate(async({N,only})=>{
   ret25:V({mix:[[60,0.25]]}),ret50:V({mix:[[60,0.5]]}),midret25:V({sip:0.12,pit:false,mix:[[60,0.25]]}),midret50:V({sip:0.12,pit:false,mix:[[60,0.5]]}),
   thin:V({sip:0.08,pit:false}),thinglide:V({sip:0.08,pit:false,mix:[[50,0.25],[56,0.5]]}),thin50:V({sip:0.08,pit:false,mix:[[23,0.5]]}),sip0:V({sip:0,pit:false}),sip30:V({sip:0.3}),
   nocover:V({setup:{health:'no'},pol:{insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
+  midnocover:V({sip:0.12,pit:false,setup:{health:'no'},pol:{insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
+  frugalnocover:V({setup:{home:'starter',food:'home',social:'quiet',other:'none',travel:'none',health:'no'},sip:0.3,pol:{wedding:'modest',kidsQ:'k1',schoolQ:'gov',insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
   home:V({buy:'near'}),villa:V({buy:'villa'}),car:V({car:true}),
   acts:V({acts:true}),lump:V({lump:true}),
   work70:V({pol:{retire:'work'},retireAt:70}),
@@ -29,7 +31,7 @@ const out=await p.evaluate(async({N,only})=>{
  for(const [name,st] of Object.entries(STR).filter(([n])=>!only.length||only.includes(n))) for(let k=1;k<=N;k++){
   const f=document.createElement('iframe');f.src='index.html?test=1&seed='+(k*13+5);document.body.appendChild(f);await new Promise(r=>f.onload=r);
   const L=f.contentWindow.LifeHappens;L.goToSetup();const prof=Object.assign({},L.state.profile);L.beginLife(Object.assign({},prof,st.setup||{}));
-  const s=L.state;let crashRet=null,sipSet=false,stops=0,bought=null,carB=false,startSal=s.salary;const types={};
+  const s=L.state;let probe={},crashRet=null,sipSet=false,stops=0,bought=null,carB=false,startSal=s.salary;const types={};
   for(let i=0;i<1000&&s.status==='playing';i++){
    let g=0;while(s.event&&g++<5){const e=s.event;stops++;types[e.type]=(types[e.type]||0)+1;
     if(e.type==='pitstop'){L.resolveEvent(e.id,'go',{pit:{cover:st.pitCover||'renew',sip:st.pit&&e.sipBoost?'boost':'keep'}});continue;}
@@ -49,9 +51,10 @@ const out=await p.evaluate(async({N,only})=>{
     if(st.acts){for(const a of ['familyDay','volunteer','donate']){if(L.chooseOptional(a))break;}}
     if(st.lump&&s.cash>9*L.monthlyBudget(s).total&&s.employment==='employed')L.chooseOptional('investLump','idle');
    }
+   {const a=Math.floor(L.preciseAge(s));if(!s.event&&(a===40||a===55||a===70)&&!probe[a]){const f=Math.pow(1.06,Math.floor(s.month/12));probe[a]={hp:Math.round(L.healthPremium(s)/f),fam:s.coverFamily,par:s.parentsCovered,term:!!s.termCover,cost:Math.round(L.monthlyBudget(s).total/f),inc:Math.round(L.monthlyIncome(s)/f),cash:Math.round(s.cash/f/1000),inv:Math.round(s.invested/f/1000)};}}
    L.advanceMonth();}
   const end=L.lifeEnding(s);
-  res.push({crashRet,name,k,end:end.key,H:L.lifeHappiness(s),nw:Math.round(L.realNetWorth(s)/1e5),age:+L.ageLabel(),broke:s.finalReason==='insolvent',stops,startSal,bought,ret:s.retiredAtAge||null,types,avg:end.avg});
+  res.push({probe,brokeAt:s.status!=='playing'&&s.finalReason==='insolvent'?L.ageLabel():null,prem:Math.round(s.stats.insurancePaid/1e5),claims:Math.round(s.stats.claims/1e5),crashRet,name,k,end:end.key,H:L.lifeHappiness(s),nw:Math.round(L.realNetWorth(s)/1e5),age:+L.ageLabel(),broke:s.finalReason==='insolvent',stops,startSal,bought,ret:s.retiredAtAge||null,types,avg:end.avg});
   f.remove();}
  return res;},{N,only});
 require('fs').writeFileSync(process.argv[3],JSON.stringify(out));await b.close();})();
