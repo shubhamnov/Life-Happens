@@ -327,6 +327,12 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
 .card-top h2{margin:0;font:700 17px var(--display);display:flex;align-items:center;gap:6px}
 .sip-row{display:flex;align-items:center;gap:10px;background:var(--mint);border:2px solid #fff;border-radius:20px;padding:10px 12px;box-shadow:var(--shadow)}
 .sip-row .emoji{font-size:26px}
+.mix-row{background:#E9EEF8}
+.mix-row.crash{background:#FBE3DC}
+.mix-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+.mix-options button{min-height:58px;border-radius:14px;border:2px solid #fff;background:#EFEADD;font:700 15px var(--display);box-shadow:0 2px 0 #2E3A3312;padding:6px}
+.mix-options button small{display:block;font:700 11px var(--body,inherit);color:#4E5E54}
+.mix-options button[aria-pressed=true]{background:#DCE6F7;border-color:#7C93C4}
 .sip-row div{flex:1;min-width:0}
 .sip-row b{display:block;font:700 16px var(--display)}
 .sip-row small{display:block;font-size:12px;color:#4E5E54;font-weight:700;line-height:1.35}
@@ -597,6 +603,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
   <div class="sheet-top"><h2 id="moreTitle">Your life</h2><button type="button" class="secondary" id="moreClose">Back to the race</button></div>
   <div class="life-tags" id="lifeTags"></div>
   <section class="sip-row" aria-label="Monthly SIP"><span class="emoji" aria-hidden="true">🌱</span><div><b id="sipTitle">No SIP yet</b><small id="sipNote">Invest a fixed amount automatically every month.</small></div><button type="button" class="secondary" id="sipBtn">Set SIP</button></section>
+  <section class="sip-row mix-row" aria-label="Investment mix"><span class="emoji" aria-hidden="true">⚖️</span><div><b id="mixTitle">All growth</b><small id="mixNote">Growth earns more but can crash. Safe earns 7% and never falls.</small></div><button type="button" class="secondary" id="mixBtn">Change</button></section>
   <section class="card" aria-labelledby="planTitle">
    <div class="card-top"><h2 id="planTitle"><span class="emoji" aria-hidden="true">🧾</span>Monthly plan</h2><button type="button" class="secondary" id="editExpensesBtn">Edit plan</button></div>
    <div class="money-bar" id="moneyBar" aria-hidden="true"></div>
@@ -634,7 +641,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
 <div class="overlay hidden" id="sipInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="sipInfoTitle">
  <div class="dialog"><div class="end-art emoji" aria-hidden="true">🌱</div><span class="sticker">QUICK TIP</span><h2 id="sipInfoTitle">What’s a SIP?</h2>
   <p>A <b>Systematic Investment Plan</b>: a fixed amount moves from your savings into investments every month, automatically.</p>
-  <ul class="sip-steps"><li>💤 Savings earn 2.5% a year while prices rise about 6%.</li><li>📈 Invested money grows 10–15% a year over any 10 years, with ups and downs along the way.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
+  <ul class="sip-steps"><li>💤 Savings earn 2.5% a year while prices rise about 6%.</li><li>📈 Invested money has grown about 12% a year over the long run, with ups, downs and the odd crash.</li><li>⏰ Starting early matters most: time does the heavy lifting.</li><li>🛟 Keep about 6 months of expenses in savings for surprises.</li></ul>
   <p><b>Tip:</b> start a SIP as soon as money is left over each month.</p>
   <div class="dialog-actions single"><button type="button" class="primary" id="sipInfoClose">Got it</button></div></div>
 </div>
@@ -690,10 +697,15 @@ const A=Object.freeze({
  maxXp:5,trainingCost:4000,
  cushionMonths:6,              // savings beyond 6 months of expenses count as idle cash
  ads:{first:[30,54],gap:[66,102]},  // an ad card roughly every 5½–8½ years
- // Markets: an index that grows 12.5% a year on trend, plus a swing that wanders but stays within ±10%
- // of the trend (log terms). So over ANY 10 years invested money grows about 10.3–14.8% a year,
- // while single years can still be anywhere from a loss to a big gain. Dips and booms move the swing.
- market:{annual:0.125,band:0.10,revert:0.97,vol:0.035},
+ // Markets: an index with a 13.5% trend, a swing that wanders within ±10% of it (log terms), and crashes.
+ // Crashes drag the long run down to about 12.5% a year (expect); a lifetime lands between 11% and 13.5%.
+ // A crash, about once in 20 years: the index drops 33–50% within a year, then wins back half to three
+ // quarters of the fall over 2–3½ years. The rest is a lasting dent. stress: the Me-ring cost while it lasts
+ // (working, retired) when everything is in growth.
+ market:{annual:0.135,expect:0.125,band:0.10,revert:0.97,vol:0.035,crash:{chance:1/170,depth:[0.4,0.7],back:[0.5,0.75],fall:[8,14],heal:[24,42],rest:60,quiet:36,stress:[12,24]}},
+ safeRate:0.07,                // the safe part of investments (deposits, PPF): 7% a year, never falls
+ mixes:[0,0.25,0.5,0.75],
+ safeYears:5,                  // retired with this many years of costs in savings + safe money: peace of mind      // share of investments kept safe
  savingsRate:0.025,            // savings earn 2.5% a year (credited monthly) while prices rise 6%
  unsecuredMonthlyRate:0.01,    // 1% a month on unsecured debt
  debtMinRate:0.03,debtMinFloor:2000,             // minimum repayment: the larger of 3% of balance or ₹2,000 (inflation-indexed)
@@ -808,7 +820,7 @@ function createState(){
   salary:45000,career:0,jobStartMonth:1,lastPromotionYear:0,promotions:0,
   employment:'employed',           // employed | laidoff | retired ("laidoff" also covers accident recovery; see breakReason)
   laidOffMonthsLeft:0,breakReason:'',lastLayoffMonth:-999,retiredAtAge:null,retirePromptShown:false,startupUntil:0,
-  cash:0,invested:0,unsecuredDebt:0,sip:0,
+  cash:0,invested:0,safe:0,mix:0,unsecuredDebt:0,sip:0,
   vehicle:'public',transit:'bus',vehicleLoan:null,eduLoan:null,   // loans: {kind,principal,balance,emi,monthsLeft,rate}
   ownsHome:false,homeValue:0,homeLoan:null,
   costs:{housing:0,food:0,social:0,travel:0,other:0,commute:0,fuel:0,household:0,homeUpgrade:0,pet:0,parents:0}, // base-year (age-23) rupees
@@ -830,7 +842,7 @@ function createState(){
   // Ads (own seeded generator, so they never shift the main random stream) and the end-screen what-ifs.
   overspendMonths:0,lastOverspendMonth:-999,lifestyleSaved:null,pendingTighten:false,pendingRestore:false,
   bigShock:{due:[],count:0},coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
-  mkt:{x:0,rng:0},
+  mkt:{x:0,rng:0,c:0,cr:null,rest:A.market.crash.quiet,news:0,low:0},
   adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
 }
@@ -934,8 +946,9 @@ const KIDS_COVER=['housing','food','social','travel','commute','fuel'];
 // (or stop now, if retired); then living costs without kids, school, loans or term cover come out monthly.
 function retireOutlook(s=state){
  const inf=inflationFactor(s),age=preciseAge(s),retired=s.employment==='retired',rAge=retired?age:Math.max(age,A.retirePromptAge);
- const real=Math.pow((1+A.market.annual)/(1+A.annualInflation),1/12)-1,cashReal=Math.pow((1+A.savingsRate)/(1+A.annualInflation),1/12)-1,infM=Math.pow(1+A.annualInflation,1/12);
+ const growthReal=Math.pow((1+A.market.expect)/(1+A.annualInflation),1/12)-1,cashReal=Math.pow((1+A.savingsRate)/(1+A.annualInflation),1/12)-1,infM=Math.pow(1+A.annualInflation,1/12);
  const b=monthlyBudget(s),cost=sum(b.lines.filter(l=>l.kind!=='debt'&&!/^(child|school|term|policy)/.test(l.key)).map(l=>l.amount))/inf;
+ const share=s.invested>0?Math.min(1,s.safe/s.invested):s.mix,safeReal=Math.pow((1+A.safeRate)/(1+A.annualInflation),1/12)-1,real=share*safeReal+(1-share)*growthReal;
  let inv=s.invested/inf,cash=(s.cash-s.unsecuredDebt)/inf,sip=retired?0:activeSip(s)/inf,spare=retired?0:Math.max(0,b.free)/inf;
  for(let m=0;m<Math.round((rAge-age)*12);m++){inv=inv*(1+real)+sip;cash=cash*(1+cashReal)+spare;sip/=infM;spare/=infM;}
  let left=inv+cash,a=rAge;const pot=left;
@@ -1024,6 +1037,8 @@ function ringDrivers(s=state){
  else if(cushion>=6)add('Six months of savings',[10,0,0]);else if(cushion>=3)add('A savings cushion',[7,0,0]);else if(cushion>=1)add('A thin savings cushion',[3,0,0]);
  if(s.unsecuredDebt>b.total*6)add('Heavy card debt',[-10,0,0]);else if(s.unsecuredDebt>0)add('Card debt',[-4,0,0]);
  if(s.insured)add('Health cover',[2,0,0]);
+ {const cs=crashStress(s);if(cs)add(s.employment==='retired'?'Watching a crash eat your retirement money':'Watching a market crash',[cs,0,0]);}
+ if(s.employment==='retired'&&safeYears(s)>=A.safeYears)add('Five years of bills in safe money',[6,0,0]);
  if(s.employment==='laidoff')add(s.breakReason==='recovery'?'Recovering from an accident':s.breakReason==='break'?'A break to recharge':'Between jobs',s.breakReason==='break'?[8,4,0]:[-8,0,0]);
  if(s.married)add('Married life',[2,10,3]);
  const kids=activeChildren(s).length;if(kids)add(kids>1?'Two kids':'Your kid',[0,6*kids,3*kids]);
@@ -1147,11 +1162,34 @@ function lifeEnding(s=state){
    ===================================================================== */
 // The market's own generator (s.mkt.rng), so market moves never shift the life events.
 function mRand(s){let a=(s.mkt.rng+0x6D2B79F5)|0;s.mkt.rng=a;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
-const MKT_TREND=Math.log(1+A.market.annual)/12;
+const MKT_TREND=Math.log(1+A.market.annual)/12,SAFE_M=Math.pow(1+A.safeRate,1/12);
 // Keep the swing inside ±band (reflect off the edges).
 function mktClamp(x){const b=A.market.band;if(x>b)x=b-(x-b)*0.5;if(x<-b)x=-b+(-b-x)*0.5;return clamp(x,-b,b);}
-function monthlyReturn(s=state){const M=A.market,z=(mRand(s)+mRand(s)+mRand(s)+mRand(s)-2)*Math.sqrt(3),x0=s.mkt.x,x1=mktClamp(x0*M.revert+M.vol*z);s.mkt.x=x1;return Math.exp(MKT_TREND+x1-x0)-1;}
-// A dip or a boom moves the swing (never outside the band, so the 10-year promise holds).
+function monthlyReturn(s=state){const M=A.market,z=(mRand(s)+mRand(s)+mRand(s)+mRand(s)-2)*Math.sqrt(3),x0=s.mkt.x,x1=mktClamp(x0*M.revert+M.vol*z);s.mkt.x=x1;return Math.exp(MKT_TREND+x1-x0+crashStep(s))-1;}
+// Crashes sit on top of the swing: s.mkt.c is how far below the trend the crash holds the index (log, ≤ 0).
+// It falls fast, then heals in a straight line. news: 1 = a crash is three months in, 2 = it has just healed.
+function crashStep(s){
+ const k=s.mkt,C=A.market.crash,c0=k.c,u=mRand(s),pick=r=>Math.round(r[0]+mRand(s)*(r[1]-r[0]));
+ if(k.cr){const q=k.cr;
+  if(q.fall>0){k.c=c0-q.down;q.fall-=1;if(q.fall===q.len-3)k.news=1;k.low=Math.min(k.low,k.c);}
+  else{k.c=Math.min(q.stop,c0+q.up);if(k.c===q.stop){k.news=2;k.healed=s.month-q.start;k.cr=null;k.rest=C.rest;k.c=0;return q.stop-c0;}}}
+ else if(k.rest>0)k.rest-=1;
+ else if(u<C.chance){const d=C.depth[0]+mRand(s)*(C.depth[1]-C.depth[0]),f=pick(C.fall),h=pick(C.heal);k.cr={fall:f,len:f,down:d/f,up:d/h,depth:d,stop:-d*(1-(C.back[0]+mRand(s)*(C.back[1]-C.back[0]))),start:s.month};k.low=0;}
+ return k.c-c0;
+}
+// Investments have a safe part (s.safe, inside s.invested). New money follows the chosen mix; sales take the safe part first.
+function growthPart(s=state){return Math.max(0,s.invested-s.safe);}
+function addInvest(s,amount){s.invested+=amount;s.safe+=Math.round(amount*s.mix);}
+function sellInvest(s,amount){const d=Math.min(s.invested,amount);s.invested-=d;s.safe=Math.max(0,s.safe-d);return d;}
+// Retired: how many years of today's costs sit in savings and safe money (the bucket that never falls).
+function safeYears(s=state){return (Math.max(0,s.cash)+s.safe)/Math.max(1,monthlyBudget(s).total*12);}
+function crashFall(s=state){return 1-Math.exp(s.mkt.c);}
+// A crash costs peace of mind in step with how much of your money is riding on it; far more once there is no salary.
+function crashStress(s=state){
+ const fall=crashFall(s),g=growthPart(s);if(!s.mkt.cr||fall<0.1||g<monthlyBudget(s).total*6)return 0;
+ return -Math.round(A.market.crash.stress[s.employment==='retired'?1:0]*g/Math.max(1,g+s.safe+Math.max(0,s.cash))*Math.min(1,fall/0.3));
+}
+// A dip or a boom moves the swing (never outside the band).
 function marketJump(s,size){const x0=s.mkt.x,x1=clamp(x0+size,-A.market.band,A.market.band);s.mkt.x=x1;return Math.exp(x1-x0)-1;}
 function settleMonth(s=state){
  if(s.lastSettledMonth===s.month)return s.lastSettlement;
@@ -1159,7 +1197,8 @@ function settleMonth(s=state){
  const out={month:s.month,income:0,expenses:0,marketChange:0,unpaid:0,missedDebt:0,drawdown:0,interest:0,loanPaidOff:'',sip:0,sipSkipped:false};
  const r=monthlyReturn(s),cashRate=A.savingsRate/12;   // the market moves every month, invested or not
  if(s.cash>0){const i=Math.round(s.cash*cashRate);s.cash+=i;out.savingsInterest=i;s.stats.savingsInterest+=i;}
- if(s.invested>0){const before=s.invested;s.invested=Math.max(0,Math.round(s.invested*(1+r)));out.marketChange=s.invested-before;}
+ if(s.invested>0){const before=s.invested,safe=Math.min(s.safe,before);s.safe=Math.round(safe*SAFE_M);s.invested=s.safe+Math.max(0,Math.round((before-safe)*(1+r)));out.marketChange=s.invested-before;}
+ if(s.mkt.news===2){s.mkt.news=0;if(growthPart(s)>0)record('📈 Markets are back at their old high, '+(s.mkt.healed/12).toFixed(1).replace('.0','')+' years after the crash began.',{kind:'sip'});}
  whatIfGrow(s,r,cashRate);
  const budget=monthlyBudget(s);out.expenses=budget.total;
  out.income=budget.income;out.tax=budget.tax;s.cash+=budget.income;s.stats.taxPaid+=budget.tax;
@@ -1180,13 +1219,13 @@ function settleMonth(s=state){
   const short=pay(due);s.unsecuredDebt=Math.max(0,s.unsecuredDebt-(due-short));missed=short;
  }
  if((unpaid>0||missed>0)&&s.invested>0){
-  const draw=Math.min(s.invested,unpaid+missed);s.invested-=draw;out.drawdown=draw;s.stats.investmentsSold+=draw;
+  const draw=sellInvest(s,unpaid+missed);out.drawdown=draw;s.stats.investmentsSold+=draw;
   let d=draw;const u=Math.min(d,unpaid);unpaid-=u;d-=u;if(d>0){s.unsecuredDebt=Math.max(0,s.unsecuredDebt-d);missed-=d;}
  }
  if(unpaid>0)s.unsecuredDebt+=unpaid;
  out.unpaid=unpaid;out.missedDebt=missed;
  const sip=activeSip(s);
- if(sip>0){if(unpaid===0&&missed===0&&s.cash>=sip){s.cash-=sip;s.invested+=sip;out.sip=sip;s.stats.sipInvested+=sip;}else{out.sipSkipped=true;s.stats.sipSkipped+=1;}}
+ if(sip>0){if(unpaid===0&&missed===0&&s.cash>=sip){s.cash-=sip;addInvest(s,sip);out.sip=sip;s.stats.sipInvested+=sip;}else{out.sipSkipped=true;s.stats.sipSkipped+=1;}}
  if(unpaid>0||missed>0){s.distressMonths+=1;s.stats.strainedMonths+=1;s.stats.maxDistress=Math.max(s.stats.maxDistress,s.distressMonths);}
  else{if(s.distressMonths>0)s.stats.recoveries+=1;s.distressMonths=0;}
  if(s.policy){const p=s.policy;p.value=Math.round(p.value*(1+p.rate/12)+(s.month<p.paidUntil&&unpaid===0?p.premium:0));
@@ -1234,10 +1273,10 @@ function settlementMessage(o){
 function fundExpense(amount,method,fun){
  const s=state,cushionBefore=monthsOfCushion(s),cashBefore=s.cash;
  let fromCash=0,fromInvest=0,borrowed=0;
- if(method==='invest'){fromInvest=Math.min(s.invested,amount);s.invested-=fromInvest;s.stats.investmentsSold+=fromInvest;}
+ if(method==='invest'){fromInvest=sellInvest(s,amount);s.stats.investmentsSold+=fromInvest;}
  if(method==='borrow')borrowed=amount;
  else{const rest=amount-fromInvest;fromCash=Math.min(s.cash,rest);s.cash-=fromCash;borrowed=rest-fromCash;
-  if(method==='savings'&&borrowed>0&&s.invested>0){const sell=Math.min(s.invested,borrowed);s.invested-=sell;s.stats.investmentsSold+=sell;fromInvest+=sell;borrowed-=sell;}}
+  if(method==='savings'&&borrowed>0&&s.invested>0){const sell=sellInvest(s,borrowed);s.stats.investmentsSold+=sell;fromInvest+=sell;borrowed-=sell;}}
  s.unsecuredDebt+=borrowed;if(fun)s.stats.fun+=amount;else s.stats.shocks+=amount;
  const parts=[];if(fromCash)parts.push(money(fromCash)+' from savings');if(fromInvest)parts.push(money(fromInvest)+' from investments');if(borrowed)parts.push(money(borrowed)+' as new debt');
  const text='Paid '+money(amount)+': '+parts.join(', ')+'.';
@@ -1379,16 +1418,24 @@ const EVENTS={
    const amt=c==='big'?e.big:e.small;s.cash-=amt;const win=rand()<0.25;const back=win?amt*3:Math.round(amt*0.2);s.cash+=back;s.stats.fun+=Math.max(0,amt-back);
    return{text:win?'To the moon! '+money(amt)+' became '+money(back)+'.':'It crashed. '+money(amt)+' became '+money(back)+'.',feedback:win?fb('risky','You won this time. Most hype coins do not do this; luck is not a strategy.'):c==='small'?fb('solid','You only bet what you could lose. Lesson learnt cheaply.'):lessonFb(s,'Hype is not a plan. Your buddy’s “sure-shot” tip crashed.',LISTEN,true)};}},
  boom:{kicker:'BULL RUN',art:'📈',titles:['Markets are partying!','Your investments just had a great month.'],snapshot:true,
-  eligible:s=>s.invested>=10000&&s.mkt.x<A.market.band-0.06,
-  create:s=>{const up=marketJump(s,0.06+rand()*0.12),before=s.invested;s.invested=Math.round(s.invested*(1+up));return{gain:s.invested-before,description:'Markets rose about '+Math.round(up*100)+'%. Your investments are worth '+money(s.invested-before)+' more. Everyone on social media is now an expert.',foot:'Markets can keep rising or fall back. No one knows which in advance.'};},
-  choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'book',emoji:'💼',title:'Book some profit',detail:'Move '+money(Math.round(s.invested*0.2))+' (a fifth) into savings.'}],
-  resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed invested.',feedback:fb('solid','Staying the course is a sound long-term habit. Rises and dips both come and go.')};const amt=Math.round(s.invested*0.2);s.invested-=amt;s.cash+=amt;return{text:'Moved '+money(amt)+' of gains into savings.',feedback:monthsOfCushion(s)<3?fb('great','Locking in some gains to build your cash cushion is a sensible move.'):fb('solid','Fine, though with a healthy cushion already, more could have kept compounding.')};}},
+  eligible:s=>growthPart(s)>=10000&&!s.mkt.cr&&s.mkt.x<A.market.band-0.06,
+  create:s=>{const up=marketJump(s,0.06+rand()*0.12),before=s.invested;s.invested=s.safe+Math.round(growthPart(s)*(1+up));return{gain:s.invested-before,description:'Markets rose about '+Math.round(up*100)+'%. Your investments are worth '+money(s.invested-before)+' more. Everyone on social media is now an expert.',foot:'Markets can keep rising or fall back. No one knows which in advance.'};},
+  choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'book',emoji:'💼',title:'Book some profit',detail:'Move '+money(Math.round(growthPart(s)*0.2))+' (a fifth) into savings.'}],
+  resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed invested.',feedback:fb('solid','Staying the course is a sound long-term habit. Rises and dips both come and go.')};const amt=Math.round(growthPart(s)*0.2);s.invested-=amt;s.cash+=amt;return{text:'Moved '+money(amt)+' of gains into savings.',feedback:monthsOfCushion(s)<3?fb('great','Locking in some gains to build your cash cushion is a sensible move.'):fb('solid','Fine, though with a healthy cushion already, more could have kept compounding.')};}},
+ crash:{kicker:'MARKET CRASH',art:'🌋',warn:true,forced:true,title:'Markets are crashing.',snapshot:true,
+  create:s=>{const fall=crashFall(s),g=growthPart(s);return{fall,description:'A real crash: the market is down about '+Math.round(fall*100)+'% in three months, and still falling. Your growth money is now '+money(g)+'.'+(s.safe>0?' Your safe money ('+money(s.safe)+') has not moved.':'')+' Crashes like this have always healed, but it can take years.',foot:'Bills that savings cannot pay come out of safe money first. Growth money sold now is sold cheap.'};},
+  choices:(e,s)=>{const g=growthPart(s);return[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(g)+' in growth and wait it out.'},{id:'half',emoji:'🛟',title:'Move half to safe',detail:money(Math.round(g*0.5))+' stops falling, and misses the recovery.'},{id:'sell',emoji:'🏃',title:'Sell a quarter',detail:'Move '+money(Math.round(g*0.25))+' into savings.'}];},
+  resolve:(e,c)=>{const s=state,g=growthPart(s);
+   if(c==='stay')return{text:'You stayed invested through the crash.',feedback:fb(s.employment==='retired'&&s.safe+s.cash<monthlyBudget(s).total*24?'risky':'solid',s.employment==='retired'&&s.safe+s.cash<monthlyBudget(s).total*24?'Staying is right, but with little safe money your bills now force you to sell growth cheap. A safe part before retiring would have covered them.':'Nothing is lost until you sell. Your SIP now buys cheap, and the recovery does the rest.')};
+   if(c==='half'){const mv=Math.round(g*0.5);s.safe+=mv;record('Moved '+money(mv)+' to safe during a crash at '+ageLabel()+'.',{kind:'sip'});return{text:'Moved '+money(mv)+' from growth to safe.',feedback:fb('missed','That half is now safe from further falls, and locked out of the recovery. The time to add safe money is before a crash, not during one.')};}
+   const cushion=monthsOfCushion(s),sold=Math.round(g*0.25);s.invested-=sold;s.cash+=sold;s.stats.investmentsSold+=sold;
+   return{text:'Sold '+money(sold)+' in the crash and moved it to savings.',feedback:cushion<1?fb('solid','With almost no cash, a cushion matters more than the loss you just locked in.'):fb('missed','You had a cushion already. Selling in a crash turns a fall on paper into a real loss.')};}},
  market:{kicker:'MARKET DIP',art:'📉',titles:['Your investments fell.','Red everywhere on the market apps.'],snapshot:true,
-  eligible:s=>s.invested>=10000&&s.mkt.x>-A.market.band+0.06,
-  create:s=>{const dip=-marketJump(s,-(0.06+rand()*0.14)),before=s.invested;s.invested=Math.round(s.invested*(1-dip));const loss=before-s.invested;return{loss,dip,description:'Markets fell about '+Math.round(dip*100)+'%. Your investments are worth '+money(loss)+' less. You have not sold anything; this is a change in market value.',foot:'Markets can recover or fall further. No one knows which in advance.'};},
-  choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'sell',emoji:'🏃',title:'Sell some',detail:'Move '+money(Math.min(s.invested,Math.round(s.invested*0.25)))+' (a quarter) into savings.'}],
+  eligible:s=>growthPart(s)>=10000&&!s.mkt.cr&&s.mkt.x>-A.market.band+0.06,
+  create:s=>{const dip=-marketJump(s,-(0.06+rand()*0.14)),before=s.invested;s.invested=s.safe+Math.round(growthPart(s)*(1-dip));const loss=before-s.invested;return{loss,dip,description:'Markets fell about '+Math.round(dip*100)+'%. Your investments are worth '+money(loss)+' less. You have not sold anything; this is a change in market value.',foot:'Markets can recover or fall further. No one knows which in advance.'};},
+  choices:(e,s)=>[{id:'stay',emoji:'🧘',title:'Stay invested',detail:'Keep all '+money(s.invested)+' invested.'},{id:'sell',emoji:'🏃',title:'Sell some',detail:'Move '+money(Math.round(growthPart(s)*0.25))+' (a quarter) into savings.'}],
   resolve:(e,c)=>{const s=state;if(c==='stay')return{text:'You stayed invested through the dip.',feedback:fb('solid','Selling after a fall locks in the loss. Staying keeps you positioned for a recovery, though one is never guaranteed.')};
-   const cushion=monthsOfCushion(s),sold=Math.min(s.invested,Math.round(s.invested*0.25));s.invested-=sold;s.cash+=sold;s.stats.investmentsSold+=sold;
+   const cushion=monthsOfCushion(s),sold=Math.round(growthPart(s)*0.25);s.invested-=sold;s.cash+=sold;s.stats.investmentsSold+=sold;
    return{text:'Sold '+money(sold)+' after the dip and moved it to savings.',feedback:cushion<1?fb('solid','With little cash on hand, rebuilding your cushion is reasonable, even though it locks in part of the loss.'):fb('missed','You had a cash cushion already. Selling after a fall locks in the loss and leaves less to benefit from any recovery.')};}},
 
  /* ---- home & wheels ---- */
@@ -1496,7 +1543,7 @@ const EVENTS={
   create:()=>({mediate:priced(40000),court:priced(200000),description:'Lawyers, paperwork and splitting what you built together. Savings and investments are divided; you keep supporting any children.',foot:'Divorce is one of the most expensive life events, emotionally and financially.'}),
   choices:e=>[{id:'mediate',emoji:'🕊️',title:'Mediation: split it fairly',detail:money(e.mediate)+' in fees. Savings and investments split 50/50.'},{id:'court',emoji:'⚖️',title:'Fight it out in court',detail:money(e.court)+' in fees and a lot of stress. 50% chance you keep 65% instead of half.'}],
   resolve:(e,c)=>{const s=state,keep=c==='court'&&rand()<0.5?0.65:0.5,r=fundExpense(c==='court'?e.court:e.mediate,'savings');
-   const lost=Math.round(s.cash*(1-keep))+Math.round(s.invested*(1-keep));s.cash=Math.round(s.cash*keep);s.invested=Math.round(s.invested*keep);
+   const lost=Math.round(s.cash*(1-keep))+Math.round(s.invested*(1-keep));s.cash=Math.round(s.cash*keep);s.invested=Math.round(s.invested*keep);s.safe=Math.round(s.safe*keep);
    s.married=false;s.life.divorced=true;s.costs.household=0;s.life.nextBirthMonth=0;s.stats.shocks+=lost;
    record('Divorced at '+ageLabel()+'; '+money(lost)+' of savings and investments went to your ex-spouse.',{major:true,kind:'family'});
    return{text:'Divorce finalised. '+r.text+' Your ex-spouse received '+money(lost)+'.',feedback:c==='court'?fb('risky',keep>0.5?'You kept more, but paid big legal fees for it.':'Big legal fees and still a 50/50 split. Courts are a gamble.'):fb('solid','A fair split with lower fees. Painful, but you can rebuild from here.')};}},
@@ -1531,7 +1578,7 @@ const EVENTS={
    const before=s.salary;s.salary=Math.round(s.salary*(1-A.layoffCutPct));s.jobStartMonth=s.month;record('Laid off at '+ageLabel()+'; took '+money(e.severance)+' severance and a 20% pay cut to keep working.',{major:true,kind:'career'});
    return{text:'Severance of '+money(e.severance)+' added to savings. Pay is now '+money(s.salary)+' (was '+money(before)+').',feedback:fb('solid','Steady income lowers risk now. The lower pay compounds too: future raises start from a smaller base.')};}},
  retire:{kicker:'A NEW CHAPTER',art:'🌅',title:'Retire now?',snapshot:true,
-  create:s=>{const b=monthlyBudget(s),assets=s.cash+s.invested,yrs=assets/Math.max(1,b.total*12);return{years:yrs,description:'If you retire, your salary and SIP stop. Your expenses ('+money(b.total)+'/month today) continue and rise with inflation. Savings and investments ('+money(assets)+', about '+yrs.toFixed(1)+' years of today’s costs) must carry you to 80. No pension is modelled. '+retireOutlook(s).text.replace(/^Retire now at this pace and /,'If you retire now, ').replace(' Raise your SIP or plan to work longer.',' Working longer helps.'),foot:'In retirement, when savings run short, investments are sold automatically to pay your bills.'};},
+  create:s=>{const b=monthlyBudget(s),assets=s.cash+s.invested,yrs=assets/Math.max(1,b.total*12);return{years:yrs,description:'If you retire, your salary and SIP stop. Your expenses ('+money(b.total)+'/month today) continue and rise with inflation. Savings and investments ('+money(assets)+', about '+yrs.toFixed(1)+' years of today’s costs) must carry you to 80. No pension is modelled. '+retireOutlook(s).text.replace(/^Retire now at this pace and /,'If you retire now, ').replace(' Raise your SIP or plan to work longer.',' Working longer helps.'),foot:'In retirement, when savings run short, investments are sold to pay your bills: safe money first, then growth at whatever the market gives.'};},
   choices:()=>[{id:'retire',emoji:'🏖️',title:'Retire now',detail:'Salary stops this month. Expenses continue; investments are drawn down when savings run out.'},{id:'work',emoji:'💼',title:'Keep working',detail:'Keep earning. You can retire later.'}],
   resolve:(e,c)=>{const s=state;if(c==='work')return{text:'You chose to keep working.',feedback:fb('solid','More working years mean more saving and fewer years your assets must fund.')};
    s.employment='retired';s.laidOffMonthsLeft=0;s.retiredAtAge=ageLabel();record('Retired at '+s.retiredAtAge+'.',{major:true,kind:'retire'});celebrate('retire','🌅','Retired!','Your savings and investments take over from here.');
@@ -1603,19 +1650,19 @@ EVENTS.pitstop={kicker:'PIT STOP',art:'🏁',life:true,pit:true,
    (guaranteed returns), and some sell big buys on easy EMIs. Every choice says
    what it costs. The default is always to scroll past. */
 const AD_KICKER='📺 AD BREAK';
-function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));return yrs>=5?' Invested instead, it could be about '+compact(Math.round(amount*Math.pow(1+A.market.annual,yrs)))+' by 60.':'';}
+function adNoteFV(s,amount){const yrs=Math.max(0,60-Math.floor(preciseAge(s)));return yrs>=5?' Invested instead, it could be about '+compact(Math.round(amount*Math.pow(1+A.market.expect,yrs)))+' by 60.':'';}
 Object.assign(EVENTS,{
  adSip:{kicker:AD_KICKER,art:'🌱',ad:true,weight:s=>idleCash(s)>priced(50000,s)||!s.sip?3:1.2,
   eligible:s=>pitSipBoost(s)>0||idleCash(s)>=priced(20000,s),
   create:s=>{const boost=pitSipBoost(s),idle=idleCash(s);return{boost,idle,title:idle>=priced(20000,s)?'“'+compact(idle)+' sleeping in savings? Put it to work!”':adPick(s,['“SIP karo, chill karo.”','“₹5,000 a month for 35 years can grow to about ₹3 crore.”']),
-   description:'A mutual fund ad. Over any 10 years, invested money here grows 10–15% a year, with ups and downs.',
+   description:'A mutual fund ad. Over the long run, invested money here grows about 12% a year, with ups, downs and the odd crash.',
    foot:'Keep about 6 months of expenses in savings. The rest works harder invested.'};},
   choices:(e,s)=>{const c=[];
    if(e.idle>=priced(20000,s))c.push({id:'lump',emoji:'💰',title:'Invest the idle '+compact(e.idle),detail:'6 months of expenses stay in savings.'});
    if(e.boost>0)c.push({id:'sip',emoji:'🌱',title:(s.sip?'Raise SIP to ':'Start a SIP of ')+money(e.boost)+'/month',detail:'From next month, automatically.'});
    c.push({id:'skip',emoji:'📴',title:'Skip the ad',detail:'Nothing changes.'});return c;},
   resolve:(e,c)=>{const s=state;
-   if(c==='lump'){const amt=Math.min(e.idle,idleCash(s));s.cash-=amt;s.invested+=amt;record('Invested '+money(amt)+' of idle savings at '+ageLabel()+'.',{kind:'sip'});return{text:money(amt)+' moved from savings into investments.',feedback:fb('great','Your cushion stays, and the rest now grows instead of shrinking to inflation.')};}
+   if(c==='lump'){const amt=Math.min(e.idle,idleCash(s));s.cash-=amt;addInvest(s,amt);record('Invested '+money(amt)+' of idle savings at '+ageLabel()+'.',{kind:'sip'});return{text:money(amt)+' moved from savings into investments.',feedback:fb('great','Your cushion stays, and the rest now grows instead of shrinking to inflation.')};}
    if(c==='sip'){const before=s.sip;s.sip=e.boost;if(!before)record('Started a '+money(e.boost)+'/month SIP at '+ageLabel()+'.',{major:true,kind:'sip'});return{text:'SIP set to '+money(e.boost)+' a month.',feedback:fb('great','Automatic investing every month is how wealth quietly builds.')};}
    const idle=idleCash(s);return{text:'Ad skipped.',feedback:idle>=priced(50000,s)?fb('missed',compact(idle)+' idle in savings earns 2.5% while prices rise 6%: about '+compact(idleLoss(idle))+' a year lost.'):fb('solid','Fair enough. Your money plan stays as it is.')};}},
  adScheme:{kicker:AD_KICKER,art:'🤑',ad:true,weight:1.3,
@@ -1787,7 +1834,7 @@ function bonusChoices(e,s){const c=[{id:'save',emoji:'🐷',title:'Save it',deta
  c.push({id:'treat',emoji:'🛍️',title:'Treat yourself',detail:'Gone by next week.'});return c;}
 function bonusResolve(e,c,label){const s=state,months=monthsOfCushion(s);
  if(c==='save'){s.cash+=e.amount;return{text:label+' '+money(e.amount)+' added to savings.',feedback:s.unsecuredDebt>0?fb('missed','Savings are safer, but your debt costs 1% a month. Paying it down was a guaranteed saving.'):months<3?fb('great','You built your cash cushion toward about three months of expenses, which buys flexibility when life surprises you.'):fb('solid','Safe and flexible. With a healthy cushion already, investing could have given it more years to grow, with ups and downs.')};}
- if(c==='invest'){s.invested+=e.amount;return{text:label+' '+money(e.amount)+' invested.',feedback:s.unsecuredDebt>0?fb('risky','Investing while carrying debt at 1% a month means betting returns beat the interest. Not guaranteed.'):months<1?fb('risky','Long-term growth is valuable, but you have less than a month of expenses in cash. The next surprise may become debt.'):months<3?fb('solid','Good for the long term. Your cash cushion is still under three months, so keep building it too.'):fb('great','You already have a cash cushion, so this money has years to compound. Returns are uncertain, but time helps.')};}
+ if(c==='invest'){addInvest(s,e.amount);return{text:label+' '+money(e.amount)+' invested.',feedback:s.unsecuredDebt>0?fb('risky','Investing while carrying debt at 1% a month means betting returns beat the interest. Not guaranteed.'):months<1?fb('risky','Long-term growth is valuable, but you have less than a month of expenses in cash. The next surprise may become debt.'):months<3?fb('solid','Good for the long term. Your cash cushion is still under three months, so keep building it too.'):fb('great','You already have a cash cushion, so this money has years to compound. Returns are uncertain, but time helps.')};}
  if(c==='treat'){s.stats.fun+=e.amount;return{text:'You spent the '+label.toLowerCase()+' on a treat. 🛍️',feedback:s.unsecuredDebt>0||months<1?fb('missed','A treat is fine, but with debt or a thin cushion this money could have made you much safer.'):fb('solid','Enjoying some of your money is part of a good life. Just do not make every bonus disappear.')};}
  const toDebt=Math.min(s.unsecuredDebt,e.amount);s.unsecuredDebt-=toDebt;s.cash+=e.amount-toDebt;return{text:label+' used to repay '+money(toDebt)+' of debt'+(e.amount>toDebt?'; '+money(e.amount-toDebt)+' went to savings.':'.'),feedback:fb('great','Repaying 1%-a-month debt is a guaranteed return and lowers your minimum monthly repayment.')};}
 /* ---------- Scheduling & eligibility ---------- */
@@ -1888,6 +1935,7 @@ function maybeStartEvent(){
  if(!op.social&&m>=24){op.social=1;if(m<36){const t=pickRandomEvent(s,OPENERS.social);if(t){startEvent(t,{first:true});return;}}}
 if(!s.retirePromptShown&&s.employment!=='retired'&&preciseAge(s)>=A.retirePromptAge){s.retirePromptShown=true;startEvent('retire');return;}
  if(!s.life.lastResort&&s.employment==='retired'&&preciseAge(s)<A.endAge-1&&s.cash+s.invested<monthlyBudget(s).total*24){s.life.lastResort=true;startEvent('lastResort');return;}
+ if(s.mkt.news===1){s.mkt.news=0;if(growthPart(s)>=10000){startEvent('crash');return;}}
  const life=lifeEventDue(s);if(life){startEvent(life);return;}
  if(coverDue(s)){startEvent('renewCover');return;}
  const ctx=contextEventDue(s);if(ctx){startEvent(ctx);return;}
@@ -2137,7 +2185,7 @@ const OPTIONAL={
    if(net>=0)s.cash+=net;else s.unsecuredDebt+=-net;record('Sold the home at '+ageLabel()+': '+money(net)+' after repaying the loan.',{major:true,kind:'home'});
    return{text:'Home sold. '+(net>=0?money(net)+' added to savings after repaying the loan.':money(-net)+' of the loan was left over and became debt.'),feedback:fb('solid','Selling frees you from the EMI. You are back to paying rent, which rises every year.')};}}
 };
-function investFeedback(s,amount){s.invested+=amount;const m=monthsOfCushion(s);return{text:'Moved '+money(amount)+' into investments. Savings now '+money(s.cash)+'.',feedback:s.unsecuredDebt>0?fb('risky','You are investing while carrying debt at 1% a month. Paying debt first is a guaranteed return.'):m<1?fb('risky','Your savings now cover less than a month of expenses. A surprise may become debt.'):m<3?fb('solid','Investing builds long-term growth. Keep building your cash cushion toward three months too.'):fb('great','You kept a healthy cushion and gave this money time to compound. Returns are not guaranteed.')};}
+function investFeedback(s,amount){addInvest(s,amount);const m=monthsOfCushion(s);return{text:'Moved '+money(amount)+' into investments. Savings now '+money(s.cash)+'.',feedback:s.unsecuredDebt>0?fb('risky','You are investing while carrying debt at 1% a month. Paying debt first is a guaranteed return.'):m<1?fb('risky','Your savings now cover less than a month of expenses. A surprise may become debt.'):m<3?fb('solid','Investing builds long-term growth. Keep building your cash cushion toward three months too.'):fb('great','You kept a healthy cushion and gave this money time to compound. Returns are not guaranteed.')};}
 // With variants: optionalBlocker(id) says whether any version is possible;
 // optionalBlocker(id, variant) checks that exact version.
 function optionalBlocker(id,variant){
@@ -2215,6 +2263,7 @@ function pitTip(s){
  if(monthsOfCushion(s)<3)return 'Build a 3-month savings cushion before upgrading anything.';
  if(!s.insured)return 'No health cover: one hospital stay could wipe out your savings.';
  if((s.married||s.children.length)&&!s.termCover&&preciseAge(s)<A.term.maxAge)return 'Your family relies on your pay. Term cover is cheapest the younger you buy it.';
+ if((s.employment==='retired'||preciseAge(s)>=55)&&safeYears(s)<A.safeYears&&growthPart(s)>=b.total*12*22)return 'Nearly all your money rides on the market. Five years of bills in safe money (More → Mix) buys calm in a crash, and you can afford it.';
  return 'Nicely balanced. Keep it up.';
 }
 function pitReport(s){
@@ -2249,6 +2298,23 @@ function finishPit(e,c){
 /* =====================================================================
    11. MONTHLY SIP — an automatic monthly investment (changing it is free)
    ===================================================================== */
+// The mix: what share of investments sits in the safe part. Changing it moves existing money to match, at today's prices.
+function mixBlocker(share){const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';if(!A.mixes.includes(share))return 'Pick one of the mixes.';if(share===s.mix&&Math.abs(s.safe-Math.round(s.invested*share))<=Math.max(1000,s.invested*0.02))return 'Already set.';return null;}
+function mixLabel(share){return share?Math.round(share*100)+'% safe, '+Math.round((1-share)*100)+'% growth':'All growth';}
+function setMix(share){
+ const s=state;if(mixBlocker(share))return null;
+ const before=s.safe,after=Math.round(s.invested*share),moved=after-before,fall=crashFall(s);s.mix=share;s.safe=after;
+ record('Investment mix set to '+mixLabel(share).toLowerCase()+' at '+ageLabel()+'.',{kind:'sip'});
+ const yrs=A.retirePromptAge-preciseAge(s),retired=s.employment==='retired';
+ const feedback=moved>0&&fall>0.1?fb('missed','Moving to safe after a '+Math.round(fall*100)+'% fall locks in that loss: this money will not be there for the recovery.')
+  :moved<0&&fall>0.1?fb('great','Buying growth while prices are '+Math.round(fall*100)+'% down. It may fall further, but you bought cheap.')
+  :share===0?fb(retired||yrs<5?'risky':'solid',retired||yrs<5?'All growth with retirement here: a crash now would force you to sell low to pay the bills.':'Growth earns the most over decades. You have time to sit out a crash.')
+  :share>=0.5&&!retired&&yrs>15?fb('missed','Safe money never falls, but at 7% it barely beats 6% inflation. With '+Math.round(yrs)+' years to go, that costs a lot of growth.')
+  :fb('solid',retired||yrs<10?'A safe part pays the bills during a crash, so the growth part gets time to recover.':'A small safe part softens crashes at a small cost in growth.');
+ const text='Mix set: '+mixLabel(share).toLowerCase()+'.'+(Math.abs(moved)>=1000?' '+money(Math.abs(moved))+' moved to '+(moved>0?'safe':'growth')+'.':'');
+ s.feedback=Object.assign({source:'Investment mix',art:'⚖️'},feedback);s.message=text;
+ return{text,feedback,moved};
+}
 function sipBlocker(amount){const s=state;if(s.status!=='playing')return 'This run has ended.';if(blockingEvent(s))return 'Resolve the current life event first.';if(!Number.isInteger(amount)||amount<0)return 'Enter a whole amount in rupees.';if(amount>0&&amount<A.sipMin)return 'The smallest SIP is '+money(A.sipMin)+' a month.';if(amount>A.sipMax)return 'The largest SIP is '+money(A.sipMax)+' a month.';if(amount===s.sip)return 'Already set.';if(amount>0&&s.employment==='retired')return 'SIPs need a salary. You are retired.';return null;}
 function setSip(amount){
  const s=state;if(sipBlocker(amount))return null;
@@ -2369,13 +2435,13 @@ function whatIfLessons(s=state){
  if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
  return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
 }
-window.__LH_MODEL={A,BASE_PRICES,retireOutlook,kidsInSchool,schoolAdmission,schoolStepDown,SCHOOL_ORDER,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
+window.__LH_MODEL={A,BASE_PRICES,retireOutlook,growthPart,addInvest,sellInvest,crashFall,crashStress,safeYears,setMix,mixBlocker,mixLabel,kidsInSchool,schoolAdmission,schoolStepDown,SCHOOL_ORDER,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
  severanceMonths,housePrice,houseUpfront,houseLoanEmi,annualTax,monthlyTax,grossPay,healthPremium,termQuote,termPremium,lifeEventDue,monthAtAge,inSchool,childAge,fundExpense,
  blockingEvent,pitPreview,lifestyleShift,pitSipBoost,CARD_DEFAULTS,
- RINGS,RING_FX,PACES,LIFESTYLE_RINGS,ringDrivers,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
+ RINGS,RING_FX,PACES,LIFESTYLE_RINGS,ringDrivers,pitTip,ringTargets,ringEffect,ringAverages,monthPoints,lifeEnding,tickRings,workPace,houseSpec,rideSpec,vehicleLabel,
  happiness,happyRaw,weakestRing,idleLoss,marketJump,monthlyReturn,renewalQuote,coverRenewalDue,cutPlan,startCover,endCover,healthQuoteBase,coverDue,BIG_SHOCKS,coverAdKind,lifeHappiness,realNetWorth,randomProfile,newCharacter,setGender,allEmis,idleCash,whatIfLessons,pickAd,wealthClass,statusBuy};
 })();
 </script>
@@ -2867,7 +2933,7 @@ function renderPlay(){
  $('cashNote').textContent=s.cash<=0?'Empty!':idleBig?'💤 '+compact(idle)+' idle':cushion>=1?Math.floor(cushion)+' mo of bills':'Under a month';
  document.querySelector('.wallet-card.cash').classList.toggle('idle',idleBig);
  if(idleBig)$('cashNote').title=compact(idle)+' above a 6-month cushion earns 2.5% while prices rise 6%: about '+compact(M.idleLoss(idle))+' a year lost.';
- $('investNote').textContent=s.sip>0&&s.employment==='employed'?'SIP '+compact(s.sip)+'/mo':s.invested>0?'Can rise or fall':'Nothing yet';
+ $('investNote').textContent=s.mkt.cr&&M.crashFall()>=0.1&&M.growthPart()>0?'📉 Crash: '+Math.round(M.crashFall()*100)+'% down':s.sip>0&&s.employment==='employed'?'SIP '+compact(s.sip)+'/mo':s.invested>0?'Can rise or fall':'Nothing yet';
  $('loanNote').textContent=loans>0?'EMI '+compact(M.allEmis())+'/mo':'None';
  $('debtNote').textContent=s.unsecuredDebt>0?'1% a month!':'None 🎉';
  document.querySelector('.wallet-card.debt').classList.toggle('bad',s.unsecuredDebt>0);
@@ -2888,6 +2954,10 @@ function renderMore(){
  if(s.sip>0){$('sipTitle').textContent='SIP '+money(s.sip)+'/month';$('sipNote').textContent=s.employment!=='employed'?'Paused while there is no salary.':(s.lastSettlement&&s.lastSettlement.sipSkipped?'Skipped last month: not enough savings. ':'')+money(s.stats.sipInvested)+' auto-invested so far.';$('sipBtn').textContent='Change';}
  else{$('sipTitle').textContent='No SIP yet';$('sipNote').textContent=s.employment==='retired'?'SIPs stop in retirement.':'Invest a fixed amount automatically every month, after bills.';$('sipBtn').textContent='Start SIP';}
  $('sipBtn').disabled=sipLocked||(s.employment==='retired'&&!s.sip);
+ {const g=M.growthPart(),fall=M.crashFall(),crash=!!s.mkt.cr&&fall>=0.1;
+  $('mixTitle').textContent=s.invested>0&&s.safe<=0?'All growth: '+compact(g):s.invested>0?'Safe '+compact(s.safe)+' · Growth '+compact(g):'Mix: '+M.mixLabel(s.mix).toLowerCase();
+  $('mixNote').textContent=crash?'📉 Market crash: growth is about '+Math.round(fall*100)+'% off its high. Safe money has not moved.':s.employment==='retired'?'Savings + safe money cover '+M.safeYears().toFixed(1)+' years of bills. Five or more buys peace of mind.':'New money goes '+M.mixLabel(s.mix).toLowerCase()+'. Safe earns 7% and never falls.';
+  $('mixBtn').disabled=sipLocked;$('mixBtn').parentElement.classList.toggle('crash',crash);}
  // Monthly plan: a money bar instead of a wall of numbers
  renderMoneyBar(b);
  const notes=[];if(s.employment==='laidoff')notes.push(s.breakReason?'Salary paused: '+s.laidOffMonthsLeft+' month'+(s.laidOffMonthsLeft===1?'':'s')+' left; it resumes at '+money(s.salary)+'.':'Salary paused while you search for a job (6 to 18 months).');
@@ -3081,6 +3151,20 @@ function sipPreview(){
  const block=M.sipBlocker(pick);if(block)h+='<p class="res-note" style="color:var(--danger-ink)">'+esc(block)+'</p>';
  return h;
 }
+function mixPreview(){
+ const s=S(),pick=ui.mixPick;if(pick===null)return '';
+ const safe=Math.round(s.invested*pick),moved=safe-s.safe,fall=M.crashFall(),yearly=M.monthlyBudget().total*12,yrs=v=>((Math.max(0,s.cash)+v)/Math.max(1,yearly)).toFixed(1);
+ let h='<div class="preview"><table><tr><td>🛟 Safe (7%, never falls)</td><td>'+compact(s.safe)+' → '+compact(safe)+'</td></tr><tr><td>📈 Growth (about 12%, can crash)</td><td>'+compact(s.invested-s.safe)+' → '+compact(s.invested-safe)+'</td></tr><tr><td>Bills covered by savings + safe</td><td>'+yrs(s.safe)+' → '+yrs(safe)+' years</td></tr></table></div>';
+ if(s.mkt.cr&&fall>=0.1&&moved>1000)h+='<p class="res-note" style="color:var(--danger-ink)">Markets are '+Math.round(fall*100)+'% down. Moving growth to safe now locks in that fall.</p>';
+ const block=M.mixBlocker(pick);if(block)h+='<p class="res-note" style="color:var(--danger-ink)">'+esc(block)+'</p>';
+ return h+'<p class="res-note">Your existing investments move to match, and new money follows the same mix. When bills need investments sold, safe money goes first.</p>';
+}
+function mixBody(){
+ const tag={0:'most growth, full crashes',0.25:'a small shield',0.5:'half and half',0.75:'calm, slow growth'};
+ return '<p class="lead">Growth money follows the market: about 12% a year over the long run, but a crash can take a third or more off for years. Safe money earns 7% and never falls, barely ahead of 6% inflation. Changing the mix is free.</p><div class="mix-options">'+A.mixes.map(v=>'<button type="button" data-mix="'+v+'" aria-pressed="'+(ui.mixPick===v)+'">'+(v?Math.round(v*100)+'% safe':'All growth')+'<small>'+tag[v]+'</small></button>').join('')+'</div><div id="mixPreview" aria-live="polite">'+mixPreview()+'</div>';
+}
+function syncMix(){$('mixPreview').innerHTML=mixPreview();$('confirmOk').disabled=ui.mixPick===null||!!M.mixBlocker(ui.mixPick);$('confirmBody').querySelectorAll('[data-mix]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.mix)===ui.mixPick)));}
+function openMix(){const s=S();if(M.blockingEvent()||s.status!=='playing')return;ui.mixPick=null;openConfirm({kicker:'INVESTMENT MIX',title:'⚖️ Safe or growth?',body:mixBody(),okLabel:'Set mix',okDisabled:true,onOk:()=>{const r=M.setMix(ui.mixPick);if(r)sfx(r.feedback.label==='risky'||r.feedback.label==='missed'?'risky':'good');}});}
 function sipBody(){
  const pick=ui.sipPick,preset=A.sipOptions.includes(pick);
  return '<p class="lead">A SIP moves a fixed amount from savings into investments every month, after your bills are paid. If savings cannot cover it, that month is skipped. Changing it is free and does not use your power-up.</p><div class="sip-options">'+A.sipOptions.map(v=>'<button type="button" data-sip="'+v+'" aria-pressed="'+(pick===v)+'">'+(v?compact(v):'Off')+'</button>').join('')+'</div>'
@@ -3121,7 +3205,8 @@ function renderAbout(){
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],
   ['Education loan','Some lives start with one: ₹8 lakh at 10% a year over 8 years (≈₹12,100 EMI), which bought a 25% higher first salary'],
-  ['Investments','A market index that grows 12.5% a year on trend. Months and single years swing up and down (with occasional booms and dips), but over any 10 years invested money grows about 10% to 15% a year. Gains are not taxed in this model'],
+  ['Investments','Growth money follows a market index: about 12% a year over a lifetime (11% to 13.5%). Months and single years swing up and down, and two or three times in a life a crash takes a third to a half off within a year. Half to three quarters of that comes back over the next few years. Gains are not taxed in this model'],
+  ['Safe or growth','Your mix (More → Mix) keeps none, a quarter, half or three quarters of your investments in safe money: 7% a year, never falls. Changing the mix moves existing money at today’s prices and steers new money. Bills take safe money before growth. Safe money has never ended a life richer here; it buys calm. A crash costs peace of mind in step with your growth money (double once retired), and a retiree with five years of bills in savings and safe money feels secure'],
   ['Savings','Savings earn 2.5% a year, credited monthly, while prices rise 6%'],
   ['Retirement plan','When you retire you set how you will live (rent, food, weekends, extras) and see how many years your savings and investments last'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
@@ -3197,7 +3282,7 @@ $('sheetHowTo').addEventListener('click',()=>{sfx('tap');closeModal('moreOverlay
 document.addEventListener('keydown',e=>{if((e.key===' '||e.key==='p')&&!anyOverlayOpen()&&S().status==='playing'&&!/INPUT|BUTTON|TEXTAREA/.test((document.activeElement||{}).tagName||'')){e.preventDefault();togglePause();}});
 $('speedBtn').addEventListener('click',()=>{const frac=ui.elapsed/monthMs(),sp=A.speeds;prefs.speed=sp[(sp.indexOf(prefs.speed)+1)%sp.length];M.savePrefs();ui.elapsed=frac*monthMs();sfx('tap');render();});
 $('retireBtn').addEventListener('click',()=>{if(M.requestRetirement())render();});
-$('sipBtn').addEventListener('click',openSip);
+$('sipBtn').addEventListener('click',openSip);$('mixBtn').addEventListener('click',openMix);
 $('moreBtn').addEventListener('click',()=>{const s=S();if(M.blockingEvent()||s.status!=='playing')return;sfx('tap');renderMore();openModal('more','moreOverlay');});
 $('moreClose').addEventListener('click',()=>{sfx('tap');closeModal('moreOverlay');});
 $('moreOverlay').addEventListener('click',e=>{if(e.target===$('moreOverlay'))closeModal('moreOverlay');});
@@ -3218,6 +3303,7 @@ $('moveDeck').addEventListener('click',e=>{const b=e.target.closest('[data-move]
  const kick={'one-time':'ONE-TIME POWER-UP',recurring:'MONTHLY POWER-UP',big:'BIG BUY'}[o.tab];
  openConfirm({kicker:kick,title:o.emoji+' '+o.name,okLabel:'Confirm',body:'<p class="lead">'+esc(o.describe(s))+'</p><div class="preview"><table>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table></div><p class="res-note">This uses your one power-up for this month.</p>',onOk:()=>{const r=M.chooseOptional(id);if(r)sfx(r.feedback.label==='risky'?'risky':'good');}});});
 $('confirmBody').addEventListener('click',e=>{const v=e.target.closest('[data-variant]');if(v&&!v.disabled){ui.variantPick=v.dataset.variant;syncVariant($('confirmBody').dataset.variantFor);const again=$('confirmBody').querySelector('[data-variant="'+ui.variantPick+'"]');if(again)again.focus({preventScroll:true});sfx('tap');return;}
+ const mx=e.target.closest('[data-mix]');if(mx){ui.mixPick=Number(mx.dataset.mix);syncMix();sfx('tap');return;}
  const b=e.target.closest('[data-sip]');if(!b)return;ui.sipPick=Number(b.dataset.sip);const c=$('sipCustom');if(c)c.value='';syncSip();sfx('tap');});
 $('confirmBody').addEventListener('input',e=>{if(e.target.id!=='sipCustom')return;const v=e.target.value.trim();ui.sipPick=v===''?null:Math.round(Number(v));if(Number.isNaN(ui.sipPick))ui.sipPick=null;syncSip();});
 $('confirmOk').addEventListener('click',()=>{const act=ui.confirmAction;ui.confirmAction=null;closeModal('confirmOverlay');if(act)act();render();});
