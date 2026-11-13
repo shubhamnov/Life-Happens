@@ -55,9 +55,9 @@ async function test(name,fn){try{await fn();results.push({name,ok:true});}catch(
 /* 5 */ await test('5. Vehicle loan: successful EMIs, missed EMI, no double counting',async()=>{const {L}=await game(15,{commute:'bike'});const s=L.state;
  eq(s.vehicleLoan.emi,L.emiFor(100000),'EMI');near(s.vehicleLoan.emi,3300,40,'≈₹3,300 EMI');eq(L.totalDebt(),s.vehicleLoan.balance,'loan counted once in debt');
  s.nextEventMonth=9999;for(let m=0;m<40;m++){s.event=null;s.cash+=50000;L.advanceMonth();}eq(s.vehicleLoan,null,'loan repaid after 36 EMIs');eq(s.unsecuredDebt,0,'no leftover debt');
- const g=await game(16,{commute:'car'});const t=g.L.state;near(t.vehicleLoan.emi,19900,60,'car EMI ≈ ₹19,900');t.cash=0;t.unsecuredDebt=0;t.employment='laidoff';t.laidOffMonthsLeft=3;const bal=t.vehicleLoan.balance;g.L.advanceMonth();
+ const g=await game(16,{commute:'car'});const t=g.L.state;near(t.vehicleLoan.emi,12600,60,'car EMI ≈ ₹12,600 (5 years at 9.5%)');assert(t.vehicleLoan.monthsLeft>=58,'5-year car loan');t.cash=0;t.unsecuredDebt=0;t.employment='laidoff';t.laidOffMonthsLeft=3;const bal=t.vehicleLoan.balance;g.L.advanceMonth();
  assert(t.vehicleLoan.balance<bal,'loan still amortises on schedule');const due=g.L.monthlyBudget().lines.find(l=>l.key==='emi');assert(due,'EMI shown in expenses');
- near(t.unsecuredDebt,t.lastSettlement.unpaid,1,'missed EMI + bills became unsecured debt exactly once');eq(t.vehicleLoan.monthsLeft,34,'term counts down (month 1 already paid one EMI)');});
+ near(t.unsecuredDebt,t.lastSettlement.unpaid,1,'missed EMI + bills became unsecured debt exactly once');eq(t.vehicleLoan.monthsLeft,58,'term counts down (month 1 already paid one EMI)');});
 /* 6 */ await test('6. Medical event with and without health cover',async()=>{const {L}=await game(17);const s=L.state;
  L.startEvent('medical');const e1=s.event;eq(e1.amount,e1.total,'uninsured pays all');L.resolveEvent(e1.id,'borrow');
  s.insured=true;s.costs.insurance=1000;L.startEvent('medical');const e2=s.event;eq(e2.amount,Math.round(e2.total*0.35),'cover pays 65%');assert(e2.amount>0,'covered player still pays something');
@@ -175,7 +175,7 @@ await test('Education loan: +25% salary, EMI for 8 years, counted as debt and in
  for(let m=0;m<100;m++){s.event=null;s.cash+=100000;L.advanceMonth();}eq(s.eduLoan,null,'repaid after 96 EMIs');eq(s.unsecuredDebt,0,'nothing left over');
  const g=await game(83);eq(g.L.state.salary,45000,'no loan: chosen salary');eq(g.L.state.eduLoan,null,'no loan');});
 await test('Fuel: your own vehicle adds a fuel line; bus or Metro does not',async()=>{const a=(await game(84,{commute:'bike'})).L;const f=a.monthlyBudget().lines.find(l=>l.key==='fuel');assert(f&&f.amount===2500,'two-wheeler fuel ₹2,500');
- const b=(await game(85,{commute:'car'})).L;eq(b.monthlyBudget().lines.find(l=>l.key==='fuel').amount,8000,'car fuel ₹8,000');
+ const b=(await game(85,{commute:'car'})).L;eq(b.monthlyBudget().lines.find(l=>l.key==='fuel').amount,5000,'car fuel ₹5,000');
  const c=(await game(86)).L;eq(c.monthlyBudget().lines.some(l=>l.key==='fuel'),false,'no fuel on public transport');assert(['bus','metro'].includes(c.state.transit),'rides a bus or Metro');
  c.state.cash=1e6;c.state.month=30;assert(c.chooseOptional('buyBike'),'buys a bike');eq(c.monthlyBudget().lines.find(l=>l.key==='fuel').amount,Math.round(2500*Math.pow(1.06,2)),'fuel starts at today’s price');});
 await test('Life stages: weddings 25–38, at most two kids, no births after 40, “no” means no',async()=>{let weds=0,births=0;
@@ -249,13 +249,13 @@ await test('Life rings: drift toward targets, event bumps apply once, score favo
 await test('Big buys: home types and car models trade comfort, people and show-off value',async()=>{const {L}=await game(202);const s=L.state;s.month=100;s.nextEventMonth=9999;s.cash=8e6;s.salary=500000;
  const vs=L.OPTIONAL.buyHouse.variants(s);eq(vs.map(v=>v.id).join(),'society,villa,near','three home types');
  const by=Object.fromEntries(vs.map(v=>[v.id,v]));assert(by.villa.price>by.society.price&&by.society.price>by.near.price,'villa costs most, near-family least');
- assert(by.villa.brag>by.society.brag,'villa has more show-off value');assert(by.villa.rings[2]<0&&by.society.rings[2]>by.villa.rings[2]+10,'villa: no society around you');assert(by.society.rings[0]<by.villa.rings[0],'society flat: less comfort');assert(by.near.rings[1]>by.society.rings[1],'near family: more Family & Friends');
+ assert(by.villa.brag>by.society.brag,'villa has more show-off value');assert(by.villa.rings[2]<=0&&by.society.rings[2]>by.villa.rings[2]+10,'villa: no society around you');assert(by.villa.rings[0]>by.society.rings[0]+8,'villa: the most comfort');assert(by.society.rings[0]<by.villa.rings[0],'society flat: less comfort');assert(by.near.rings[1]>by.society.rings[1],'near family: more Family & Friends');
  const rent=L.ringTargets();const cash=s.cash;assert(L.chooseOptional('buyHouse','villa'),'villa bought');eq(s.homeType,'villa','home type stored');eq(s.cash,cash-L.houseUpfront(s,'villa'),'villa down payment');
- eq(L.monthlyBudget().lines.find(l=>l.key==='housing').amount,L.priced(6000),'villa maintenance');assert(L.ringTargets().com<rent.com,'Community target falls in a villa');
+ eq(L.monthlyBudget().lines.find(l=>l.key==='housing').amount,L.priced(5000),'villa maintenance');assert(L.ringTargets().com<rent.com,'Community target falls in a villa');
  s.event=null;s.month+=1;s.salary=40000;assert(/bank/i.test(L.optionalBlocker('buyCar','suv')||''),'bank check per model');s.salary=500000;
  const cars=L.OPTIONAL.buyCar.variants(s);eq(cars.map(v=>v.id).join(),'hatch,mpv,suv','three car models');assert(cars[2].emi>cars[0].emi,'SUV EMI is bigger');
  assert(L.chooseOptional('buyCar','mpv'),'7-seater bought');eq(s.carModel,'mpv','model stored');eq(s.vehicleLoan.principal,L.priced(1000000),'7-seater loan');eq(L.vehicleLabel(),'7-seater family car','label');
- eq(L.monthlyBudget().lines.find(l=>l.key==='fuel').amount,L.priced(9500),'7-seater fuel');
+ eq(L.monthlyBudget().lines.find(l=>l.key==='fuel').amount,L.priced(7000),'7-seater fuel');
  s.month+=1;L.applyExpenseChange('commute','public');eq(s.carModel,'hatch','selling resets the model');eq(s.vehicleLoan,null,'loan settled');noNaN(s);});
 await test('Pace: set by choices, never by a dial; Hustle lifts raises and costs happiness, then settles',async()=>{const {L}=await game(203);const s=L.state;s.nextEventMonth=9999;s.nextPitMonth=9999;s.event=null;s.life.marriagePlan='no';s.life.parentsMonth=0;s.cash=1e6;s.openers={shock:1,bonus:1,social:1};
  eq(L.setPace,undefined,'no pace control');eq(L.paceBlocker,undefined,'no pace blocker');
@@ -524,6 +524,13 @@ await test('Health later in life: hospital bills from 60, cover pays 65%, no new
  quiet(s);s.month=L.monthAtAge(66);assert(/past 65/.test(L.optionalBlocker('insure')||''),'no new cover past 65: '+L.optionalBlocker('insure'));
  s.month=L.monthAtAge(56);assert(L.ringDrivers().some(d=>/No health cover at your age/.test(d.label)&&d.v[0]<0),'worry without cover');s.insured=true;s.coverBase=1000;assert(L.ringDrivers().some(d=>/health worries/.test(d.label)&&d.v[0]>=6),'calm with cover');
  s.month=L.monthAtAge(40);assert(L.ringDrivers().some(d=>d.label==='Health cover'&&d.v[0]===2),'small comfort when young');});
+await test('Big buys: a car is a 5-year loan; the villa grows fastest; cutting to basics sells a paid-off car',async()=>{const {L}=await game(650);const s=L.state;quiet(s);s.cash=5e6;s.salary=3e5;
+ const v=L.OPTIONAL.buyCar.variants(s).find(x=>x.id==='hatch');near(v.emi,L.priced(12600),80,'hatch EMI about ₹12,600 (today)');
+ s.month=L.monthAtAge(35);const r=L.chooseOptional('buyHouse','villa');assert(r,'villa bought: '+L.optionalBlocker('buyHouse'));const h0=s.homeValue;s.month+=12;L.advanceMonth&&0;
+ assert(/6.5% a year/.test(L.OPTIONAL.buyHouse.describe(s,'villa')),'describe says 6.5%');
+ s.employment='retired';s.vehicle='car';s.carModel='hatch';s.profile.commute='car';s.vehicleLoan=null;s.costs.commute=2500;s.costs.fuel=5000;
+ const plan=L.cutPlan(s,'basics');assert(plan.changes.some(([k,v])=>k==='commute'&&v==='public'),'basics sells the car: '+plan.label);assert(/sell the hatchback, take the bus/.test(plan.label),'says so: '+plan.label);
+ s.vehicleLoan={kind:'car',balance:1e5,emi:5000,monthsLeft:20,rate:0.008,principal:6e5};assert(!L.cutPlan(s,'basics').changes.some(([k])=>k==='commute'),'not while the loan runs');});
 window.__TEST_RESULTS=results;
 })();
 </script>

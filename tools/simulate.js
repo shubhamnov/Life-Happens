@@ -19,7 +19,7 @@ const out=await p.evaluate(async({N,only})=>{
   nocover:V({setup:{health:'no'},pol:{insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
   midnocover:V({sip:0.12,pit:false,setup:{health:'no'},pol:{insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
   frugalnocover:V({setup:{home:'starter',food:'home',social:'quiet',other:'none',travel:'none',health:'no'},sip:0.3,pol:{wedding:'modest',kidsQ:'k1',schoolQ:'gov',insureoffer:'no',adCover:'skip'},pitCover:'lapse'}),
-  home:V({buy:'near'}),villa:V({buy:'villa'}),car:V({car:true}),
+  home:V({buy:'near'}),society:V({buy:'society'}),villa:V({buy:'villa'}),car:V({car:true}),mpv:V({car:'mpv'}),suv:V({car:'suv'}),
   acts:V({acts:true}),lump:V({lump:true}),
   work70:V({pol:{retire:'work'},retireAt:70}),
   passive:{setup:null,sip:0,pit:false,pol:{},raw:true},
@@ -46,8 +46,8 @@ const out=await p.evaluate(async({N,only})=>{
    if(st.mix&&!s.event){const a=L.preciseAge(s);let want=0;for(const [ag,sh] of st.mix)if(a>=ag)want=sh;if(want!==s.mix)L.setMix(want);}
    if(s.mkt.cr&&s.employment==='retired'&&crashRet===null)crashRet=Math.round(L.preciseAge(s));
    if(!s.event){
-    if(st.buy&&!bought&&!s.ownsHome){const v=L.OPTIONAL.buyHouse.variants(s).find(x=>x.id===st.buy);if(v&&!v.block&&s.cash-v.upfront>3*L.monthlyBudget(s).total){if(L.chooseOptional('buyHouse',st.buy))bought=L.ageLabel();}}
-    if(st.car&&!carB&&s.vehicle==='public'&&L.preciseAge(s)>=28){if(L.chooseOptional('buyCar','hatch'))carB=true;}
+    if(st.buy&&!bought&&!s.ownsHome){const v=L.OPTIONAL.buyHouse.variants(s).find(x=>x.id===st.buy);const bb=L.monthlyBudget(s);if(v&&!v.block&&s.cash-v.upfront>3*bb.total&&bb.leftover-L.OPTIONAL.buyHouse.monthly(s,st.buy)>=0.15*bb.income){if(L.chooseOptional('buyHouse',st.buy))bought=L.ageLabel();}}
+    if(st.car&&!carB&&s.vehicle==='public'&&L.preciseAge(s)>=28&&(()=>{const bb=L.monthlyBudget(s),m=st.car===true?'hatch':st.car;return s.cash>=3*bb.total&&bb.leftover-L.OPTIONAL.buyCar.monthly(s,m)>=0.15*bb.income;})()){if(L.chooseOptional('buyCar',st.car===true?'hatch':st.car))carB=true;}
     if(st.acts){for(const a of ['familyDay','volunteer','donate']){if(L.chooseOptional(a))break;}}
     if(st.lump&&s.cash>9*L.monthlyBudget(s).total&&s.employment==='employed')L.chooseOptional('investLump','idle');
    }

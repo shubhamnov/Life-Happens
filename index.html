@@ -712,6 +712,7 @@ const A=Object.freeze({
  unsecuredMonthlyRate:0.01,    // 1% a month on unsecured debt
  debtMinRate:0.03,debtMinFloor:2000,             // minimum repayment: the larger of 3% of balance or ₹2,000 (inflation-indexed)
  vehicleLoanMonthlyRate:0.01,vehicleLoanTerm:36,
+ carLoan:{annualRate:0.095,termMonths:60},   // cars: a 5-year loan at 9.5% (two-wheelers: 3 years at 12%)
  vehicleResaleShare:0.8,       // selling a financed vehicle: resale repays 80% of the outstanding loan, the rest becomes unsecured debt
  house:{basePrice:6000000,downShare:0.2,feesShare:0.07,annualRate:0.085,termMonths:240,appreciation:0.05,sellCostShare:0.03},  // price and upkeep per home type: BASE_PRICES.house
  maxEmiShare:0.5,              // a bank approves a new loan only if all EMIs stay within 50% of take-home pay
@@ -777,16 +778,16 @@ const BASE_PRICES={  // age-23 prices; current price = base × (1.06 ^ years ela
  travel:{none:{label:'Stay home',emoji:'🛋️',cost:0},weekend:{label:'Weekend getaways',emoji:'🏞️',cost:3000},india:{label:'A big India trip a year',emoji:'🚆',cost:6000},abroad:{label:'Abroad every year',emoji:'✈️',cost:15000}},
  other:{none:{label:'None',emoji:'➖',cost:0},small:{label:'Small extra',emoji:'🎧',cost:2000},regular:{label:'Regular extra',emoji:'🏋️',cost:5000},big:{label:'Big extra',emoji:'🎮',cost:10000}},
  // running = passes, fares or upkeep (service, insurance); fuel is its own line for your own vehicle.
- commute:{public:{label:'Bus / Metro',emoji:'🚇',running:1500,fuel:0,loan:0},bike:{label:'Two-wheeler',emoji:'🛵',running:800,fuel:2500,loan:100000},car:{label:'Car',emoji:'🚗',running:3000,fuel:8000,loan:600000},cabs:{label:'Cabs',emoji:'🚕',running:7000,fuel:0,loan:0}},
+ commute:{public:{label:'Bus / Metro',emoji:'🚇',running:1500,fuel:0,loan:0},bike:{label:'Two-wheeler',emoji:'🛵',running:800,fuel:2500,loan:100000},car:{label:'Car',emoji:'🚗',running:2500,fuel:5000,loan:600000},cabs:{label:'Cabs',emoji:'🚕',running:7000,fuel:0,loan:0}},
  school:{gov:{label:'Government school',emoji:'🏫',monthly:1500,admission:5000},budget:{label:'Budget private school',emoji:'📘',monthly:10000,admission:25000},private:{label:'Private school',emoji:'🎒',monthly:29000,admission:75000},intl:{label:'International school',emoji:'🌍',monthly:75000,admission:300000}},  // ≈ ₹18K, ₹1.2L, ₹3.5L and ₹9L a year in 2026
  // Big buys trade comfort against people. rings = lasting [Me, Family & Friends, Community]
  // effect on ring targets while you own it; brag = show-off value (worth 0 points).
  house:{society:{label:'Society flat',emoji:'🏢',price:1,maintenance:3000,brag:1,rings:[8,2,12],blurb:'Clubhouse, festivals, neighbours who know your name. Nothing to show off.'},
-  villa:{label:'Independent villa',emoji:'🏡',price:1.8,maintenance:6000,brag:3,rings:[16,4,-4],blurb:'Space, a garden and serious bragging rights. No society around you.'},
+  villa:{label:'Independent villa',emoji:'🏡',price:1.5,maintenance:5000,brag:3,rings:[18,8,0],grow:0.065,blurb:'Space, a garden, room for family to stay. The land under it grows in value fastest. No society around you.'},
   near:{label:'Flat near family',emoji:'🏘️',price:0.85,maintenance:2500,brag:0,rings:[6,12,6],blurb:'In your old neighbourhood, close to parents and old friends. Cheaper, cosier, zero flex.'}},
- car:{hatch:{label:'Hatchback',emoji:'🚗',loan:600000,running:3000,fuel:8000,brag:1,rings:[4,2,0],blurb:'Easy to park, cheap to run. Gets you everywhere.'},
-  mpv:{label:'7-seater family car',emoji:'🚐',loan:1000000,running:4000,fuel:9500,brag:1,rings:[4,6,1],blurb:'Room for grandparents, cousins and the dog. Road trips unlocked.'},
-  suv:{label:'Big SUV',emoji:'🚙',loan:1500000,running:5000,fuel:11000,brag:3,rings:[8,3,-1],blurb:'Heads turn at every signal. So does your fuel gauge.'}}
+ car:{hatch:{label:'Hatchback',emoji:'🚗',loan:600000,running:2500,fuel:5000,brag:1,rings:[6,4,2],blurb:'Easy to park, cheap to run. Gets you everywhere.'},
+  mpv:{label:'7-seater family car',emoji:'🚐',loan:1000000,running:3500,fuel:7000,brag:1,rings:[5,10,2],blurb:'Room for grandparents, cousins and the dog. Road trips unlocked.'},
+  suv:{label:'Big SUV',emoji:'🚙',loan:1500000,running:4500,fuel:9500,brag:3,rings:[10,4,-1],blurb:'Heads turn at every signal. So does your fuel gauge.'}}
 };
 
 /* =====================================================================
@@ -805,9 +806,10 @@ const pick=arr=>arr[Math.floor(rand()*arr.length)];
 const byAge=(table,age)=>table.find(r=>age<r[0])[1];
 function emiFor(principal,rate=A.vehicleLoanMonthlyRate,n=A.vehicleLoanTerm){return Math.round(principal*rate/(1-Math.pow(1+rate,-n)));}
 function makeLoan(kind,principal){
- const [rate,n]=kind==='home'?[A.house.annualRate/12,A.house.termMonths]:kind==='edu'?[A.eduLoan.annualRate/12,A.eduLoan.termMonths]:[A.vehicleLoanMonthlyRate,A.vehicleLoanTerm];
+ const [rate,n]=kind==='home'?[A.house.annualRate/12,A.house.termMonths]:kind==='edu'?[A.eduLoan.annualRate/12,A.eduLoan.termMonths]:kind==='car'?[A.carLoan.annualRate/12,A.carLoan.termMonths]:[A.vehicleLoanMonthlyRate,A.vehicleLoanTerm];
  return {kind,principal,balance:principal,emi:emiFor(principal,rate,n),monthsLeft:n,rate};
 }
+function rideEmi(kind,principal){return kind==='car'?emiFor(principal,A.carLoan.annualRate/12,A.carLoan.termMonths):emiFor(principal);}
 const LOANS=[['eduLoan','Education'],['vehicleLoan','Vehicle'],['homeLoan','Home']];   // settled in this order
 
 /* =====================================================================
@@ -1694,7 +1696,7 @@ Object.assign(EVENTS,{
   resolve:(e,c)=>{const s=state;
    if(c==='book'){const v=rideVariants('car',s).find(x=>x.id==='suv');if(v.block)return{text:'Loan declined. '+v.block,feedback:fb('solid','The bank’s 50% rule just saved you from an EMI you could not afford.')};
     OPTIONAL.buyCar.apply(s,'suv');s.whatIf.adBuys.push('Big SUV');const b=monthlyBudget(s);
-    return{text:'You booked the SUV. EMI '+money(s.vehicleLoan.emi)+'/month for 3 years, plus fuel and upkeep.',feedback:b.leftover<b.income*0.15||monthsOfCushion(s)<A.cushionMonths?lessonFb(s,'The ad worked. EMI, fuel and upkeep now take a big slice of every month, and a car loses value every year.',LISTEN,true):fb('solid','You could afford it. A car still loses value every year, so enjoy the ride.')};}
+    return{text:'You booked the SUV. EMI '+money(s.vehicleLoan.emi)+'/month for 5 years, plus fuel and upkeep.',feedback:b.leftover<b.income*0.15||monthsOfCushion(s)<A.cushionMonths?lessonFb(s,'The ad worked. EMI, fuel and upkeep now take a big slice of every month, and a car loses value every year.',LISTEN,true):fb('solid','You could afford it. A car still loses value every year, so enjoy the ride.')};}
    return{text:c==='test'?'Great test drive. You walked away. 😎':'Scrolled past.',feedback:fb('great','Buying a car because an ad said so is how EMIs pile up. Buy one when your plan says so.')};}},
  adHome:{kicker:AD_KICKER,art:'🏰',ad:true,weight:0.9,
   eligible:s=>s.employment==='employed'&&!s.ownsHome&&preciseAge(s)>=28,
@@ -1761,11 +1763,11 @@ const STEP_DOWN={food:{foodie:'balanced',balanced:'home',home:'home'},social:{bi
 // level 'basics': the cheapest life that fits your family; 'trim': one step down on food and weekends, no extras.
 function cutPlan(s,level){
  const p=s.profile,kids=activeChildren(s).length,want={other:'none'};
- if(level==='basics'){want.food='home';want.social='quiet';want.travel='none';if(!s.ownsHome)want.home=kids>=2?(p.home==='premium'?'comfort':p.home):'starter';}
+ if(level==='basics'){want.food='home';want.social='quiet';want.travel='none';if(!s.ownsHome)want.home=kids>=2?(p.home==='premium'?'comfort':p.home):'starter';if(s.vehicle!=='public'&&s.vehicle!=='cabs'&&!s.vehicleLoan)want.commute='public';}   // a paid-off vehicle is sold for the bus
  else{want.food=STEP_DOWN.food[p.food];want.social=STEP_DOWN.social[p.social];want.travel=STEP_DOWN.travel[p.travel||'none'];}
- const changes=['home','food','social','travel','other'].filter(k=>want[k]&&want[k]!==(p[k]||'none')).map(k=>[k,want[k]]);
+ const changes=['home','food','social','travel','other','commute'].filter(k=>want[k]&&want[k]!==(p[k]||'none')).map(k=>[k,want[k]]);
  const copy=JSON.parse(JSON.stringify(s));changes.forEach(([k,v])=>applyExpenseTo(copy,k,v));
- const P=BASE_PRICES,names={home:v=>P.home[v].label,food:v=>P.food[v].label.toLowerCase(),social:v=>P.social[v].label.toLowerCase(),travel:v=>v==='none'?'no holidays':P.travel[v].label.toLowerCase(),other:()=>'no extras'};
+ const P=BASE_PRICES,names={home:v=>P.home[v].label,food:v=>P.food[v].label.toLowerCase(),social:v=>P.social[v].label.toLowerCase(),travel:v=>v==='none'?'no holidays':P.travel[v].label.toLowerCase(),other:()=>'no extras',commute:()=>'sell the '+vehicleLabel(s).toLowerCase()+', take the bus'};
  return{changes,saving:monthlyBudget(s).total-monthlyBudget(copy).total,label:changes.map(([k,v])=>names[k](v)).join(', ')};
 }
 function applyCut(s,plan){if(!s.lifestyleSaved)s.lifestyleSaved={home:s.profile.home,food:s.profile.food,social:s.profile.social,travel:s.profile.travel||'none',other:s.profile.other||'none'};plan.changes.forEach(([k,v])=>applyExpenseTo(s,k,v));record('Cut back at '+ageLabel()+': '+plan.label+' (saves '+money(plan.saving)+'/month).',{major:true,kind:'budget'});}
@@ -2042,7 +2044,7 @@ function advanceMonth(){
   s.lastRaiseYear=y;
   if(s.employment==='employed')yearlyRaise(s);
   else s.story='New year: prices rose 6%. '+(s.employment==='retired'?'Your assets carry the higher costs.':'No raise while between jobs.');
-  if(s.ownsHome)s.homeValue=Math.round(s.homeValue*(1+A.house.appreciation));
+  if(s.ownsHome)s.homeValue=Math.round(s.homeValue*(1+(houseSpec(s.homeType).grow||A.house.appreciation)));
   s.milestone='newyear';
  }
  if(s.month===A.reviewMonth&&s.employment==='employed'){
@@ -2101,18 +2103,18 @@ function bankCheck(s,newEmi){
 function rideVariants(kind,s){
  if(kind!=='car')return null;
  return Object.entries(BASE_PRICES.car).map(([id,c])=>({id,emoji:c.emoji,label:c.label,blurb:c.blurb,brag:c.brag,rings:c.rings,
-  price:priced(c.loan,s),emi:emiFor(priced(c.loan,s)),block:bankCheck(s,emiFor(priced(c.loan,s)))}));
+  price:priced(c.loan,s),emi:rideEmi('car',priced(c.loan,s)),block:bankCheck(s,rideEmi('car',priced(c.loan,s)))}));
 }
 function vehicleOption(kind){
  const base=BASE_PRICES.commute[kind],other=kind==='bike'?'car':'bike';
  return {tab:'big',name:(kind==='bike'?'Buy a two-wheeler':'Buy a car'),emoji:base.emoji,color:kind==='bike'?'c-sand':'c-blue',
   variants:kind==='car'?s=>rideVariants('car',s):null,
   cost:()=>0,
-  monthly:(s,v)=>{const ride=rideSpec(kind,v);return emiFor(priced(ride.loan,s))+priced(ride.running+ride.fuel,s)-priced(s.costs.commute+s.costs.fuel,s);},
-  available:s=>s.vehicle===kind?'You already '+(kind==='bike'?'ride one':'drive one')+'.':s.vehicleLoan?'Repay or sell your '+vehicleLabel(s).toLowerCase()+' first (Monthly Plan → Commute).':kind==='car'?null:bankCheck(s,emiFor(priced(base.loan,s))),
-  describe:(s,v)=>{const ride=rideSpec(kind,v);return (kind==='car'?ride.label+': ':'')+money(priced(ride.loan,s))+' on a 36-month loan at 12% a year: EMI '+money(emiFor(priced(ride.loan,s)))+', plus about '+money(priced(ride.fuel,s))+' a month for fuel and '+money(priced(ride.running,s))+' for upkeep. Replaces your current commute'+(s.vehicle===other?' (your '+vehicleLabel(s).toLowerCase()+' is sold)':'')+'.';},
+  monthly:(s,v)=>{const ride=rideSpec(kind,v);return rideEmi(kind,priced(ride.loan,s))+priced(ride.running+ride.fuel,s)-priced(s.costs.commute+s.costs.fuel,s);},
+  available:s=>s.vehicle===kind?'You already '+(kind==='bike'?'ride one':'drive one')+'.':s.vehicleLoan?'Repay or sell your '+vehicleLabel(s).toLowerCase()+' first (Monthly Plan → Commute).':kind==='car'?null:bankCheck(s,rideEmi(kind,priced(base.loan,s))),
+  describe:(s,v)=>{const ride=rideSpec(kind,v);return (kind==='car'?ride.label+': ':'')+money(priced(ride.loan,s))+(kind==='car'?' on a 5-year loan at 9.5% a year':' on a 3-year loan at 12% a year')+': EMI '+money(rideEmi(kind,priced(ride.loan,s)))+', plus about '+money(priced(ride.fuel,s))+' a month for fuel and '+money(priced(ride.running,s))+' for upkeep. Replaces your current commute'+(s.vehicle===other?' (your '+vehicleLabel(s).toLowerCase()+' is sold)':'')+'.';},
   apply:(s,v)=>{applyExpenseTo(s,'commute',kind,v);const ride=rideSpec(kind,s.carModel);record('Bought a '+ride.label.toLowerCase()+' on a '+money(s.vehicleLoan.principal)+' loan at '+ageLabel()+'.',{major:true,kind:'vehicle'});celebrate('vehicle',ride.emoji,'New ride!',ride.label+' unlocked');const b=monthlyBudget(s);
-   return{text:'New '+ride.label.toLowerCase()+'! Loan '+money(s.vehicleLoan.principal)+' at '+money(s.vehicleLoan.emi)+'/month for 36 months.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The gap will turn into debt.'):b.leftover<b.income*0.15?fb('risky','A new ride, but the EMI leaves a thin monthly surplus.'):v==='suv'?fb('solid','Very shiny. Show-off value earns no points; the EMI and fuel are real.'):fb('solid','Convenience you can afford. Vehicles lose value; the EMI does not.')};}};
+   return{text:'New '+ride.label.toLowerCase()+'! Loan '+money(s.vehicleLoan.principal)+' at '+money(s.vehicleLoan.emi)+'/month for '+s.vehicleLoan.monthsLeft/12+' years.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The gap will turn into debt.'):b.leftover<b.income*0.15?fb('risky','A new ride, but the EMI leaves a thin monthly surplus.'):v==='suv'?fb('solid','Very shiny. Show-off value earns no points; the EMI and fuel are real.'):fb('solid','Convenience you can afford. Vehicles lose value; the EMI does not.')};}};
 }
 // Ring power-ups: small, deliberate ways to look after your people and your community.
 function ringAction(o){return Object.assign({tab:'one-time',monthly:()=>0,
@@ -2185,7 +2187,7 @@ const OPTIONAL={
   cost:(s,v)=>houseUpfront(s,v),
   monthly:(s,v)=>houseLoanEmi(s,v)+priced(houseSpec(v).maintenance,s)-priced(s.costs.housing,s)-priced(s.costs.homeUpgrade,s),
   available:s=>s.ownsHome?'You already own your home.':null,
-  describe:(s,v)=>{const h=houseSpec(v);return h.label+' for '+money(housePrice(s,v))+'. Pay 20% down + 7% registration ('+money(houseUpfront(s,v))+'), and a 20-year home loan at 8.5% a year: EMI '+money(houseLoanEmi(s,v))+'. Rent stops; maintenance is '+money(priced(h.maintenance,s))+'/month. Home value grows about 5% a year.';},
+  describe:(s,v)=>{const h=houseSpec(v);return h.label+' for '+money(housePrice(s,v))+'. Pay 20% down + 7% registration ('+money(houseUpfront(s,v))+'), and a 20-year home loan at 8.5% a year: EMI '+money(houseLoanEmi(s,v))+'. Rent stops; maintenance is '+money(priced(h.maintenance,s))+'/month. Home value grows about '+String(Math.round((h.grow||A.house.appreciation)*1000)/10)+'% a year.';},
   apply:(s,v)=>{const h=houseSpec(v),price=housePrice(s,v),loan=Math.round(price*(1-A.house.downShare));s.ownsHome=true;s.homeType=v;s.homeValue=price;s.homeLoan=makeLoan('home',loan);s.homeUpgraded=false;s.costs.homeUpgrade=0;
    record('Bought a '+h.label.toLowerCase()+' for '+money(price)+' at '+ageLabel()+' ('+money(loan)+' home loan).',{major:true,kind:'home'});celebrate('home',h.emoji,'Home sweet home!',h.label);const b=monthlyBudget(s);
    return{text:'You bought a '+h.label.toLowerCase()+'! Loan '+money(loan)+' at '+money(s.homeLoan.emi)+'/month for 20 years. Rent stops from next month.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The home could become a burden.'):monthsOfCushion(s)<2?fb('risky','A home of your own, but the down payment left your cash cushion thin.'):b.leftover<b.income*0.15?fb('risky','A home of your own, with a thin monthly surplus. Big EMIs leave little room for surprises.'):fb('great','A home you can afford, with a cushion left over. Rent money now builds equity.')};}},
@@ -3232,8 +3234,8 @@ function renderAbout(){
   ['Savings','Savings earn 2.5% a year, credited monthly, while prices rise 6%'],
   ['Retirement plan','When you retire you set how you will live (rent, food, weekends, extras) and see how many years your savings and investments last'],['Monthly SIP','A fixed amount (a preset or any custom amount from ₹500 to ₹10L) moved from savings to investments each month after bills. Skipped (not a strained month) when savings cannot cover it. Paused without a salary'],
   ['Unsecured debt','1% interest a month. Minimum repayment is the larger of 3% of the balance or ₹2,000 (inflation-adjusted)'],
-  ['Vehicle loans','12% a year over 36 months. Two-wheeler ₹1,00,000 (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars: a hatchback ₹6,00,000 (≈₹19,929 EMI, ₹8,000 fuel + ₹3,000 upkeep), a 7-seater ₹10,00,000 (₹9,500 fuel + ₹4,000 upkeep; good for family time) or a big SUV ₹15,00,000 (₹11,000 fuel + ₹5,000 upkeep; most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt'],
-  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹60 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹1.08 crore (₹6,000/month; comfy for you, lonelier, most show-off value) or a flat near family at ₹51 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Home value grows 5% a year. Selling costs 3%'],
+  ['Vehicle loans','A two-wheeler ₹1,00,000 on 3 years at 12% (≈₹3,321 EMI, ₹2,500 fuel + ₹800 upkeep). Cars on 5 years at 9.5%: a hatchback ₹6,00,000 (≈₹12,600 EMI, ₹5,000 fuel + ₹2,500 upkeep), a 7-seater ₹10,00,000 (₹7,000 fuel + ₹3,500 upkeep; best for family time) or a big SUV ₹15,00,000 (₹9,500 fuel + ₹4,500 upkeep; most show-off value), at age-23 prices. Selling a financed vehicle repays 80% of what is left; the rest becomes debt. Cutting to basics sells a paid-off vehicle'],
+  ['Home loan','Three homes, at age-23 prices that rise 6% a year: a society flat at ₹60 lakh (maintenance ₹3,000/month; great for community life), an independent villa at ₹90 lakh (₹5,000/month; the most comfort, no society around you, most show-off value, and its land grows 6.5% a year) or a flat near family at ₹51 lakh (₹2,500/month; close to family). 20% down + 7% registration; 20-year loan at 8.5% a year. Rent stops. Flats grow 5% a year. Selling costs 3%'],
   ['Bank check','New loans need a salary, and all EMIs together (including an education loan) must stay within 50% of take-home pay'],
   ['Shortfalls','Bills are paid from savings. When savings run out, investments are sold automatically. Only when both are gone does anything unpaid become unsecured debt'],['Race ends early','Only when savings and investments are both gone and some costs go unpaid 6 months in a row. One fully paid month resets the count'],
   ['Layoff','Severance = 1 month’s notice pay + 15 days’ pay per completed year in the job (capped at 12 months of salary). Then either 3 months without salary, or a 20% lower-paid role right away'],
