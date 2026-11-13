@@ -499,6 +499,22 @@ await test('Mix screen: the More sheet shows safe and growth; the dialog preview
  assert(/All growth/.test(d.getElementById('mixTitle').textContent),'starts all growth');d.getElementById('mixBtn').click();assert(/Safe or growth/.test(d.getElementById('confirmTitle').textContent),'dialog opens');eq(d.querySelectorAll('#confirmBody [data-mix]').length,4,'four mixes');assert(d.getElementById('confirmOk').disabled,'nothing picked yet');
  d.querySelector('#confirmBody [data-mix="0.25"]').click();assert(/₹2L|2\.00L|₹2,00,000/.test(d.getElementById('mixPreview').textContent),'preview shows the safe amount ('+d.getElementById('mixPreview').textContent.slice(0,80)+')');d.getElementById('confirmOk').click();
  eq(s.mix,0.25,'mix set');eq(s.safe,2e5,'money moved');L.render();assert(/Safe/.test(d.getElementById('mixTitle').textContent)&&/Growth/.test(d.getElementById('mixTitle').textContent),'row shows both parts');});
+await test('Setup: costs above take-home are warned about, and starting that way takes a second tap',async()=>{const {L,win}=await loadGame(620);const d=win.document;L.goToSetup();const p=L.state.profile;p.salary=30000;d.getElementById('beginGameBtn').click();
+ const steps=d.querySelectorAll('#wizBody .wiz-dots i').length;for(let i=0;i<steps-1;i++)d.getElementById('wizNext').click();
+ p.home='premium';p.food='foodie';p.social='big';p.travel='india';L.render&&0;d.querySelector('#wizBody [data-wiz]').click();
+ assert(/more than you take home/.test(d.getElementById('wizBody').textContent),'warning shown: '+d.getElementById('wizBody').textContent.slice(-200));
+ d.getElementById('wizNext').click();eq(L.state.status,'setup','first tap only warns');assert(/Start anyway/.test(d.getElementById('wizNext').textContent),'button now says start anyway');assert(/tap again/.test(d.getElementById('wizBody').textContent),'explains the second tap');
+ d.getElementById('wizNext').click();eq(L.state.status,'playing','second tap starts');});
+await test('Setup: the default setup and a well-paid fancy one get no overspend warning',async()=>{const {L,win}=await loadGame(621);const d=win.document;L.goToSetup();const p=L.state.profile;d.getElementById('beginGameBtn').click();
+ assert(!/more than you take home|to spare/.test(d.getElementById('wizBody').textContent),'default setup: no warning');
+ p.salary=100000;Object.assign(p,{home:'premium',food:'foodie',social:'big',travel:'none',other:'none'});d.querySelector('#wizBody [data-wiz]').click();const txt=d.getElementById('wizBody').textContent;
+ assert(!/more than you take home/.test(txt),'not short');});
+await test('End screen: headline net worth is in today’s money; retirement drawdowns and a SIP from 23 are not lessons',async()=>{const {L,win}=await game(630);const d=win.document,s=L.state;quiet(s);
+ s.whatIf.sipStart=3;s.whatIf.noSipUnits=3;s.whatIf.sipBase=5000;assert(!L.whatIfLessons().some(l=>l.key==='sip'),'a SIP started at 23 is not called late');
+ s.whatIf.sipStart=(30-23)*12+2;s.whatIf.noSipUnits=80;assert(L.whatIfLessons().some(l=>l.key==='sip'&&/age 30/.test(l.title)),'a SIP from 30 is: '+JSON.stringify(L.whatIfLessons().map(l=>[l.key,l.title,l.gain])));
+ s.cash=0;s.invested=5e6;s.salary=0;s.employment='retired';for(let i=0;i<6;i++){quiet(s);L.advanceMonth();}assert(s.stats.investmentsSold>0,'retiree sold to pay bills');assert(!L.whatIfLessons().some(l=>l.key==='sold'),'not a lesson');
+ s.month=(80-23)*12;s.cash=1e7;L.endRun('completed');L.render();const head=d.querySelector('.end-score').textContent;
+ assert(head.includes(L.compact(L.realNetWorth()))&&/today/.test(head),'headline in today’s money: '+head);assert(/that year’s rupees/.test(d.getElementById('endBody').textContent),'nominal figures labelled');});
 window.__TEST_RESULTS=results;
 })();
 </script>

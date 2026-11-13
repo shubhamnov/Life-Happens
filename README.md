@@ -71,3 +71,14 @@ Other model rules: 6% inflation applied at the start of each simulated year (cos
 
 All values are illustrative. This is educational entertainment, not financial advice.
 29. **Safe or growth (the second money decision):** investments have a safe part (7% a year, never falls) and a growth part (the market). The mix (More → Mix: 0, 25, 50 or 75% safe) moves existing money to match at today's prices and steers new SIP and lump-sum money. Forced sales take safe money first. Simulations (60 seeded lives per mix) showed safe money never ends a life richer, because 12.5% against 7% outruns even a crash at retirement. So the trade-off is stated honestly as wealth against calm: during a crash the Me ring drops in step with the share of money in growth (up to −12 working, −24 retired), and a retiree with five years of bills in savings plus safe money gets +6 Me. Result: comfortable lives end happier with a safe bucket at retirement (about half of them, +0.3 to +0.5 lifetime happiness, about 30% less money left at 80); tight lives go broke more often with one (2–4 more in 60), because they need the growth. A crash card appears three months into each crash (stay, move half to safe, sell a quarter); moving to safe mid-crash is flagged as locking in the loss. The pit crew suggests a safe bucket from 55 only when the pot covers 22+ years of costs. The retirement check blends the two returns by the current mix.
+
+## Tools
+
+Serve the repo (`python3 -m http.server 8765`), then:
+
+- `node tools/run-tests.js` runs `tests.html` headless and exits non-zero on any failure.
+- `node tools/simulate.js 40 out.json base,ret50` plays 40 seeded lives per style (styles are listed in the file).
+- `node tools/summarize.js out.json` prints broke counts, median and 10th-percentile real net worth (₹ lakh) and happiness per style.
+- `node tools/compare.js out.json base ret50` compares two styles on the same seeds.
+
+Playwright must be installed (`npm i playwright`), or set `PW_CHROMIUM` to a Chromium binary.

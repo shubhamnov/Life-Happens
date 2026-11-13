@@ -274,6 +274,7 @@ body.playing .app{height:100dvh;min-height:0;overflow:hidden;gap:0;padding-top:m
 .end-score{display:flex;justify-content:center;gap:18px;margin:6px 0 4px;text-align:center}
 .end-score div span{display:block;font:800 11px var(--sans);letter-spacing:.1em;color:var(--muted)}
 .end-score div strong{font:700 30px/1.1 var(--display);color:var(--forest-dark)}
+.end-score div small{display:block;font:700 11px var(--sans);color:var(--muted)}
 .life-tags>span{font-size:12px;font-weight:800;background:var(--paper);border:1.5px solid var(--line);color:#3E5A47;border-radius:999px;padding:3px 9px 3px 6px;display:inline-flex;gap:4px;align-items:center}
 
 /* ---------- Wallet ---------- */
@@ -301,6 +302,7 @@ button.hud-happy{position:absolute;border:0;color:var(--ink);cursor:pointer}
 .wiz-step{text-align:center}.wiz-step.slide{animation:wizIn .35s ease-out}.wiz-emoji{font-size:44px;line-height:1;margin:4px 0;animation:wizBob 1.6s ease-in-out infinite}
 .wiz-step h2{margin:2px 0 4px}.wiz-opts{display:grid;gap:7px;text-align:left;margin:8px 0}
 .wiz-opt{display:flex;gap:9px;align-items:center;width:100%;min-height:48px;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:6px 10px;color:var(--ink)}.wiz-opt>span:not(.emoji):not(.rchip){flex:1;min-width:0;text-align:left}.wiz-opt .rchip{flex:0 0 auto}.wiz-opt strong{display:block;font-size:14px}.wiz-opt small{font-size:12px;color:var(--muted)}.wiz-opt[aria-pressed="true"]{border-color:var(--forest);background:var(--sage);transform:scale(1.02);transition:transform .15s}
+.wiz-warn{margin:6px 0 0;padding:7px 10px;border-radius:12px;background:#FBE3DC;color:var(--danger-ink);font-size:12.5px;font-weight:700;line-height:1.35}.wiz-warn.soft{background:#FFF1D6;color:#7A5A12}.wiz-warn.loud{outline:2px solid var(--danger-ink)}
 .wiz-budget{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#FFF8E2;border-radius:12px;padding:7px;font-size:11px;font-weight:700;color:var(--muted);text-align:center}.wiz-budget b{display:block;font-size:13.5px;color:var(--ink)}.wiz-budget .neg b{color:var(--danger-ink)}
 .link-btn{display:block;margin:8px auto 0;background:none;border:0;color:var(--muted);font-weight:700;text-decoration:underline;min-height:36px}
 @keyframes wizIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes wizBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
@@ -843,7 +845,7 @@ function createState(){
   overspendMonths:0,lastOverspendMonth:-999,lifestyleSaved:null,pendingTighten:false,pendingRestore:false,
   bigShock:{due:[],count:0},coverFamily:false,coverBase:0,coverRenewMonth:0,coverFamilyAsked:false,policy:null,creepIncome:0,lastCreepMonth:-999,xRng:0,
   mkt:{x:0,rng:0,c:0,cr:null,rest:A.market.crash.quiet,news:0,low:0},
-  adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
+  adNext:0,adRng:0,lastAdType:'',whatIf:{g:1,idle:0,prevIdle:0,ten:0,sold:0,soldSeen:0,soldBase:0,noSipUnits:0,sipStart:0,sipBase:0,interest:0,adLoss:0,adBuys:[]}
  };
 }
 let state=createState();
@@ -1245,7 +1247,7 @@ function whatIfAdd(s,out,total){
  const w=s.whatIf,f=inflationFactor(s);
  w.prevIdle=Math.max(0,s.cash-A.cushionMonths*total);
  if(out.income>0)w.ten+=out.income*0.1;
- w.sold+=s.stats.investmentsSold-w.soldSeen;w.soldSeen=s.stats.investmentsSold;
+ {const d=s.stats.investmentsSold-w.soldSeen;w.soldSeen=s.stats.investmentsSold;if(s.employment!=='retired'){w.sold+=d;w.soldBase=(w.soldBase||0)+d;}}   // living off investments in retirement is the plan, not a lesson
  w.interest+=out.interest/f;
  if(!w.sipStart&&s.sip>0){w.sipStart=s.month;w.sipBase=s.sip/f;}
  if(!w.sipStart&&s.employment==='employed')w.noSipUnits+=f/w.g;
@@ -2428,9 +2430,9 @@ function whatIfLessons(s=state){
  const w=s.whatIf,f=inflationFactor(s),real=v=>Math.round(v/f),out=[];
  const age0=w.sipStart?Math.floor(ageAtMonth(w.sipStart)):0;
  if(w.idle>0)out.push({key:'idle',emoji:'💤',gain:real(w.idle),title:'Cash above a 6-month cushion, invested',take:'Keep about 6 months of expenses in savings and invest the rest. Savings earn 2.5% while prices rise 6%.'});
- if(w.sipStart&&w.noSipUnits>0)out.push({key:'sip',emoji:'⏰',gain:real(w.sipBase*w.noSipUnits*w.g),title:'Your SIP from your first salary, not from '+age0,take:'Start investing with your first salary, even a small amount. Time does the heavy lifting.'});
+ if(w.sipStart&&age0>=24&&w.noSipUnits>0)out.push({key:'sip',emoji:'⏰',gain:real(w.sipBase*w.noSipUnits*w.g),title:'Your SIP from your first salary, not from age '+age0,take:'Start investing with your first salary, even a small amount. Time does the heavy lifting.'});
  if(!w.sipStart&&w.ten>s.invested)out.push({key:'ten',emoji:'🌱',gain:real(w.ten-s.invested),title:'10% of your pay invested every month',take:'Invest a fixed share of every salary, automatically, before you spend it.'});
- if(w.sold>s.stats.investmentsSold)out.push({key:'sold',emoji:'🔨',gain:real(w.sold-s.stats.investmentsSold),title:'Not selling investments to pay bills',take:'A cash cushion means a surprise never forces you to sell investments.'});
+ if(w.sold>(w.soldBase||0))out.push({key:'sold',emoji:'🔨',gain:real(w.sold-(w.soldBase||0)),title:'Not selling investments before retirement',take:'A cash cushion means a surprise never forces you to sell investments.'});
  if(w.interest>0)out.push({key:'debt',emoji:'💳',gain:Math.round(w.interest),title:'No card debt (interest you paid)',take:'Card debt costs 12% a year. Clear it before anything else.'});
  if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
  return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
@@ -2847,17 +2849,26 @@ const WIZ=[
 function wizBudget(p){const edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),take=salary-Math.round(M.annualTax(salary*12)/12);
  const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.travel[p.travel||'none'].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
 // The same steps plan retirement spending (no health step; home only while renting), with how long the money lasts.
+// Setup only: costs above take-home mean card debt from the first month. Warn, and make starting that way a deliberate second tap.
+function wizShort(){return ui.wiz.mode!=='retire'&&wizBudget(S().profile).left<0;}
+function wizWarning(b){
+ if(b.left<0)return '<p class="wiz-warn'+(ui.wiz.warned?' loud':'')+'" role="alert">⚠️ Your costs are <b>'+money(-b.left)+'</b> a month more than you take home. The gap goes on a credit card at 1% a month from month one. Pick cheaper options'+(ui.wiz.warned?', or tap again to start anyway.':'.')+'</p>';
+ if(b.left<b.take*0.1)return '<p class="wiz-warn soft">Only '+money(b.left)+' a month to spare: one surprise and you are borrowing. Aim for at least '+money(Math.round(b.take*0.1/500)*500)+'.</p>';
+ return '';
+}
+// Returns true when the click should start; the first try with costs above pay only shows the warning.
+function wizMayStart(){if(!wizShort()){ui.wiz.warned=false;return true;}if(ui.wiz.warned)return true;ui.wiz.warned=true;sfx('risky');renderWizard(false);return false;}
 function wizSteps(){return ui.wiz.mode==='retire'?WIZ.filter(w=>w.key!=='health'&&!(w.key==='home'&&S().ownsHome)):WIZ;}
 function retireBudget(){const s=S(),b=M.monthlyBudget(),assets=Math.max(0,s.cash+s.invested),yrs=assets/Math.max(1,b.total*12);return{cost:b.total,assets,yrs};}
 function renderWizard(animate){
  const steps=wizSteps(),retire=ui.wiz.mode==='retire',p=S().profile,i=ui.wiz.step,st=steps[i],cur=st.key==='health'?(p.health==='yes'?'yes':'no'):(p[st.key]||'none');
  const strip=retire?(()=>{const r=retireBudget();return '<div class="wiz-budget"><span>Monthly costs<b>'+money(r.cost)+'</b></span><span>Savings + invested<b>'+compact(r.assets)+'</b></span><span class="'+(r.yrs<80-M.preciseAge()?'neg':'')+'">Lasts about<b>'+r.yrs.toFixed(0)+' yrs</b></span></div>';})()
-  :(()=>{const b=wizBudget(p);return '<div class="wiz-budget"><span>Take-home<b>'+money(b.take)+'</b></span><span>Monthly costs<b>'+money(b.cost)+'</b></span><span class="'+(b.left<0?'neg':'')+'">Left over<b>'+money(b.left)+'</b></span></div>';})();
+  :(()=>{const b=wizBudget(p);return '<div class="wiz-budget"><span>Take-home<b>'+money(b.take)+'</b></span><span>Monthly costs<b>'+money(b.cost)+'</b></span><span class="'+(b.left<0?'neg':'')+'">Left over<b>'+money(b.left)+'</b></span></div>'+wizWarning(b);})();
  $('wizSticker').textContent=retire?'YOUR RETIREMENT PLAN':'YOUR LIFE, YOUR WAY';
  $('wizBody').innerHTML='<div class="wiz-dots" aria-label="Step '+(i+1)+' of '+steps.length+'">'+steps.map((w,j)=>'<i class="'+(j<i?'done':j===i?'on':'')+'"></i>').join('')+'</div>'
   +'<div class="wiz-step'+(animate?' slide':'')+'"><div class="wiz-emoji emoji" aria-hidden="true">'+st.emoji+'</div><h2 id="wizTitle">'+esc(st.title)+'</h2><p class="lead">'+(retire&&i===0?'No salary now: your savings and investments pay for how you live. ':'')+esc(st.why)+'</p>'
   +'<div class="wiz-opts">'+st.opts().map(o=>'<button type="button" class="wiz-opt" data-wiz="'+o.id+'" aria-pressed="'+(o.id===cur)+'">'+em(o.emoji)+'<span><strong>'+esc(o.label)+'</strong><small>'+(o.cost?money(M.priced(o.cost))+'/month':'Free')+'</small></span>'+'</button>').join('')+'</div></div>'+strip;
- $('wizBack').disabled=i===0;$('wizNext').textContent=i===steps.length-1?(retire?'Start retirement 🌅':'Start the race 🏁'):'Next →';$('wizSkip').textContent=retire?'Keep my current spending':'Skip: keep this setup';
+ $('wizBack').disabled=i===0;const short=!retire&&wizBudget(p).left<0;$('wizNext').textContent=i===steps.length-1?(retire?'Start retirement 🌅':short&&ui.wiz.warned?'Start anyway':'Start the race 🏁'):'Next →';$('wizSkip').textContent=retire?'Keep my current spending':'Skip: keep this setup';
 }
 function openWizard(){if(S().status!=='setup')return;ui.wiz={step:0,mode:'setup'};renderWizard(true);showOverlay('profileOverlay');}
 function openRetirePlan(){const s=S();if(s.status!=='playing'||s.employment!=='retired'||M.blockingEvent())return;ui.wiz={step:0,mode:'retire'};renderWizard(true);openModal('retireplan','profileOverlay');}
@@ -3090,10 +3101,10 @@ function renderEnd(){
  $('endTitle').textContent=end.title;
  $('endLead').textContent=end.line+(sum.completed?'':' For six months in a row, savings and investments could not cover your costs. It is a lesson about this simulated life, not about you.');
  const stat=(l,v)=>'<div><span>'+l+'</span><strong>'+v+'</strong></div>';
- $('endBody').innerHTML='<div class="end-score"><div><span>❤️ LIFETIME HAPPINESS</span><strong>'+sum.happy+'</strong></div><div><span>💎 NET WORTH</span><strong>'+compact(M.netWorth())+'</strong></div></div>'
-  +'<p class="res-note" style="text-align:center">'+(sum.happy>=best?'🎉 Your happiest life so far! ':'Your best: ❤️ '+best+'. ')+'In today’s money your net worth is '+compact(sum.realWorth)+'.</p>'
+ $('endBody').innerHTML='<div class="end-score"><div><span>❤️ LIFETIME HAPPINESS</span><strong>'+sum.happy+'</strong></div><div><span>💎 NET WORTH</span><strong>'+compact(sum.realWorth)+'</strong><small>in today’s money</small></div></div>'
+  +'<p class="res-note" style="text-align:center">'+(sum.happy>=best?'🎉 Your happiest life so far! ':'Your best: ❤️ '+best+'. ')+'Prices rise every year, so at '+esc(age)+' that is '+compact(M.netWorth())+' in that year’s rupees, the figures below.</p>'
   +couldBeHtml(sum)
-  +'<h3>Your money at '+esc(age)+'</h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('📈 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('🏦 LOANS & 💳 DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
+  +'<h3>Your money at '+esc(age)+' <small>(that year’s rupees)</small></h3><div class="snapshot end-stats">'+stat('🐷 SAVINGS',money(s.cash))+stat('📈 INVESTED',money(s.invested))+(s.ownsHome?stat('🏡 HOME VALUE',money(s.homeValue)):'')+stat('🏦 LOANS & 💳 DEBT',money(M.totalDebt()))+stat('💎 NET WORTH',money(M.netWorth()))+stat('🏆 PROMOTIONS',String(s.promotions))+'</div>'
   +(sum.reasons.length?'<h3>What shaped this race</h3><ul class="end-list">'+sum.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>':'')
   +'<h3>Big moments</h3><ul class="end-list">'+sum.decisions.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul>'
   +'<p class="res-note">Illustrative game outcome, not a forecast. Run code: '+s.seed+'.</p>';
@@ -3262,10 +3273,10 @@ $('startBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup()
 document.querySelector('.gender-pick').addEventListener('click',e=>{const b=e.target.closest('[data-gender]');if(!b)return;prefs.gender=b.dataset.gender;M.savePrefs();if(M.setGender(prefs.gender))sfx('tap');renderStory();b.focus({preventScroll:true});});
 $('rerollBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');goToSetup(0);const a=$('storyAvatar');a.style.animation='none';void a.offsetWidth;a.style.animation='';});
 $('beginGameBtn').addEventListener('click',()=>{unlockAudio();sfx('tap');openWizard();});
-$('wizBody').addEventListener('click',e=>{const b=e.target.closest('[data-wiz]');if(!b)return;const p=S().profile,k=wizSteps()[ui.wiz.step].key;if(ui.wiz.mode==='retire'){if(p[k]!==b.dataset.wiz)M.applyExpenseChange(k,b.dataset.wiz);}else{p[k]=b.dataset.wiz;renderStory();}sfx('tap');renderWizard(false);const again=$('wizBody').querySelector('[data-wiz="'+b.dataset.wiz+'"]');if(again)again.focus({preventScroll:true});});
+$('wizBody').addEventListener('click',e=>{const b=e.target.closest('[data-wiz]');if(!b)return;const p=S().profile,k=wizSteps()[ui.wiz.step].key;if(ui.wiz.mode==='retire'){if(p[k]!==b.dataset.wiz)M.applyExpenseChange(k,b.dataset.wiz);}else{p[k]=b.dataset.wiz;ui.wiz.warned=false;renderStory();}sfx('tap');renderWizard(false);const again=$('wizBody').querySelector('[data-wiz="'+b.dataset.wiz+'"]');if(again)again.focus({preventScroll:true});});
 $('wizBack').addEventListener('click',()=>{if(ui.wiz.step>0){ui.wiz.step-=1;sfx('tap');renderWizard(true);}});
-$('wizNext').addEventListener('click',()=>{if(ui.wiz.step<wizSteps().length-1){ui.wiz.step+=1;sfx('tap');renderWizard(true);return;}closeWizard();});
-$('wizSkip').addEventListener('click',closeWizard);
+$('wizNext').addEventListener('click',()=>{if(ui.wiz.step<wizSteps().length-1){ui.wiz.step+=1;sfx('tap');renderWizard(true);return;}if(wizMayStart())closeWizard();});
+$('wizSkip').addEventListener('click',()=>{if(wizMayStart())closeWizard();});
 $('hudHappy').addEventListener('click',()=>{sfx('tap');openHappy();});
 $('restartBtn').addEventListener('click',requestRestart);
 $('newLifeBtn').addEventListener('click',()=>{sfx('tap');goToSetup(0);});
