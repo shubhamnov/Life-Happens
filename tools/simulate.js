@@ -27,6 +27,7 @@ const out=await p.evaluate(async({N,only})=>{
   loner:V({setup:{home:'starter',food:'home',social:'quiet',other:'none',travel:'none'},sip:0.4,pol:{marriageQ:'no'}}),
   lavish:V({setup:{home:'premium',food:'foodie',social:'big',travel:'india',other:'regular'},sip:0.05,pol:{wedding:'lavish',schoolQ:'private',overspend:'school',creep:'up'}}),
  };
+ STR.fit=Object.assign({},STR.base,{setup:{health:'yes',travel:'weekend',other:'small'}});   // keeps the home the story card suggests for the pay
  const res=[];
  for(const [name,st] of Object.entries(STR).filter(([n])=>!only.length||only.includes(n))) for(let k=1;k<=N;k++){
   const f=document.createElement('iframe');f.src='index.html?test=1&seed='+(k*13+5);document.body.appendChild(f);await new Promise(r=>f.onload=r);

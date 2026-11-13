@@ -823,7 +823,7 @@ let runCounter=0;
 function createState(){
  return {
   runId:++runCounter,status:'intro',seed:0,month:0,
-  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',travel:'none',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes',name:'',city:'',cityArt:'',job:''},
+  profile:{salary:45000,home:'comfort',food:'balanced',social:'regular',travel:'none',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'yes',name:'',city:'',cityArt:'',col:1,job:''},
   salary:45000,career:0,jobStartMonth:1,lastPromotionYear:0,promotions:0,
   employment:'employed',           // employed | laidoff | retired ("laidoff" also covers accident recovery; see breakReason)
   laidOffMonthsLeft:0,breakReason:'',lastLayoffMonth:-999,retiredAtAge:null,retirePromptShown:false,startupUntil:0,
@@ -907,7 +907,7 @@ function severanceMonths(s=state){const yrs=Math.max(0,Math.floor((s.month-s.job
 function travellers(s=state){return 1+(s.married?1:0)+0.6*activeChildren(s).length;}
 function travellerLabel(s=state){const k=activeChildren(s).length;return ['you',s.married?'spouse':'',k?k+(k>1?' kids':' kid'):''].filter(Boolean).join(' + ');}
 function houseSpec(type){return BASE_PRICES.house[type]||BASE_PRICES.house.society;}
-function housePrice(s=state,type='society'){return priced(A.house.basePrice*houseSpec(type).price,s);}
+function housePrice(s=state,type='society'){return priced(Math.round(A.house.basePrice*houseSpec(type).price*cityCost(s)),s);}
 function houseUpfront(s=state,type='society'){return Math.round(housePrice(s,type)*(A.house.downShare+A.house.feesShare));}
 function houseLoanEmi(s=state,type='society'){return emiFor(Math.round(housePrice(s,type)*(1-A.house.downShare)),A.house.annualRate/12,A.house.termMonths);}
 // A car's loan, fuel and upkeep depend on the model; other rides use BASE_PRICES.commute.
@@ -1973,7 +1973,7 @@ function beginLife(profile){
  Object.assign(s.profile,profile||{});
  const p=s.profile,ride=BASE_PRICES.commute[p.commute],edu=p.eduLoan==='yes';
  s.status='playing';s.month=1;s.salary=Math.round(Number(p.salary)*(edu?1+A.eduLoan.salaryBoost:1));s.jobStartMonth=1;
- s.costs.housing=BASE_PRICES.home[p.home].cost;s.costs.food=BASE_PRICES.food[p.food].cost;s.costs.social=BASE_PRICES.social[p.social].cost;s.costs.other=BASE_PRICES.other[p.other||'none'].cost;s.costs.travel=BASE_PRICES.travel[p.travel||'none'].cost;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;
+ s.costs.housing=rentFor(s,p.home);s.costs.food=BASE_PRICES.food[p.food].cost;s.costs.social=BASE_PRICES.social[p.social].cost;s.costs.other=BASE_PRICES.other[p.other||'none'].cost;s.costs.travel=BASE_PRICES.travel[p.travel||'none'].cost;s.costs.commute=ride.running;s.costs.fuel=ride.fuel;
  s.vehicle=p.commute;s.transit=s.seed%2?'metro':'bus';
  if(ride.loan)s.vehicleLoan=makeLoan(p.commute,ride.loan);
  if(edu)s.eduLoan=makeLoan('edu',A.eduLoan.principal);
@@ -1993,12 +1993,17 @@ function beginLife(profile){
 /* ---------- A random starting life (the story card) ---------- */
 const NAMES={man:['Aarav','Rohan','Kabir','Arjun','Vihaan','Ishaan','Rahul','Aditya','Karan','Siddharth','Farhan','Joseph','Harpreet','Vikram','Nikhil','Manoj'],
  woman:['Ananya','Priya','Diya','Meera','Ishita','Kavya','Sana','Riya','Aisha','Neha','Tanvi','Mariam','Simran','Pooja','Lakshmi','Fatima']};
-const CITIES=[['Pune','🏙️'],['Bengaluru','🌳'],['Hyderabad','🕌'],['Chennai','🌊'],['Mumbai','🌆'],['Delhi','🏛️'],['Kolkata','🚋'],['Ahmedabad','🪁'],['Jaipur','🏯'],['Kochi','🛶'],['Indore','🍲'],['Noida','🏢']];
+// [name, art, cost of living]: scales rent and home prices. Pay follows the city: a first job on ₹35K is
+// usually somewhere rent is cheap, a ₹60K one in a big metro.
+const CITIES=[['Pune','🏙️',1.05],['Bengaluru','🌳',1.2],['Hyderabad','🕌',1],['Chennai','🌊',1],['Mumbai','🌆',1.35],['Delhi','🏛️',1.15],['Kolkata','🚋',0.9],['Ahmedabad','🪁',0.85],['Jaipur','🏯',0.8],['Kochi','🛶',0.85],['Indore','🍲',0.75],['Noida','🏢',1.05]];
+function cityFor(salary){const want=0.8+(salary-35000)/25000*0.45;return CITIES.filter(c=>Math.abs(c[2]-want)<=0.15);}
+function cityCost(s=state){return s.profile.col||1;}
+function rentFor(s,id){return Math.round(BASE_PRICES.home[id].cost*cityCost(s)/100)*100;}
 const JOBS=['software developer','sales executive','graphic designer','bank officer','marketing associate','data analyst','nurse','school teacher','mechanical engineer','accountant','customer support lead','hotel manager'];
 // Uses the run's seeded generator, so a run code always gives the same character.
 function randomProfile(gender){
- const coin=rand(),avatar=gender==='man'||gender==='woman'?gender:coin<0.5?'man':'woman',salary=pick([35000,45000,45000,60000]),edu=rand()<0.35,city=pick(CITIES);
- return {avatar,name:pick(NAMES[avatar]),city:city[0],cityArt:city[1],job:pick(JOBS),salary,eduLoan:edu?'yes':'no',
+ const coin=rand(),avatar=gender==='man'||gender==='woman'?gender:coin<0.5?'man':'woman',salary=pick([35000,45000,45000,60000]),edu=rand()<0.35,city=pick(cityFor(salary));
+ return {avatar,name:pick(NAMES[avatar]),city:city[0],cityArt:city[1],col:city[2],job:pick(JOBS),salary,eduLoan:edu?'yes':'no',
   home:salary>=60000?'comfort':salary<=35000?'starter':pick(['starter','comfort']),food:'balanced',social:'regular',commute:'public',other:'none',health:'no'};
 }
 function newCharacter(seed,gender){newRun(seed);state.status='setup';Object.assign(state.profile,randomProfile(gender));return state.profile;}
@@ -2193,10 +2198,10 @@ const OPTIONAL={
    return{text:'You bought a '+h.label.toLowerCase()+'! Loan '+money(loan)+' at '+money(s.homeLoan.emi)+'/month for 20 years. Rent stops from next month.',feedback:b.leftover<0?fb('risky','Your monthly costs are now above your income. The home could become a burden.'):monthsOfCushion(s)<2?fb('risky','A home of your own, but the down payment left your cash cushion thin.'):b.leftover<b.income*0.15?fb('risky','A home of your own, with a thin monthly surplus. Big EMIs leave little room for surprises.'):fb('great','A home you can afford, with a cushion left over. Rent money now builds equity.')};}},
  sellHouse:{tab:'big',name:'Sell your home',emoji:'🪧',color:'c-clay',
   cost:()=>0,
-  monthly:s=>priced(BASE_PRICES.home[s.profile.home].cost,s)-(s.homeLoan?s.homeLoan.emi:0)-priced(houseSpec(s.homeType).maintenance,s),
+  monthly:s=>priced(rentFor(s,s.profile.home),s)-(s.homeLoan?s.homeLoan.emi:0)-priced(houseSpec(s.homeType).maintenance,s),
   available:s=>s.ownsHome?null:'You do not own a home.',
   describe:s=>'Sell for about '+money(Math.round(s.homeValue*(1-A.house.sellCostShare)))+' after 3% costs. The home loan ('+money(s.homeLoan?s.homeLoan.balance:0)+') is repaid and the rest goes to savings. You go back to renting ('+BASE_PRICES.home[s.profile.home].label+').',
-  apply:s=>{const proceeds=Math.round(s.homeValue*(1-A.house.sellCostShare)),owed=s.homeLoan?s.homeLoan.balance:0,net=proceeds-owed;s.homeLoan=null;s.ownsHome=false;s.homeType='';s.homeValue=0;s.costs.housing=BASE_PRICES.home[s.profile.home].cost;
+  apply:s=>{const proceeds=Math.round(s.homeValue*(1-A.house.sellCostShare)),owed=s.homeLoan?s.homeLoan.balance:0,net=proceeds-owed;s.homeLoan=null;s.ownsHome=false;s.homeType='';s.homeValue=0;s.costs.housing=rentFor(s,s.profile.home);
    if(net>=0)s.cash+=net;else s.unsecuredDebt+=-net;record('Sold the home at '+ageLabel()+': '+money(net)+' after repaying the loan.',{major:true,kind:'home'});
    return{text:'Home sold. '+(net>=0?money(net)+' added to savings after repaying the loan.':money(-net)+' of the loan was left over and became debt.'),feedback:fb('solid','Selling frees you from the EMI. You are back to paying rent, which rises every year.')};}}
 };
@@ -2375,7 +2380,7 @@ function previewExpenseChange(key,value){
  return{before,after,debtChange:totalDebt(copy)-totalDebt(state),soldLoan:!!state.vehicleLoan&&!copy.vehicleLoan};
 }
 function applyExpenseTo(s,key,value,model){
- if(key==='home'){s.profile.home=value;s.costs.housing=BASE_PRICES.home[value].cost;}
+ if(key==='home'){s.profile.home=value;s.costs.housing=rentFor(s,value);}
  else if(key==='food'){s.profile.food=value;s.costs.food=BASE_PRICES.food[value].cost;}
  else if(key==='social'){s.profile.social=value;s.costs.social=BASE_PRICES.social[value].cost;}
  else if(key==='travel'){s.profile.travel=value;s.costs.travel=BASE_PRICES.travel[value].cost;}
@@ -2450,7 +2455,7 @@ function whatIfLessons(s=state){
  if(w.adLoss>0||w.adBuys.length)out.push({key:'ads',emoji:'📺',gain:Math.round(w.adLoss),title:'Saying no to ads'+(w.adBuys.length?' ('+w.adBuys.join(', ')+')':''),take:'Ads sell dreams on easy EMIs. Buy when your plan says so, not when the ad does.'});
  return out.filter(l=>l.gain>=10000||(l.key==='ads'&&w.adBuys.length)).sort((a,b)=>b.gain-a.gain).slice(0,3);
 }
-window.__LH_MODEL={A,BASE_PRICES,retireOutlook,growthPart,addInvest,sellInvest,crashFall,crashStress,safeYears,setMix,mixBlocker,mixLabel,kidsInSchool,schoolAdmission,schoolStepDown,SCHOOL_ORDER,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
+window.__LH_MODEL={A,BASE_PRICES,CITIES,cityFor,cityCost,rentFor,retireOutlook,growthPart,addInvest,sellInvest,crashFall,crashStress,safeYears,setMix,mixBlocker,mixLabel,kidsInSchool,schoolAdmission,schoolStepDown,SCHOOL_ORDER,travellers,travellerLabel,yearlyTrip,EVENTS,OPTIONAL,RANDOM_POOL,money,compact,esc,clamp,emiFor,
  get state(){return state;},prefs,savePrefs,newRun,beginLife,advanceMonth,resolveEvent,requestRetirement,endRun,
  chooseOptional,optionalBlocker,applyExpenseChange,expenseChangeBlocker,previewExpenseChange,setSip,sipBlocker,
  monthlyBudget,monthlyIncome,inflationFactor,priced,preciseAge,ageLabel,resilience,totalDebt,netWorth,activeChildren,endSummary,settlementMessage,startEvent,monthsOfCushion,
@@ -2843,16 +2848,16 @@ function renderStory(){
  document.querySelectorAll('[data-gender]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.gender===p.avatar)));
  $('storyName').textContent='You’re '+p.name+', 23';
  const fact=(e,main,sub)=>'<li>'+em(e)+'<span>'+main+(sub?'<small>'+sub+'</small>':'')+'</span></li>';
- $('storyFacts').innerHTML=fact('💼','First job as a '+esc(p.job),'in '+esc(p.city)+' '+(p.cityArt||''))
+ const col=p.col||1;$('storyFacts').innerHTML=fact('💼','First job as a '+esc(p.job),'in '+esc(p.city)+' '+(p.cityArt||'')+(Math.abs(col-1)>=0.05?' · rent '+Math.round(Math.abs(col-1)*100)+'% '+(col<1?'below':'above')+' average':''))
   +fact('💰',compact(salary)+'/month salary',tax?money(salary-tax)+' after '+money(tax)+' tax':'No income tax yet')
   +(edu?fact('🎓',compact(A.eduLoan.principal)+' education loan',money(eduEmi())+'/month EMI for 8 years. It got you the better pay.'):fact('📘','No education loan','Nothing to repay'))
-  +fact(home.emoji,'Renting: '+home.label,money(home.cost)+'/month · '+P.food[p.food].label.toLowerCase()+' · '+P.social[p.social].label.toLowerCase()+(p.health==='yes'?' · 🛡️ health cover':''))
+  +fact(home.emoji,'Renting: '+home.label,money(M.rentFor(s,p.home))+'/month · '+P.food[p.food].label.toLowerCase()+' · '+P.social[p.social].label.toLowerCase()+(p.health==='yes'?' · 🛡️ health cover':''))
   +fact('🚇','Bus and Metro to work','No vehicle yet');
 }
 /* ---------- Profile setup: a short animated walk-through before the race ---------- */
 // Five quick questions; each shows its monthly cost, how it moves happiness, and what is left of the salary.
 const WIZ=[
- {key:'home',emoji:'🏠',title:'Where do you live?',why:'Rent is your biggest monthly cost. A nicer place makes everyday life comfier (🧍 Me).',opts:()=>Object.entries(P.home).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.home[id]},
+ {key:'home',emoji:'🏠',title:'Where do you live?',why:'Rent is your biggest monthly cost. A nicer place makes everyday life comfier (🧍 Me).',opts:()=>Object.entries(P.home).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:M.rentFor(S(),id)})),rings:id=>M.LIFESTYLE_RINGS.home[id]},
  {key:'food',emoji:'🍲',title:'How do you eat?',why:'Eating out is fun, and it costs more every single month.',opts:()=>Object.entries(P.food).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.food[id]},
  {key:'social',emoji:'🎳',title:'Your weekends?',why:'Going out with people fills 👨‍👩‍👧 Family & Friends and 🏘️ Community, the parts of happiness that drop first.',opts:()=>Object.entries(P.social).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:o.cost})),rings:id=>M.LIFESTYLE_RINGS.social[id]},
  {key:'travel',emoji:'✈️',title:'Holidays?',why:'Trips fill 🧍 Me and 👨‍👩‍👧 Family & Friends. A holiday fund saves a little every month and pays for a trip each year. Family trips cost more: everyone needs a ticket.',opts:()=>Object.entries(P.travel).map(([id,o])=>({id,emoji:o.emoji,label:o.label,cost:Math.round(o.cost*M.travellers())})),rings:id=>M.LIFESTYLE_RINGS.travel[id]},
@@ -2860,7 +2865,7 @@ const WIZ=[
  {key:'health',emoji:'🛡️',title:'Health cover?',why:'Pays 65% of hospital bills. You renew it yourself at pit stops; it never renews on its own.',opts:()=>[{id:'yes',emoji:'🛡️',label:'Yes, cover me',cost:A.healthCover.premium},{id:'no',emoji:'🎲',label:'Not now',cost:0}],rings:id=>id==='yes'?[2,0,0]:null}
 ];
 function wizBudget(p){const edu=p.eduLoan==='yes',salary=Math.round(p.salary*(edu?1+A.eduLoan.salaryBoost:1)),take=salary-Math.round(M.annualTax(salary*12)/12);
- const cost=P.home[p.home].cost+P.food[p.food].cost+P.social[p.social].cost+P.travel[p.travel||'none'].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
+ const cost=M.rentFor(S(),p.home)+P.food[p.food].cost+P.social[p.social].cost+P.travel[p.travel||'none'].cost+P.other[p.other||'none'].cost+P.commute.public.running+(edu?eduEmi():0)+(p.health==='yes'?A.healthCover.premium:0);return{take,cost,left:take-cost};}
 // The same steps plan retirement spending (no health step; home only while renting), with how long the money lasts.
 // Setup only: costs above take-home mean card debt from the first month. Warn, and make starting that way a deliberate second tap.
 function wizShort(){return ui.wiz.mode!=='retire'&&wizBudget(S().profile).left<0;}
@@ -3142,7 +3147,7 @@ function renderExpenses(){
  h+='<div class="breakdown" aria-label="Monthly expenses breakdown">'+b.lines.map(l=>'<div><span>'+esc(l.label)+'</span><span>'+money(l.amount)+'</span></div>').join('')+'<div class="total"><span>Total monthly expenses</span><span>'+money(b.total)+'</span></div>'+(b.sip?'<div><span>🌱 SIP (invested after bills)</span><span>'+money(b.sip)+'</span></div>':'')+'</div>';
  const pend=ui.pendingExpense;
  const group=(key,title,current,opts,note)=>'<section class="edit-group"><h3>'+title+'</h3>'+(note?'<p>'+esc(note)+'</p>':'')+'<div class="edit-options">'+opts.map(o=>{const sel=String(current)===o.id,isPend=pend&&pend.key===key&&pend.value===o.id;return '<button type="button" class="edit-choice'+(isPend?' pending':'')+'" data-expense-key="'+key+'" data-expense-value="'+o.id+'" aria-pressed="'+sel+'"'+(o.disabled?' disabled':'')+'><strong>'+(o.emoji?o.emoji+' ':'')+esc(o.label)+'</strong><span>'+esc(o.price)+'</span></button>';}).join('')+'</div></section>';
- const simple=(grp,dis)=>Object.entries(grp).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:money(Math.round(o.cost*f))+'/mo',disabled:dis}));
+ const simple=(grp,dis)=>Object.entries(grp).map(([id,o])=>({id,emoji:o.emoji,label:o.label,price:money(Math.round((grp===P.home?M.rentFor(s,id):o.cost)*f))+'/mo',disabled:dis}));
  h+=group('home',s.ownsHome?'🏡 Home (you own it)':'🏠 Rent',s.ownsHome?'':s.profile.home,simple(P.home,s.ownsHome),s.ownsHome?'You own your home, so there is no rent. Sell it in Big buys to rent again.':'');
  h+=group('food','🍲 Groceries & food',s.profile.food,simple(P.food));
  h+=group('social','🎳 Social & lifestyle',s.profile.social,simple(P.social));
@@ -3224,7 +3229,7 @@ function renderAbout(){
   ['Burnout','If your time for yourself stays very low (under 35) for 9 months while working, burnout hits: take a 2-month unpaid break, slow down for 2 years, or push through with a doctor’s bill'],
   ['Happiness power-ups','A day with your people (₹6,000), volunteering (free) and donating (₹10,000), at age-23 prices, in More → Power-ups. Each can be used once a year. The lift fades within a few months: how you live every month matters more'],
   ['Travel','Holidays are part of your Monthly Plan: stay home, weekend getaways (₹3,000/month), a big India trip a year (₹6,000) or abroad every year (₹15,000), per traveller (a spouse counts fully, each child 60%, so a couple pays 2× and a family of four about 3.2×; holidays with family also fill Family & Friends, and each yearly family trip gives it an extra lift). The fund pays for a trip every year, shown on the race and in your journal. More → Power-ups → Plan a dream trip books a one-off trip from savings, once a year: hills ₹20K, India ₹60K, abroad ₹1.5L or a bucket-list trip ₹3.5L per person'],
-  ['Start / finish','You start at 23 with a random life: name, city, job, salary (₹35K to ₹60K a month), maybe an education loan, a rented home and the bus or Metro. 🎲 New life rolls another. The race runs from age 23.0 to 80.0 (month 685), one month at a time'],['Pacing','About 0.45 seconds per month at 1× (1 year ≈ 5.4 s), so a whole life takes about 7 minutes with stops. Speeds 1×, 2× and 4×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
+  ['Start / finish','You start at 23 with a random life: name, city, job, salary (₹35K to ₹60K a month), maybe an education loan, a rented home and the bus or Metro. Pay follows the city: a ₹35K first job is in a cheaper city (Indore, Jaipur, Kochi…), a ₹60K one in a big metro (Mumbai, Bengaluru, Delhi). Rent and home prices follow the city, from 75% of average in Indore to 135% in Mumbai. 🎲 New life rolls another. The race runs from age 23.0 to 80.0 (month 685), one month at a time'],['Pacing','About 0.45 seconds per month at 1× (1 year ≈ 5.4 s), so a whole life takes about 7 minutes with stops. Speeds 1×, 2× and 4×'],['Inflation','6% a year on living costs, applied at the start of each simulated year'],
   ['Salary','Monthly pay before tax. First review at month 7 (+5%, +1% per Career XP). Then a yearly appraisal of 11% to 28, 8.5% to 35, 6.5% to 45 and 4.5% after that'],
   ['Promotions','Possible at a yearly appraisal, at most once every 2 years. Hike: +27% before 28, +20% to 35, +12% to 45, then +6.5%. Chance per year: 12% + 6% per Career XP, scaled down with age (×0.8 to 35, ×0.45 to 45, ×0.15 after)'],
   ['Income tax','India’s new regime (FY 2025-26), simplified: ₹75,000 standard deduction; slabs 0% to ₹4L, 5% to ₹8L, 10% to ₹12L, 15% to ₹16L, 20% to ₹20L, 25% to ₹24L, 30% above; no tax up to ₹12L taxable (rebate, with marginal relief); 4% cess. Slabs rise with inflation in the game. Deducted from salary every month'],

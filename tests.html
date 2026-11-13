@@ -30,7 +30,7 @@ function assert(cond,msg){if(!cond)throw new Error(msg);}
 function eq(a,b,msg){if(a!==b)throw new Error(msg+' (expected '+b+', got '+a+')');}
 function near(a,b,tol,msg){if(Math.abs(a-b)>tol)throw new Error(msg+' (expected ≈'+b+', got '+a+')');}
 function loadGame(seed){return new Promise((res,rej)=>{const f=document.createElement('iframe');f.src='index.html?test=1&seed='+seed;f.onload=()=>{const L=f.contentWindow.LifeHappens;if(!L)return rej(new Error('Test API missing'));res({f,L,win:f.contentWindow});};document.body.appendChild(f);});}
-async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'no'},profile||{}));g.L.render();return g;}
+async function game(seed,profile){const g=await loadGame(seed);g.L.goToSetup();g.L.beginLife(Object.assign({salary:45000,home:'comfort',food:'balanced',social:'regular',commute:'public',other:'none',avatar:'man',eduLoan:'no',health:'no',col:1},profile||{}));g.L.render();return g;}
 const SAFE={savings:1,save:1,full:0};
 // Deterministic auto-player used by long-run scenarios.
 function autoResolve(L,policy){const s=L.state;if(!s.event)return;const e=s.event;if(e.type==='pitstop'){assert(L.resolveEvent(e.id,'go',{pit:{cover:'renew'}}),'pit stop');return;}const ch=L.EVENTS[e.type].choices(e,s).map(c=>c.id);
@@ -531,6 +531,14 @@ await test('Big buys: a car is a 5-year loan; the villa grows fastest; cutting t
  s.employment='retired';s.vehicle='car';s.carModel='hatch';s.profile.commute='car';s.vehicleLoan=null;s.costs.commute=2500;s.costs.fuel=5000;
  const plan=L.cutPlan(s,'basics');assert(plan.changes.some(([k,v])=>k==='commute'&&v==='public'),'basics sells the car: '+plan.label);assert(/sell the hatchback, take the bus/.test(plan.label),'says so: '+plan.label);
  s.vehicleLoan={kind:'car',balance:1e5,emi:5000,monthsLeft:20,rate:0.008,principal:6e5};assert(!L.cutPlan(s,'basics').changes.some(([k])=>k==='commute'),'not while the loan runs');});
+await test('Cities: pay follows the city, and rent and home prices follow its cost of living',async()=>{const {L,win}=await loadGame(660);
+ for(const [sal,lo,hi] of [[35000,0.65,0.95],[45000,0.83,1.13],[60000,1.1,1.4]]){const c=L.cityFor(sal);assert(c.length>=3,'several cities for '+sal);assert(c.every(x=>x[2]>=lo&&x[2]<=hi),sal+': cities cost '+lo+'–'+hi);}
+ const seen={};for(let seed=1;seed<=40;seed++){const p=L.newCharacter(seed);assert(L.cityFor(p.salary).some(c=>c[0]===p.city),'city matches pay');eq(p.col,L.CITIES.find(c=>c[0]===p.city)[2],'cost of living stored');seen[p.salary]=(seen[p.salary]||0)+p.col;}
+ L.goToSetup();const p=L.state.profile;Object.assign(p,{city:'Indore',col:0.75,home:'starter'});L.beginLife(Object.assign({},p));const s=L.state;
+ eq(s.costs.housing,6000,'starter rent in Indore');eq(L.rentFor(s,'premium'),16500,'premium rent in Indore');eq(L.housePrice(s,'society'),L.priced(4500000),'a society flat costs 75% of average');
+ L.applyExpenseChange&&s.event===null;});
+await test('Story card: says when rent in your city is cheaper or dearer than average',async()=>{const {L,win}=await loadGame(661);const d=win.document;L.goToSetup();Object.assign(L.state.profile,{city:'Mumbai',cityArt:'🌆',col:1.35,home:'comfort'});L.render();
+ const txt=d.getElementById('storyFacts').textContent;assert(/rent 35% above average/.test(txt),'Mumbai rent note: '+txt.slice(0,160));assert(txt.includes(L.money(18900)),'rent shown at the city price');});
 window.__TEST_RESULTS=results;
 })();
 </script>
